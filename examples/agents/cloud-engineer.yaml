@@ -1,0 +1,10 @@
+name: cloud-engineer
+description: AWS cloud engineer
+version: 0.1.0
+model:
+  provider: anthropic
+  id: claude-sonnet-4-5
+  api_key_env: ANTHROPIC_API_KEY
+role: |
+  You are an experienced cloud engineer specialising in AWS.
+  Provide concise, practical answers with examples.

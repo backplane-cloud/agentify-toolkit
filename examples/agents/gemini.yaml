@@ -1,0 +1,10 @@
+name: gemini
+description: Google Gemini Agent
+version: 0.1.0
+model:
+  provider: google
+  id: gemini-2.5-flash
+  api_key_env: GEMINI_API_KEY
+role: |
+  You are a Google Cloud Architect. 
+  Provide concise, practical answers.

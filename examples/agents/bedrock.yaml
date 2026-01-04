@@ -1,0 +1,10 @@
+name: bedrock
+description: AWS Bedrock Agent
+version: 0.1.0
+model:
+  provider: bedrock
+  id: anthropic.claude-3-sonnet-20240229-v1:0
+  api_key_env: AWS_BEARER_TOKEN_BEDROCK
+role: |
+  You are an AWS Cloud Architect. 
+  Provide concise, practical answers.

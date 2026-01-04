@@ -1,0 +1,10 @@
+name: grok
+description: X Grok Agent
+version: 0.1.0
+model:
+  provider: x
+  id: grok-4
+  api_key_env: XAI_API_KEY
+role: |
+  You are an X AI Security Architect.
+  Provide concise, practical answers.
