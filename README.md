@@ -89,6 +89,12 @@ role: |
 agentify run examples/agent.yaml
 ```
 
+> **Overriding Model** - you can pass a provider and model parameter to override the provider and model in the YAML file
+
+```bash
+agentify run examples/agent.yaml --provider=openai --model=gpt-5-nano
+```
+
 ### 3. Run agents interactively from a folder
 
 ```bash
