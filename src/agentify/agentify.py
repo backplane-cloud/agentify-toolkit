@@ -1,8 +1,9 @@
-# Copyright 2026 Backplane
-# Licensed under the Apache License, Version 2.0
-# Author: Lewis Sheridan
-# License: MIT
-# Description: Agentify Class to build multi model AI Agents
+"""
+Copyright 2026 Backplane Software
+Licensed under the Apache License, Version 2.0
+Author: Lewis Sheridan
+Description: Agentify class to build multi-model AI Agents
+"""
 
 from dataclasses import dataclass, field
 from typing import Optional
