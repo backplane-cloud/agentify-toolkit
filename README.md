@@ -3,12 +3,29 @@
 [![PyPI](https://img.shields.io/pypi/v/agentify)](https://pypi.org/project/agentify-toolkit/)
 [![Python Version](https://img.shields.io/pypi/pyversions/agentify)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/backplane-cloud/agentify-toolkit/blob/main/examples/notebooks/Agentify_Developer_Quickstart.ipynb)
 
 > Agentify is a lightweight, declarative-first **AI agent building toolkit** for Python.
+
+## 🚀 Getting Started
+
+Prefer a hands-on walkthrough?
+
+- 📘 [Agentify Developer Quickstart (Jupyter)](examples/notebooks/Agentify_Developer_Quickstart.ipynb)
+- 📄 [Agentify YAML Deep Dive](examples/notebooks/Agentify_YAML_Deep_Dive.ipynb)
 
 ## How it works
 
 Define your agents in simple YAML files or programmatically, and run them using an interactive CLI. Agentify abstracts LLM provider integrations and provides a simplified developer experience.
+
+## Design Principles
+
+- Declarative-first: YAML is the primary interface; Python is optional.
+- Minimalism: Small, predictable API surface (run, chat, list).
+- Provider-agnostic: Switch providers without rewriting agents.
+- Predictability: Consistent behavior, validated YAML, versioning.
+- Developer-first: CLI + notebooks for quick onboarding; clear errors.
+- Extensibility: Optional memory, tools, and parameters; additive changes only.
 
 ## Architecture
 
