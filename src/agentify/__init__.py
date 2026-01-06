@@ -9,11 +9,13 @@ from .agentify import Agent
 from .agents import create_agent, create_agents
 from .specs import load_agent_specs
 from .cli_ui import show_agent_menu
+from .web import run_web_ui
 
 __all__ = [
     "Agent",
     "load_agent_specs",
     "create_agent",
     "create_agents",
-    "show_agent_menu"
+    "show_agent_menu",
+    "run_web_ui"
 ]

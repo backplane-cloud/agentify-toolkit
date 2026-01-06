@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Agentify Web UI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="/static/htmx.min.js"></script>
+    <link rel="stylesheet" href="ui/chat.css" />
+  </head>
+  <body>
+    <div id="chat-container">
+      <h2 id="chat-header">{{AGENT_NAME}}</h2>
+      <div class="tagline">
+        Model: <strong>{{AGENT_MODEL_ID}}</strong> Provider:
+        <strong>{{AGENT_PROVIDER}}</strong>
+      </div>
+      <div id="chat"></div>
+      <form
+        id="chat-form"
+        action="/ask"
+        hx-post="/ask"
+        hx-target="#chat"
+        hx-swap="beforeend"
+        method="post"
+      >
+        <input
+          id="question-input"
+          type="text"
+          name="question"
+          placeholder="Ask your agent..."
+          required
+          autocomplete="off"
+        />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+
+    <script>
+      const form = document.getElementById("chat-form");
+      const input = document.getElementById("question-input");
+      const chat = document.getElementById("chat");
+
+      // Format timestamp as HH:MM
+      function getTimestamp() {
+        const now = new Date();
+        return (
+          now.getHours().toString().padStart(2, "0") +
+          ":" +
+          now.getMinutes().toString().padStart(2, "0")
+        );
+      }
+
+      // Before HTMX request: append user message, clear input, add agent typing bubble
+      form.addEventListener("htmx:beforeRequest", (evt) => {
+        const userMessage = input.value.trim();
+        if (!userMessage) return;
+
+        // Add user message immediately
+        const userBubble = document.createElement("div");
+        userBubble.className = "message user";
+        userBubble.textContent = userMessage;
+
+        // Add timestamp
+        const span = document.createElement("div");
+        span.className = "timestamp";
+        span.textContent = getTimestamp();
+        userBubble.appendChild(span);
+
+        chat.appendChild(userBubble);
+
+        // Clear input
+        input.value = "";
+
+        // Add agent typing bubble
+        const typingBubble = document.createElement("div");
+        typingBubble.className = "message agent typing";
+        typingBubble.textContent = "Agent is thinking...";
+        chat.appendChild(typingBubble);
+
+        chat.scrollTop = chat.scrollHeight;
+      });
+
+      // After HTMX swaps new content from server
+      document.body.addEventListener("htmx:afterSwap", (evt) => {
+        // Remove typing bubble
+        const typing = chat.querySelector(".message.agent.typing");
+        if (typing) typing.remove();
+
+        // Add timestamp to last message (agent)
+        const lastMessage = chat.lastElementChild;
+        if (lastMessage && !lastMessage.querySelector(".timestamp")) {
+          const span = document.createElement("div");
+          span.className = "timestamp";
+          span.textContent = getTimestamp();
+          lastMessage.appendChild(span);
+        }
+
+        chat.scrollTop = chat.scrollHeight;
+      });
+    </script>
+  </body>
+</html>

@@ -12,6 +12,8 @@ from .cli_ui import show_agent_menu
 from .cli_config import set_server, get_server
 from .runtime_client import list_agents, upload_agent, delete_agent
 
+from .web import run_web_ui
+
 @click.group()
 def main():
     """Agentify - Declarative AI Agents and Runtime Management"""
@@ -25,7 +27,8 @@ def main():
 @click.option("--model", type=str, help="Override the model ID at runtime")
 @click.option("--provider", type=str, help="Override the LLM provider at runtime")
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
-def run(path, provider, model, server):
+@click.option("--web", is_flag=True, help="Run agent with web UI")
+def run(path, provider, model, server, web):
     """
     Run an agent YAML file or a folder containing agent YAMLs.
 
@@ -52,11 +55,12 @@ def run(path, provider, model, server):
         with open(path, "r") as f:
             spec = yaml.safe_load(f)
 
-        # Create Agent
         agent = create_agent(spec, provider=provider, model=model)
 
-        # Run Agent
-        agent.chat()
+        if web:
+            run_web_ui(agent)
+        else:
+            agent.chat()
 
     elif path.is_dir():
         # Multi-agent mode
