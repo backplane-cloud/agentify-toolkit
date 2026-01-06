@@ -44,10 +44,9 @@ class Agent:
 
     def chat(agent: Agent):
         console = Console()
-        menu_text = f"Hi I am {agent.name} and I am configured with the role of {agent.role}. I will be using the {agent.model_id} LLM for our interactions. "
-        robot = ">_b"
+        # menu_text = f"Hi I am {agent.name} and I am configured with the role of {agent.role}."
         console.print(Panel(
-            f"[bold cyan][/bold cyan]\n[bold cyan]{robot} [/bold cyan]\n{menu_text}\n[dim]Developed by Backplane Software 2026 - v0.1.0[/dim]",
+            f"[bold cyan][/bold cyan]\n[bold cyan]{agent.name.upper()} [/bold cyan] [dim]{agent.version}[/dim]\nRole: {agent.description}\nUsing [yellow]{agent.model_id}[/yellow] by {agent.provider}",
             border_style="cyan"
         ))
         while True:

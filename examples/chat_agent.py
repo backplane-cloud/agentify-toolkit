@@ -37,6 +37,7 @@ def main():
     # X's Grok Agent
     agent = Agent(
         name="Grok", 
+        version="0.1.0",
         description="X's Grok Agent",
         provider="x", 
         model_id="grok-4", 
