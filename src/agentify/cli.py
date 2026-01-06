@@ -117,11 +117,33 @@ def server_show():
     else:
         click.echo("No server configured.")
 
+@main.group()
+def config():
+    """View or manage Agentify configuration"""
+    pass
+
+@config.command("show")
+def config_show():
+    """Show current Agentify configuration"""
+    import json
+    from agentify.cli_config import get_server
+
+    config_data = {
+        "server": get_server()
+    }
+
+    click.echo(json.dumps(config_data, indent=4))
+
 
 # -----------------------------
 # Runtime server commands
 # -----------------------------
-@main.command("show")
+@main.group()
+def runtime():
+    """Manage agents on a remote runtime server"""
+    pass
+
+@runtime.command("list")
 @click.option("--server", default=None, help="Override default server URL")
 def show_server_agents(server):
     """List agents running on the runtime server"""
@@ -135,8 +157,31 @@ def show_server_agents(server):
     for a in agents:
         click.echo(f"{a['name']:20} {a['status']:10} {a['provider']:10} {a['model']}")
 
+@runtime.command("show")
+@click.argument("agent_name")
+@click.option("--server", default=None, help="Override default server URL")
+def runtime_show(agent_name, server):
+    """Show details of a specific agent on the runtime server"""
+    url = server or get_server()
+    if not url:
+        click.echo("No server configured. Use 'agentify server set <url>'")
+        return
 
-@main.command("upload")
+    agent = list_agents(url, filter_name=agent_name)  # or implement get_agent_details(agent_name)
+    if not agent:
+        click.echo(f"Agent not found: {agent_name}")
+        return
+
+    # Print detailed info
+    for a in agent:
+        click.echo(f"Name: {a['name']}")
+        click.echo(f"Status: {a['status']}")
+        click.echo(f"Provider: {a['provider']}")
+        click.echo(f"Model: {a['model']}")
+        click.echo(f"Version: {a.get('version', 'N/A')}")
+        click.echo("-" * 40)
+
+@runtime.command("load")
 @click.argument("path")
 @click.option("--server", default=None, help="Override default server URL")
 def upload(path, server):
@@ -149,7 +194,7 @@ def upload(path, server):
     click.echo(f"Uploaded {path} -> {url}: {resp}")
 
 
-@main.command("delete")
+@runtime.command("delete")
 @click.argument("agent_name")
 @click.option("--server", default=None, help="Override default server URL")
 def delete(agent_name, server):
