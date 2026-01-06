@@ -1,74 +1,82 @@
-# Copyright 2026 Backplane
+# Copyright 2026 Backplane Software
 # Licensed under the Apache License, Version 2.0
-
 
 import click
 from pathlib import Path
 import yaml
-# from .engine import run_agentify
-from .specs import create_agent, load_agent_specs, create_agents, show_agent_menu
+
+from .specs import load_agent_specs
+from .agents import create_agent, create_agents
+
+from .cli_ui import show_agent_menu
+from .cli_config import set_server, get_server
+from .runtime_client import list_agents, upload_agent, delete_agent
 
 @click.group()
 def main():
-    """Agentify - Declarative AI Agents"""
+    """Agentify - Declarative AI Agents and Runtime Management"""
     pass
 
+# -----------------------------
+# Run local agents (existing logic)
+# -----------------------------
 @main.command()
 @click.argument("path", required=False)
-def run(path):
+@click.option("--model", type=str, help="Override the model ID at runtime")
+@click.option("--provider", type=str, help="Override the LLM provider at runtime")
+@click.option("--server", type=str, help="Optional: run on a remote server instead of local")
+def run(path, provider, model, server):
     """
-    run agent.yaml or run <folder> containing agent YAMLS
+    Run an agent YAML file or a folder containing agent YAMLs.
 
     PATH can be:
       - A single YAML file → runs that agent directly
       - A folder containing YAML files → presents a menu to select an agent
     """
-
+    # Determine target path
     agent_path = path or "./agents"
     path = Path(agent_path)
     click.echo(f"Loading agents from: {path}")
 
+    # If server override is provided, run via runtime API
+    if server:
+        if not path.is_file():
+            raise click.BadParameter("Remote run currently only supports a single YAML file")
+        resp = upload_agent(server, str(path))
+        click.echo(f"Agent uploaded and executed on server {server}: {resp}")
+        return
 
-    # Single-agent mode
+    # ----- Local / programmatic agent logic -----
     if path.is_file():
-        
         # Load YAML File
         with open(path, "r") as f:
             spec = yaml.safe_load(f)
 
-
         # Create Agent
-        agent = create_agent(spec)
+        agent = create_agent(spec, provider=provider, model=model)
 
         # Run Agent
         agent.chat()
 
     elif path.is_dir():
         # Multi-agent mode
-
-        # Load specs from ./agent/*.yaml
-        specs = load_agent_specs(path)  
-
-        # For each Spec create an Agent
-        agents = create_agents(specs) 
-
-        # Show menu to select which agent to run. 
-        agent = show_agent_menu(agents) 
-
-        # Run selected agent.
-        # run_agent(selected_agent) 
+        specs = load_agent_specs(path)
+        agents = create_agents(specs)
+        agent = show_agent_menu(agents)
         agent.chat()
-
     else:
         raise click.BadParameter(f"Path does not exist: {path}")
 
+
+# -----------------------------
+# List local agents (interactive)
+# -----------------------------
 @main.command()
 @click.argument("path", required=False)
 def list(path):
     """
     List agents in a folder and select one to run (interactive TUI)
     """
-
     agent_path = path or "./agents"
     path = Path(agent_path)
     click.echo(f"Listing agents from: {path}")
@@ -76,22 +84,82 @@ def list(path):
     if not path.is_dir():
         raise click.BadParameter(f"Path is not a directory: {path}")
 
-    # Load specs from folder
     specs = load_agent_specs(path)
-
     if not specs:
         click.echo("No agent YAML files found.")
         return
 
-    # Create agents
     agents = create_agents(specs)
-
-    # Interactive menu
     agent = show_agent_menu(agents)
-
-    # Run selected agent
     agent.chat()
 
+
+# -----------------------------
+# Server configuration
+# -----------------------------
+@main.group()
+def server():
+    """Manage default runtime server configuration"""
+    pass
+
+@server.command("set")
+@click.argument("url")
+def server_set(url):
+    """Set the default runtime server"""
+    set_server(url)
+
+@server.command("show")
+def server_show():
+    """Show the current default runtime server"""
+    url = get_server()
+    if url:
+        click.echo(f"Default server: {url}")
+    else:
+        click.echo("No server configured.")
+
+
+# -----------------------------
+# Runtime server commands
+# -----------------------------
+@main.command("show")
+@click.option("--server", default=None, help="Override default server URL")
+def show_server_agents(server):
+    """List agents running on the runtime server"""
+    url = server or get_server()
+    if not url:
+        click.echo("No server configured. Use 'agentify server set <url>'")
+        return
+
+    agents = list_agents(url)
+    click.echo(f"{'NAME':20} {'STATUS':10} {'PROVIDER':10} {'MODEL'}")
+    for a in agents:
+        click.echo(f"{a['name']:20} {a['status']:10} {a['provider']:10} {a['model']}")
+
+
+@main.command("upload")
+@click.argument("path")
+@click.option("--server", default=None, help="Override default server URL")
+def upload(path, server):
+    """Upload an agent YAML file to the runtime server"""
+    url = server or get_server()
+    if not url:
+        click.echo("No server configured. Use 'agentify server set <url>'")
+        return
+    resp = upload_agent(url, path)
+    click.echo(f"Uploaded {path} -> {url}: {resp}")
+
+
+@main.command("delete")
+@click.argument("agent_name")
+@click.option("--server", default=None, help="Override default server URL")
+def delete(agent_name, server):
+    """Delete an agent from the runtime server"""
+    url = server or get_server()
+    if not url:
+        click.echo("No server configured. Use 'agentify server set <url>'")
+        return
+    resp = delete_agent(url, agent_name)
+    click.echo(f"Deleted {agent_name} from {url}: {resp}")
 
 
 if __name__ == "__main__":
