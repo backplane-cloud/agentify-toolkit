@@ -28,6 +28,9 @@ dependencies = [
   "click>=8.1"
 ]
 
+[tool.setuptools.package-data]
+agentify = ["ui/*.html", "ui/*.css", "ui/*.js"]
+
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.25"]
@@ -38,5 +41,5 @@ grok = ["xai_sdk>=1.5.0"]
 agentify = "agentify.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/backplane-software/agentify"
-Issues = "https://github.com/backplane-software/agentify/issues"
+Homepage = "https://github.com/backplane-cloud/agentify-toolkit"
+Issues = "https://github.com/backplane-cloud/agentify-toolkit/issues"
