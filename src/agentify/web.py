@@ -8,7 +8,7 @@ import uvicorn
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
 ui_path = Path(__file__).parent / "ui"
 
 app.mount("/ui", StaticFiles(directory=ui_path), name="ui")
