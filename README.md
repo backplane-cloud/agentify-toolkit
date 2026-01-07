@@ -5,7 +5,15 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/backplane-cloud/agentify-toolkit/blob/main/examples/notebooks/Agentify_Developer_Quickstart.ipynb)
 
-> Agentify is a lightweight, declarative-first **AI agent building toolkit** for Python.
+> Agentify is a lightweight, declarative-first Library for building **AI agents** in Python
+
+## KeyFeatures
+
+- Declarative agent definitions via YAML.
+- Multi-LLM support: OpenAI, Anthropic, and more.
+- Interactive CLI with TUI menu for exploring agents.
+- Programmatic agent creation and execution for custom workflows.
+- Lightweight, minimal dependencies: Click + Rich + PyYAML.
 
 ## 🚀 Getting Started
 
@@ -17,40 +25,6 @@ Prefer a hands-on walkthrough?
 ## How it works
 
 Define your agents in simple YAML files or programmatically, and run them using an interactive CLI. Agentify abstracts LLM provider integrations and provides a simplified developer experience.
-
-## Design Principles
-
-- Declarative-first: YAML is the primary interface; Python is optional.
-- Minimalism: Small, predictable API surface (run, chat, list).
-- Provider-agnostic: Switch providers without rewriting agents.
-- Predictability: Consistent behavior, validated YAML, versioning.
-- Developer-first: CLI + notebooks for quick onboarding; clear errors.
-- Extensibility: Optional memory, tools, and parameters; additive changes only.
-
-## Architecture
-
-```mermaid
-flowchart LR
-    A[agent.yaml] -->|SPEC| B(<br/>🤖<br/>agent.py<br/>Instance<br/><br/>)
-    C[agentify-toolkit] -->|SDK + CLI| B
-    B(<br/>🤖<br/>AGENT<br/><br/>) --> |Prompt| D[LLM<br/>API]
-
-    D[LLM<br/>API] --> E[GPT4.5]
-    D[LLM<br/>API] --> F[Claude-Sonnet-4.5]
-    D[LLM<br/>API] --> G[Gemini]
-    D[LLM<br/>API] --> H[Grok]
-
-```
-
-## KeyFeatures
-
-- Declarative agent definitions via YAML.
-- Multi-LLM support: OpenAI, Anthropic, and more.
-- Interactive CLI with TUI menu for exploring agents.
-- Programmatic agent creation and execution for custom workflows.
-- Lightweight, minimal dependencies: Click + Rich + PyYAML.
-
----
 
 ## Installation
 

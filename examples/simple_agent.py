@@ -1,6 +1,5 @@
 # Copyright Backplane 2026
 # Author: Lewis Sheridan
-# License: MIT
 # Description: Simple Demo to use Agentify Library to create an AI Agent
 
 from agentify import Agent

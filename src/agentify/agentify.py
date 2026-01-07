@@ -58,6 +58,5 @@ class Agent:
 
             full_prompt = f"You must assume the role of {agent.role} when responding to this prompt:\n\n{prompt}"
             with console.status(f"[blue]Sending prompt to model... {agent.name} is thinking...[/blue]", spinner="dots"):
-                # response = agent.run(full_prompt)
                 response = agent.run(full_prompt)
             console.print(Panel.fit(response, title="Agent Response", border_style="green"))
