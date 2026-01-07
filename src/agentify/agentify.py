@@ -44,7 +44,6 @@ class Agent:
 
     def chat(agent: Agent):
         console = Console()
-        # menu_text = f"Hi I am {agent.name} and I am configured with the role of {agent.role}."
         console.print(Panel(
             f"[bold cyan][/bold cyan]\n[bold cyan]{agent.name.upper()} [/bold cyan] [dim]{agent.version}[/dim]\nRole: {agent.description}\nUsing [yellow]{agent.model_id}[/yellow] by {agent.provider}",
             border_style="cyan"
