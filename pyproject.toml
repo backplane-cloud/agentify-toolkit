@@ -28,14 +28,15 @@ dependencies = [
   "click>=8.1"
 ]
 
-[tool.setuptools.package-data]
-agentify = ["ui/*.html", "ui/*.css", "ui/*.js"]
-
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.25"]
 bedrock = ["boto3>=1.34"]
 grok = ["xai_sdk>=1.5.0"]
+google = ["google-genai>=0.8"]
+
+[tool.setuptools.package-data]
+agentify = ["ui/*.html", "ui/*.css", "ui/*.js"]
 
 [project.scripts]
 agentify = "agentify.cli:main"
