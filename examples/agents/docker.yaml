@@ -4,7 +4,7 @@ version: 0.1.0
 model:
   provider: docker
   id: ai/smollm2
-  base_url: http://localhost:12434/v1
+  port: 12434
 role: |
   You are a helpful assistant running locally via Docker Model Runner.
   Provide concise answers.
