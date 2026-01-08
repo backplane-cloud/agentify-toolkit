@@ -119,13 +119,13 @@ To use the LLM Model providers, you will need an API key and they will need to b
 
 Implemented providers:
 
-| Provider  | Instruction                                    | Link                                 |
-| --------- | ---------------------------------------------- | ------------------------------------ |
-| OpenAI    | `export OPENAI_API_KEY="your_api_key_here"`    | https://platform.openai.com/api-keys |
-| Anthropic | `export ANTHROPIC_API_KEY="your_api_key_here"` |                                      |
-| Gemini    | `export GEMINI_API_KEY="your_api_key_here"`    |                                      |
-| Bedrock   | `export AWS_BEARER_TOKEN_BEDROCK`              |                                      |
-| GROK      | `export XAI_API_KEY="your_api_key_here"`       |                                      |
+| Provider  | Instruction                                    |
+| --------- | ---------------------------------------------- |
+| OpenAI    | `export OPENAI_API_KEY="your_api_key_here"`    |
+| Anthropic | `export ANTHROPIC_API_KEY="your_api_key_here"` |
+| Gemini    | `export GEMINI_API_KEY="your_api_key_here"`    |
+| GROK      | `export XAI_API_KEY="your_api_key_here"`       |
+| Bedrock   | `export AWS_BEARER_TOKEN_BEDROCK`              |
 
 > For Windows:
 > $env:<Provider\>\_API_KEY="YOUR_API_KEY"
