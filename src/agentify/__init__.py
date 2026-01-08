@@ -26,7 +26,7 @@ try:
     from importlib.metadata import version, PackageNotFoundError
 
     try:
-        __version__ = version("agentify")
+        __version__ = version("agentify-toolkit")
     except PackageNotFoundError:
         # Fallback when running locally from src/ (not installed)
         __version__ = "0.0.0-dev"
