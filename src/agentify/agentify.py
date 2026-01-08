@@ -42,7 +42,7 @@ class Agent:
             case _:
                 raise ValueError(f"Unsupported provider: {self.provider}")
 
-    def chat(agent: Agent):
+    def chat(agent: "Agent"):
         console = Console()
         console.print(Panel(
             f"[bold cyan][/bold cyan]\n[bold cyan]{agent.name.upper()} [/bold cyan] [dim]{agent.version}[/dim]\nRole: {agent.description}\nUsing [yellow]{agent.model_id}[/yellow] by {agent.provider}",
