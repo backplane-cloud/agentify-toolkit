@@ -1,7 +1,7 @@
 import boto3
 import json
 
-def run_bedrock(model_id: str, user_prompt: str) -> str:
+def run_bedrock(model_id: str, user_prompt: str, config: dict = None) -> str:
         client = boto3.client(
             service_name="bedrock-runtime",
             region_name="eu-west-1"

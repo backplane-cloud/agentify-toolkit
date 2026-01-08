@@ -8,7 +8,7 @@ Description: Agentify class to build multi-model AI Agents
 from dataclasses import dataclass, field
 from typing import Optional
 
-from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_x
+from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_x, run_docker
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -22,25 +22,28 @@ class Agent:
     model_id: str
     role: str
     version: Optional[str] = field(default="0.0.0")
+    model_config: dict = field(default_factory=dict)
 
 
     def get_model(self) -> str:
         return self.model_id
     
     def run(self, user_prompt: str) -> str:
-        match self.provider.lower():
-            case "openai":
-                return run_openai(self.model_id, user_prompt)
-            case "anthropic":
-                return run_anthropic(self.model_id, user_prompt)
-            case "google":
-                return run_google(self.model_id, user_prompt)
-            case "bedrock":
-                return run_bedrock(self.model_id, user_prompt)
-            case "x":
-                return run_x(self.model_id, user_prompt)
-            case _:
-                raise ValueError(f"Unsupported provider: {self.provider}")
+        provider = self.provider.lower()
+        if provider == "openai":
+            return run_openai(self.model_id, user_prompt, self.model_config)
+        elif provider == "anthropic":
+            return run_anthropic(self.model_id, user_prompt, self.model_config)
+        elif provider == "google":
+            return run_google(self.model_id, user_prompt, self.model_config)
+        elif provider == "bedrock":
+            return run_bedrock(self.model_id, user_prompt, self.model_config)
+        elif provider == "x":
+            return run_x(self.model_id, user_prompt, self.model_config)
+        elif provider == "docker":
+            return run_docker(self.model_id, user_prompt, self.model_config)
+        else:
+            raise ValueError(f"Unsupported provider: {self.provider}")
 
     def chat(agent: "Agent"):
         console = Console()

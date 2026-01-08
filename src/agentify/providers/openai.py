@@ -1,7 +1,7 @@
  
 from openai import OpenAI
 
-def run_openai(model_id: str, user_prompt: str) -> str:
+def run_openai(model_id: str, user_prompt: str, config: dict = None) -> str:
     client = OpenAI()
 
     response = client.responses.create(

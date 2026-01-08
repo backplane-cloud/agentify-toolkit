@@ -1,6 +1,6 @@
 from google import genai
 
-def run_google(model_id: str, user_prompt: str) -> str:
+def run_google(model_id: str, user_prompt: str, config: dict = None) -> str:
     client = genai.Client()
     response = client.models.generate_content(
         model=model_id,
