@@ -42,6 +42,20 @@ pip install .
 
 ## Quick Start
 
+> Note: To use Agentify you will require an API KEY from your AI Model Provider.
+
+To add the API KEY to your environment:
+
+```bash
+agentify providers add <provider> # e.g. anthropic, xai, google, openai
+```
+
+Then, you can validate:
+
+```bash
+agentify providers list
+```
+
 ### 1. Create an agent YAML
 
 ```yaml
