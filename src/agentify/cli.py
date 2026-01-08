@@ -6,6 +6,7 @@ from pathlib import Path
 import yaml
 import os
 
+from agentify import __version__
 from .specs import load_agent_specs
 from .agents import create_agent, create_agents
 
@@ -16,6 +17,7 @@ from .runtime_client import list_agents, upload_agent, delete_agent
 from .web import run_web_ui
 
 @click.group()
+@click.version_option(version=__version__, prog_name="Agentify")
 def main():
     """Agentify - Declarative AI Agents and Runtime Management"""
     pass
