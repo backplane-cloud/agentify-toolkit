@@ -1,4 +1,4 @@
-# 📦 Agentify — Declarative AI Agent Toolkit
+# 📦 Agentify - Declarative AI Agent Toolkit
 
 [![PyPI](https://img.shields.io/pypi/v/agentify)](https://pypi.org/project/agentify-toolkit/)
 [![Python Version](https://img.shields.io/pypi/pyversions/agentify)](https://www.python.org/)
@@ -54,6 +54,8 @@ Verify:
 ```bash
 agentify providers list
 ```
+
+Example Output:
 
 ```bash
  anthropic
@@ -115,7 +117,7 @@ Most ecosystems ask:
 
 Agentify flips it:
 
-> “The agent spec stays the same — only the provider changes.”
+> “The agent spec stays the same - only the provider changes.”
 
 ### 3. CLI-first Exploration
 
@@ -129,29 +131,29 @@ agentify run agent.yaml
 
 Agents collapse to a spec, not a codebase
 
-### ✨ Key Features
+### Key Features
 
-📝 Declarative agent definitions via YAML
+- Declarative agent definitions via YAML
 
-🔌 Multi-provider LLM support (OpenAI, Anthropic, XAI, Gemini, Bedrock)
+- Multi-provider LLM support (OpenAI, Anthropic, XAI, Gemini, Bedrock)
 
-💻 Interactive CLI and TUI for exploring agents
+- Interactive CLI and TUI for exploring agents
 
-🐍 Programmatic API for custom workflows
+- Programmatic API for custom workflows
 
-🪶 Lightweight: Click + Rich + PyYAML
+- Lightweight: Click + Rich + PyYAML
 
-### 📚 Documentation & Notebooks
+### Documentation & Notebooks
 
 Prefer a guided walkthrough?
 
-📘 Developer Quickstart (Notebook)
-`examples/notebooks/Agentify_Developer_Quickstart.ipynb`
+- Developer Quickstart (Notebook)
+  `examples/notebooks/Agentify_Developer_Quickstart.ipynb`
 
-📄 YAML Deep Dive
-`examples/notebooks/Agentify_YAML_Deep_Dive.ipynb`
+- YAML Deep Dive
+  `examples/notebooks/Agentify_YAML_Deep_Dive.ipynb`
 
-## 🛠 Programmatic Usage
+## Programmatic Usage
 
 ```python
 from agentify import Agent
@@ -194,8 +196,7 @@ Windows:
 $env:OPENAI_API_KEY="..."
 ```
 
-📦 Installation (Detailed)
-From PyPI:
+Installation from PyPI:
 
 ```bash
 pip install agentify-toolkit
@@ -209,6 +210,6 @@ cd agentify-toolkit
 pip install .
 ```
 
-## 📜 License
+## License
 
-Apache 2.0 — see LICENSE
+Apache 2.0 - see LICENSE
