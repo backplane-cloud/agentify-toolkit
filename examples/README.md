@@ -37,3 +37,15 @@ python3 simple_agent.py
 ```bash
 python3 chat_agent.py
 ```
+
+### Example 3: Client Server
+
+To run your Agent in server mode:
+
+```bash
+agentify run examples/agent.yaml --web
+```
+
+```bash
+python3 client.py
+```
