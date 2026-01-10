@@ -1,5 +1,5 @@
 # web.py
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
@@ -47,6 +47,24 @@ async def ask_agent(question: str = Form(...)):
     </div>
     """
     return HTMLResponse(content=html)
+
+@app.post("/prompt")
+async def prompt_agent(request: Request ):
+    agent = app.state.agent
+
+    # Parse JSON body
+    body = await request.json()
+    question = body.get("question", "")
+    
+    
+    prompt = f"Answer with this role:{agent.role} the question: {question}"
+
+    try:
+        answer = agent.run(prompt)
+    except Exception:
+        answer = "Agent is currently busy. Please try again in a few seconds."
+
+    return {"answer": answer}
 
 def run_web_ui(agent, host="127.0.0.1", port=8001):
     """
