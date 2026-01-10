@@ -5,7 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.3.1] - 2026-01-010
+## [0.4.2] - 2026-01-010
+
+### Added
+
+- Added --port to allow for custom port when serving agent with the --web switch
+
+---
+
+## [0.3.2] - 2026-01-010
 
 ### Added
 
