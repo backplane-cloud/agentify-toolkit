@@ -66,7 +66,7 @@ async def prompt_agent(request: Request ):
 
     return {"answer": answer}
 
-def run_web_ui(agent, host="127.0.0.1", port=8001):
+def run_web_ui(agent, host="127.0.0.1", port=None):
     """
     Run the web UI with the given agent.
     Stores the agent in app.state and starts uvicorn.
@@ -75,4 +75,7 @@ def run_web_ui(agent, host="127.0.0.1", port=8001):
     app.state.agent_name = agent.name
     app.state.provider = agent.provider
     app.state.model_id = agent.model_id
+
+    if port is None:
+        port = 8001
     uvicorn.run(app, host=host, port=port)

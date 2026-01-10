@@ -31,7 +31,8 @@ def main():
 @click.option("--provider", type=str, help="Override the LLM provider at runtime")
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
 @click.option("--web", is_flag=True, help="Run agent with web UI")
-def run(path, provider, model, server, web):
+@click.option("--port", type=int, help="Set server port")
+def run(path, provider, model, server, web, port):
     """
     Run an agent YAML file or a folder containing agent YAMLs.
 
@@ -61,7 +62,7 @@ def run(path, provider, model, server, web):
         agent = create_agent(spec, provider=provider, model=model)
 
         if web:
-            run_web_ui(agent)
+            run_web_ui(agent, port=port)
         else:
             agent.chat()
 
