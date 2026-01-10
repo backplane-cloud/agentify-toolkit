@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.3-alpha.1] - 2026-01-010
+
+### Added
+
+- Fixing Semantic Versions
+
+---
+
 ## [0.4.2] - 2026-01-010
 
 ### Added
