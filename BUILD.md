@@ -7,7 +7,7 @@
 ```bash
 rm -rf dist/ build/ src/*.egg-info
 
-./buidtest.sh # This uploads it to Test pypi
+./buildtest.sh # This uploads it to Test pypi
 ```
 
 ### Publish to PyPi Test
