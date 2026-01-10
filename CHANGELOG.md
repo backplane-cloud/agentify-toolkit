@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.1] - 2026-01-010
+
+### Added
+
+- Added /prompt to Agent API Server to handle JSON request/response from clients
+
+---
+
 ## [0.2.1] - 2026-01-08
 
 ### Added
