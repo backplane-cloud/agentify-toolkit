@@ -56,8 +56,8 @@ deactivate
 Once confirmed to be working successfully, do the same for prod:
 
 ```bash
-rm -rf dist/ build/ *.egginfo
-./buid.sh # This uploads it to PyPi Prod
+rm -rf dist/ build/ src/*.egg-info
+./build.sh # This uploads it to PyPi Prod
 ```
 
 Then repeat steps to test and verify version.
