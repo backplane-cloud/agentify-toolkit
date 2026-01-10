@@ -5,7 +5,8 @@
 ## Build Process
 
 ```bash
-rm -rf dist/ build/ *.egginfo
+rm -rf dist/ build/ src/*.egg-info
+
 ./buidtest.sh # This uploads it to Test pypi
 ```
 
