@@ -20,8 +20,8 @@ from .server import serve_agent
 @click.version_option(version=__version__, prog_name="Agentify")
 def main():
     """
-    Agentify Toolkit: Build, Prototype, and Experiment with AI Agents
-    
+    Agentify: Declarative AI Agent Toolkit for Build & Experimentation
+
     Use Agentify to define agents in YAML and execute them locally, interactively or within a simple runtime server.
     """
     pass
