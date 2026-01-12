@@ -79,7 +79,7 @@ def run(path, provider, model, server):
 @click.option("--port", type=int, help="Set server port e.g. 8001")
 def serve(path, port):
     """
-    Server Agent on Local HTTP API Server
+    Serve an agent locally via HTTP API and Web UI
 
     This launches a FastAPI server that exposes the agent over:
     - Web UI at    http://127.0.0.1:<port>
@@ -110,7 +110,7 @@ def serve(path, port):
 @click.argument("path", required=False)
 def list(path):
     """
-    List agents in a folder and select one to run (interactive TUI)
+    List agents in a folder and select one to run in chat mode
     """
     agent_path = path or "./agents"
     path = Path(agent_path)
@@ -127,6 +127,65 @@ def list(path):
     agents = create_agents(specs)
     agent = show_agent_menu(agents)
     agent.chat()
+
+@main.group()
+def agents():
+    """Manage and inspect AI agent YAML files."""
+    pass
+
+@agents.command("list")
+@click.argument("path", required=False, default=".")
+def list_agents(path):
+    """
+    List all agent YAML files in a directory.
+
+    Example:
+      agentify agents list ./examples/agents
+    """
+    p = Path(path)
+    if not p.is_dir():
+        raise click.BadParameter(f"{path} is not a directory")
+
+    specs = load_agent_specs(p)
+    if not specs:
+        click.echo("No agent YAML files found.")
+        return
+
+    click.echo(f"Found {len(specs)} agent(s) in {path}:")
+    for s in specs:
+        name = s.get("name", "Unnamed")
+        desc = s.get("description", "")
+        provider = s.get("model","").get("provider")
+        model = s.get("model","").get("id")
+        click.echo(f"{name:<20} {provider:<20} {model:<20} {desc}")
+
+
+
+@agents.command("show")
+@click.argument("agent_file", required=True)
+def show_agent(agent_file):
+    """
+    Show details of a single agent YAML file.
+
+    Example:
+      agentify agents show ./examples/agents/agent1.yaml
+    """
+    p = Path(agent_file)
+    if not p.is_file():
+        raise click.BadParameter(f"{agent_file} is not a valid file")
+
+    with open(p, "r") as f:
+        spec = yaml.safe_load(f)
+
+    # Pretty print key fields
+    click.echo(f"Name       : {spec.get('name', 'Unnamed')}")
+    click.echo(f"Description: {spec.get('description', '')}")
+    click.echo(f"Version    : {spec.get('version', 'N/A')}")
+    click.echo(f"Role       : {spec.get('role', '').strip()}")
+    model = spec.get("model", {})
+    click.echo(f"Model      : {model.get('id', 'N/A')} ({model.get('provider', '')})")
+
+
 
 
 # -----------------------------

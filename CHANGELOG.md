@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.6.0] - 2026-01-12
+
+### Added
+
+- Added `agentify agents list examples/agents` and `agentify agents show agent.yaml`
+
+---
+
 ## [0.5.0] - 2026-01-12
 
 ### Added
