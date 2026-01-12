@@ -6,6 +6,7 @@ from pathlib import Path
 import yaml
 import os
 
+from agentify import __version__
 from .specs import load_agent_specs
 from .agents import create_agent, create_agents
 
@@ -13,11 +14,16 @@ from .cli_ui import show_agent_menu
 from .cli_config import set_server, get_server, add_provider, remove_provider, list_providers
 from .runtime_client import list_agents, upload_agent, delete_agent
 
-from .web import run_web_ui
+from .server import serve_agent
 
 @click.group()
+@click.version_option(version=__version__, prog_name="Agentify")
 def main():
-    """Agentify - Declarative AI Agents and Runtime Management"""
+    """
+    Agentify: A Developer Toolkit for Declarative AI Agents
+
+    Use '--help' with any command for more details.
+    """
     pass
 
 # -----------------------------
@@ -28,14 +34,12 @@ def main():
 @click.option("--model", type=str, help="Override the model ID at runtime")
 @click.option("--provider", type=str, help="Override the LLM provider at runtime")
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
-@click.option("--web", is_flag=True, help="Run agent with web UI")
-def run(path, provider, model, server, web):
+def run(path, provider, model, server):
     """
-    Run an agent YAML file or a folder containing agent YAMLs.
+    Run an agent from a YAML file or directory.
 
-    PATH can be:
-      - A single YAML file → runs that agent directly
-      - A folder containing YAML files → presents a menu to select an agent
+    - Single: `agentify run agent.yaml`
+    - Folder: shows interactive agent picker
     """
     # Determine target path
     agent_path = path or "./agents"
@@ -58,10 +62,7 @@ def run(path, provider, model, server, web):
 
         agent = create_agent(spec, provider=provider, model=model)
 
-        if web:
-            run_web_ui(agent)
-        else:
-            agent.chat()
+        agent.chat()
 
     elif path.is_dir():
         # Multi-agent mode
@@ -73,6 +74,35 @@ def run(path, provider, model, server, web):
         raise click.BadParameter(f"Path does not exist: {path}")
 
 
+@main.command()
+@click.argument("path")
+@click.option("--port", type=int, help="Set server port e.g. 8001")
+def serve(path, port):
+    """
+    Serve an agent locally via HTTP API and Web UI
+
+    This launches a FastAPI server that exposes the agent over:
+    - Web UI at    http://127.0.0.1:<port>
+    - REST API at  /ask  /prompt  /info
+
+    If --port is not provided, the default port is 8001.
+
+    Examples:
+    agentify serve agent.yaml
+    agentify serve agent.yaml --port 8080
+
+    """
+    p = Path(path)
+    if not p.is_file():
+        raise click.BadParameter(f"{path} is not a valid agent file")
+
+    with open(p, "r") as f:
+        spec = yaml.safe_load(f)
+
+    agent = create_agent(spec)
+    serve_agent(agent, port=port)
+
+
 # -----------------------------
 # List local agents (interactive)
 # -----------------------------
@@ -80,7 +110,7 @@ def run(path, provider, model, server, web):
 @click.argument("path", required=False)
 def list(path):
     """
-    List agents in a folder and select one to run (interactive TUI)
+    List agents in a folder and select one to run in chat mode
     """
     agent_path = path or "./agents"
     path = Path(agent_path)
@@ -98,11 +128,129 @@ def list(path):
     agent = show_agent_menu(agents)
     agent.chat()
 
+@main.group()
+def agent():
+    """Manage and inspect AI agent YAML files."""
+    pass
+
+@agent.command("add")
+@click.argument("folder", required=False)
+def create_agent_cli(folder):
+    """
+    Interactively create a new agent YAML file.
+
+    Prompts for name, description, version, provider, model, role, and API key env.
+    The file will be saved as <name>.yaml in the specified folder.
+    """
+    click.echo("Creating a new agent YAML...\n")
+
+    # Prompt for basic info
+    name = click.prompt("Agent Name")
+    description = click.prompt("Description", default="")
+    version = click.prompt("Version", default="0.1.0")
+    
+    # Model/provider info
+    provider = click.prompt("Provider (e.g., openai, anthropic)")
+    model_id = click.prompt("Model ID")
+    api_key_env = click.prompt("API key environment variable name", default=f"{provider.upper()}_API_KEY")
+    
+    # Role
+    click.echo("Define the agent's role. Use multiple lines if needed. End with Ctrl+D (Linux/macOS) or Ctrl+Z (Windows) and Enter.")
+    role_lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        role_lines.append(line)
+    role = "\n".join(role_lines).strip()
+
+    # Build agent spec
+    agent_spec = {
+        "name": name,
+        "description": description,
+        "version": version,
+        "model": {
+            "provider": provider,
+            "id": model_id,
+            "api_key_env": api_key_env
+        },
+        "role": role
+    }
+
+    # Ensure folder exists
+    folder_path = Path(folder or ".")
+    folder_path.mkdir(parents=True, exist_ok=True)
+
+    # Sanitize filename
+    filename = f"{name}.yaml"
+    file_path = folder_path / filename
+
+    # Save YAML
+    with open(file_path, "w") as f:
+        yaml.dump(agent_spec, f, sort_keys=False)
+
+    click.echo(f"\nAgent YAML saved to {file_path}")
+
+@agent.command("list")
+@click.argument("path", required=False, default=".")
+def list_agents(path):
+    """
+    List all agent YAML files in a directory.
+
+    Example:
+      agentify agents list ./examples/agents
+    """
+    p = Path(path)
+    if not p.is_dir():
+        raise click.BadParameter(f"{path} is not a directory")
+
+    specs = load_agent_specs(p)
+    if not specs:
+        click.echo("No agent YAML files found.")
+        return
+
+    click.echo(f"Found {len(specs)} agent(s) in {path}:")
+    for s in specs:
+        name = s.get("name", "Unnamed")
+        desc = s.get("description", "")
+        provider = s.get("model","").get("provider")
+        model = s.get("model","").get("id")
+        click.echo(f"{name:<20} {provider:<20} {model:<20} {desc}")
+
+
+
+@agent.command("show")
+@click.argument("agent_file", required=True)
+def show_agent(agent_file):
+    """
+    Show details of a single agent YAML file.
+
+    Example:
+      agentify agents show ./examples/agents/agent1.yaml
+    """
+    p = Path(agent_file)
+    if not p.is_file():
+        raise click.BadParameter(f"{agent_file} is not a valid file")
+
+    with open(p, "r") as f:
+        spec = yaml.safe_load(f)
+
+    # Pretty print key fields
+    click.echo(f"Name       : {spec.get('name', 'Unnamed')}")
+    click.echo(f"Description: {spec.get('description', '')}")
+    click.echo(f"Version    : {spec.get('version', 'N/A')}")
+    click.echo(f"Role       : {spec.get('role', '').strip()}")
+    model = spec.get("model", {})
+    click.echo(f"Model      : {model.get('id', 'N/A')} ({model.get('provider', '')})")
+
+
+
 
 # -----------------------------
 # Server configuration
 # -----------------------------
-@main.group()
+@main.group(hidden=True)
 def server():
     """Manage default runtime server configuration"""
     pass
@@ -122,7 +270,7 @@ def server_show():
     else:
         click.echo("No server configured.")
 
-@main.group()
+@main.group(hidden=True)
 def config():
     """View or manage Agentify configuration"""
     pass
@@ -143,7 +291,7 @@ def config_show():
 # -----------------------------
 # Runtime server commands
 # -----------------------------
-@main.group()
+@main.group(hidden=True)
 def runtime():
     """Manage agents on a remote runtime server"""
     pass

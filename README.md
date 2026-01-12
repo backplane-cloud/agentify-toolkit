@@ -1,62 +1,77 @@
-# Agent Building Toolkit - Agentify 🤖
+# 📦 Agentify - Declarative AI Agent Toolkit
 
 [![PyPI](https://img.shields.io/pypi/v/agentify)](https://pypi.org/project/agentify-toolkit/)
 [![Python Version](https://img.shields.io/pypi/pyversions/agentify)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/backplane-cloud/agentify-toolkit/blob/main/examples/notebooks/Agentify_Developer_Quickstart.ipynb)
 
-> Agentify is a lightweight, declarative-first Library for building **AI agents** in Python
+**Build and experiment with AI agents using simple declarative specs.**
 
-## KeyFeatures
+Agentify is a lightweight, declarative-first toolkit for prototyping AI agents. It lets you define agents as YAML specs and test them rapidly from the CLI or Python, without committing to a framework or model provider.
 
-- Declarative agent definitions via YAML.
-- Multi-LLM support: OpenAI, Anthropic, and more.
-- Interactive CLI with TUI menu for exploring agents.
-- Programmatic agent creation and execution for custom workflows.
-- Lightweight, minimal dependencies: Click + Rich + PyYAML.
+> Use YAML for declarative specs, or Python for full control - both use the same agent model.
 
-## 🚀 Getting Started
+> Note: Agentify is not a workflow orchestrator, runtime platform, or production framework. It’s for rapid Agent building, experimentation and prototyping.
 
-Prefer a hands-on walkthrough?
+## Why Agentify ?
 
-- 📘 [Agentify Developer Quickstart (Jupyter)](examples/notebooks/Agentify_Developer_Quickstart.ipynb)
-- 📄 [Agentify YAML Deep Dive](examples/notebooks/Agentify_YAML_Deep_Dive.ipynb)
+Most agent frameworks optimise for running agents - orchestration, routing, retries, supervision, cloud execution.
 
-## How it works
+But before production comes a more important phase:
+**figuring out what the agent should even do.**
 
-Define your agents in simple YAML files or programmatically, and run them using an interactive CLI. Agentify abstracts LLM provider integrations and provides a simplified developer experience.
+Agentify optimises for that phase.
 
-## Installation
+### Designed For:
+
+✔ Rapid agent prototyping & ideation
+
+✔ Teams exploring internal AI use cases
+
+✔ Startups validating agent product ideas
+
+✔ Teaching & education (low cognitive overhead)
+
+✔ Provider portability (no early lock-in)
+
+## Quickstart
+
+### 1. Install
 
 ```bash
 pip install agentify-toolkit
 ```
 
-Or install from source:
+### 2. Add an LLM Provider Key
 
 ```bash
-git clone https://github.com/backplane-software/agentify.git
-cd agentify
-pip install .
+# anthropic | openai | xai | google | bedrock
+agentify providers add <provider>
 ```
 
-## Quick Start
-
-> Note: To use Agentify you will require an API KEY from your AI Model Provider.
-
-To add the API KEY to your environment:
-
-```bash
-agentify providers add <provider> # e.g. anthropic, xai, google, openai
-```
-
-Then, you can validate:
+Verify:
 
 ```bash
 agentify providers list
 ```
 
-### 1. Create an agent YAML
+Example Output:
+
+```bash
+ anthropic
+  env: ANTHROPIC_API_KEY
+  status: READY
+```
+
+### 3. Create an Agent (YAML)
+
+Via CLI:
+
+```bash
+agentify agent add
+```
+
+Or manually create `agent.yaml`:
 
 ```yaml
 name: claude
@@ -71,80 +86,138 @@ role: |
   Provide concise, practical answers with examples.
 ```
 
-### 2 .Run a single agent
+### 4. Run the Agent
 
 ```bash
-agentify run examples/agent.yaml
+agentify run agent.yaml
 ```
 
-> **Overriding Model** - you can pass a provider and model parameter to override the provider and model in the YAML file
+**You’ve just built your first AI agent with Agentify!**
+
+> 💡 Tip: Running multiple agents
+
+If you have multiple agents, put them in a single folder and run `agentify run <foldername>`. Agentify will provide an interactive menu so you can choose which agent you want to experiment with.
+
+> 💡 Tip: Overriding the model
+
+If you want to experiment with a different model, simply add `--provider=openai model=gpt-5-nano` to your call. Ensure you have registered the appropriate provider API key.
 
 ```bash
-agentify run examples/agent.yaml --provider=openai --model=gpt-5-nano
+agentify run agent.yaml --provider=openai --model=gpt-5-nano
 ```
 
-### 3. Run agents interactively from a folder
+## Core Ideas
+
+### 1. Declarative Agents (YAML-first)
+
+Agents become artifacts:
+
+- version controlled
+- diffable
+- shareable
+- auditable
+
+### 2. Provider Abstraction Without Lock-in
+
+Most ecosystems ask:
+
+> “Am I building on OpenAI, Anthropic, Bedrock, XAI, or Google?”
+
+Agentify flips it:
+
+> “The agent spec stays the same - only the provider changes.”
+
+### 3. CLI-first Exploration
+
+CLI interaction is fast, ergonomic, and repeatable:
 
 ```bash
-agentify run examples/agents
+agentify run agent.yaml
 ```
 
-### 4. List agents interactively
+### 4. Agent = Single File
 
-```bash
-agentify list agents
-```
+Agents collapse to a spec, not a codebase
+
+### Key Features
+
+- Declarative agent definitions via YAML
+
+- Multi-provider LLM support (OpenAI, Anthropic, XAI, Gemini, Bedrock)
+
+- Interactive CLI and TUI for exploring agents
+
+- Programmatic API for custom workflows
+
+- Lightweight: Click + Rich + PyYAML
+
+### Documentation & Notebooks
+
+Prefer a guided walkthrough?
+
+- Developer Quickstart (Notebook)
+  `examples/notebooks/Agentify_Developer_Quickstart.ipynb`
+
+- YAML Deep Dive
+  `examples/notebooks/Agentify_YAML_Deep_Dive.ipynb`
 
 ## Programmatic Usage
-
-Install agentify with `pip install agentify` and then import.
 
 ```python
 from agentify import Agent
 
-def main():
+agent = Agent(
+    name="Grok",
+    description="X's Grok Agent",
+    provider="x",
+    model_id="grok-4",
+    role="You are an AI Security Architect specialising in X AI Grok models"
+)
 
-    agent = Agent(
-        name="Grok",
-        description="X's Grok Agent",
-        provider="x",
-        model_id="grok-4",
-        role="You are an AI Security Architect specialising in X AI Grok models"
-    )
-
-    response = agent.run("Which AI LLM is the best in 1 sentence ?")
-    print(response)
-
-if __name__ == "__main__":
-    main()
+response = agent.run("Which AI LLM is the best in 1 sentence?")
+print(response)
 ```
 
-## CLI Reference
+### CLI Reference
 
-| Command                        | Example                     |
-| ------------------------------ | --------------------------- |
-| Run agent from YAML            | `agentify run <agent.yaml>` |
-| Run all YAML Agents in folder  | `agentify run <folder>`     |
-| List all YAML Agents in folder | `agentify list <folder>`    |
+| Action                    | Command                      |
+| ------------------------- | ---------------------------- |
+| Run from YAML             | `agentify run agent.yaml`    |
+| Run folder of agents      | `agentify run agents/`       |
+| List agents interactively | `agentify list agents`       |
+| Add a provider API key    | `agentify providers add <p>` |
+| List provider credentials | `agentify providers list`    |
 
-## Adding LLM API Keys
+## Supported Providers & Keys
 
-To use the LLM Model providers, you will need an API key and they will need to be made available in your environment.
+| Provider   | Env Var                           |
+| ---------- | --------------------------------- |
+| OpenAI     | `export OPENAI_API_KEY=...`       |
+| Anthropic  | `export ANTHROPIC_API_KEY=...`    |
+| Gemini     | `export GEMINI_API_KEY=...`       |
+| XAI (Grok) | `export XAI_API_KEY=...`          |
+| Bedrock    | `export AWS_BEARER_TOKEN_BEDROCK` |
 
-Implemented providers:
+Windows:
 
-| Provider  | Instruction                                    |
-| --------- | ---------------------------------------------- |
-| OpenAI    | `export OPENAI_API_KEY="your_api_key_here"`    |
-| Anthropic | `export ANTHROPIC_API_KEY="your_api_key_here"` |
-| Gemini    | `export GEMINI_API_KEY="your_api_key_here"`    |
-| GROK      | `export XAI_API_KEY="your_api_key_here"`       |
-| Bedrock   | `export AWS_BEARER_TOKEN_BEDROCK`              |
+```powershell
+$env:OPENAI_API_KEY="..."
+```
 
-> For Windows:
-> $env:<Provider\>\_API_KEY="YOUR_API_KEY"
+Installation from PyPI:
+
+```bash
+pip install agentify-toolkit
+```
+
+From source:
+
+```bash
+git clone https://github.com/backplane-cloud/agentify-toolkit.git
+cd agentify-toolkit
+pip install .
+```
 
 ## License
 
-Agentify is licensed under the Apache License, Version 2.0.
-See LICENSE for details.
+Apache 2.0 - see LICENSE

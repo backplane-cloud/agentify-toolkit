@@ -1,5 +1,5 @@
 # web.py
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
@@ -48,7 +48,25 @@ async def ask_agent(question: str = Form(...)):
     """
     return HTMLResponse(content=html)
 
-def run_web_ui(agent, host="127.0.0.1", port=8001):
+@app.post("/prompt")
+async def prompt_agent(request: Request ):
+    agent = app.state.agent
+
+    # Parse JSON body
+    body = await request.json()
+    question = body.get("question", "")
+    
+    
+    prompt = f"Answer with this role:{agent.role} the question: {question}"
+
+    try:
+        answer = agent.run(prompt)
+    except Exception:
+        answer = "Agent is currently busy. Please try again in a few seconds."
+
+    return {"answer": answer}
+
+def serve_agent(agent, host="127.0.0.1", port=None):
     """
     Run the web UI with the given agent.
     Stores the agent in app.state and starts uvicorn.
@@ -57,4 +75,7 @@ def run_web_ui(agent, host="127.0.0.1", port=8001):
     app.state.agent_name = agent.name
     app.state.provider = agent.provider
     app.state.model_id = agent.model_id
+
+    if port is None:
+        port = 8001
     uvicorn.run(app, host=host, port=port)

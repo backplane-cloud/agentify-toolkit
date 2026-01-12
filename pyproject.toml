@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agentify_toolkit"
-version = "0.1.2"
-description = "Declarative AI toolkit"
+version = "0.7.0"
+description = "Python Toolkit for Declarative AI Agent Development"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -28,10 +28,9 @@ dependencies = [
   "boto3>=1.34",
   "xai_sdk>=1.5.0",
   "google-genai>=0.8",
-  "fastapi>=0.105",
+  "fastapi>=0.128.0,<1.0.0",
   "uvicorn>=0.26",
   "python-multipart>=0.0.6"
-
 ]
 
 
