@@ -19,7 +19,11 @@ from .server import serve_agent
 @click.group()
 @click.version_option(version=__version__, prog_name="Agentify")
 def main():
-    """Agentify - Declarative AI Agents and Runtime Management"""
+    """
+    Agentify Toolkit: Build, Prototype, and Experiment with AI Agents
+    
+    Use Agentify to define agents in YAML and execute them locally, interactively or within a simple runtime server.
+    """
     pass
 
 # -----------------------------
@@ -32,11 +36,10 @@ def main():
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
 def run(path, provider, model, server):
     """
-    Run an agent YAML file or a folder containing agent YAMLs.
+    Run an agent from a YAML file or directory.
 
-    PATH can be:
-      - A single YAML file → runs that agent directly
-      - A folder containing YAML files → presents a menu to select an agent
+    - Single: `agentify run agent.yaml`
+    - Folder: shows interactive agent picker
     """
     # Determine target path
     agent_path = path or "./agents"
@@ -76,7 +79,7 @@ def run(path, provider, model, server):
 @click.option("--port", type=int, help="Set server port e.g. 8001")
 def serve(path, port):
     """
-    Serve an agent locally via a web UI and HTTP API.
+    Server Agent on Local HTTP API Server
 
     This launches a FastAPI server that exposes the agent over:
     - Web UI at    http://127.0.0.1:<port>
@@ -149,7 +152,7 @@ def server_show():
     else:
         click.echo("No server configured.")
 
-@main.group()
+@main.group(hidden=True)
 def config():
     """View or manage Agentify configuration"""
     pass

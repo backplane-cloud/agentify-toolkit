@@ -32,7 +32,7 @@ source .venv/bin/activate
 ```bash
 pip install
     --index-url https://test.pypi.org/simple
-    --extra-index-url https://pypi.org/simple/ agentify-toolkit==0.2.1
+    --extra-index-url https://pypi.org/simple/ agentify-toolkit
 ```
 
 #### Verify agentify-toolkit is running from virtual environment
