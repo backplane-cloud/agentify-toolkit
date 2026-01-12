@@ -20,9 +20,9 @@ from .server import serve_agent
 @click.version_option(version=__version__, prog_name="Agentify")
 def main():
     """
-    Agentify: Declarative AI Agent Toolkit for Build & Experimentation
+    Agentify: A Developer Toolkit for Declarative AI Agents
 
-    Use Agentify to define agents in YAML and execute them locally, interactively or within a simple runtime server.
+    Use '--help' with any command for more details.
     """
     pass
 
@@ -129,11 +129,11 @@ def list(path):
     agent.chat()
 
 @main.group()
-def agents():
+def agent():
     """Manage and inspect AI agent YAML files."""
     pass
 
-@agents.command("add")
+@agent.command("add")
 @click.argument("folder", required=False)
 def create_agent_cli(folder):
     """
@@ -192,7 +192,7 @@ def create_agent_cli(folder):
 
     click.echo(f"\nAgent YAML saved to {file_path}")
 
-@agents.command("list")
+@agent.command("list")
 @click.argument("path", required=False, default=".")
 def list_agents(path):
     """
@@ -220,7 +220,7 @@ def list_agents(path):
 
 
 
-@agents.command("show")
+@agent.command("show")
 @click.argument("agent_file", required=True)
 def show_agent(agent_file):
     """

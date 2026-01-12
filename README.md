@@ -65,6 +65,14 @@ Example Output:
 
 ### 3. Create an Agent (YAML)
 
+Via CLI:
+
+```bash
+agentify agent add
+```
+
+Or manually create `agent.yaml`:
+
 ```yaml
 name: claude
 description: AI Engineer
