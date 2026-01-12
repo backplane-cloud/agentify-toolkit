@@ -9,7 +9,7 @@ from .agentify import Agent
 from .agents import create_agent, create_agents
 from .specs import load_agent_specs
 from .cli_ui import show_agent_menu
-from .web import run_web_ui
+from .server import serve_agent
 
 __all__ = [
     "Agent",
@@ -17,7 +17,7 @@ __all__ = [
     "create_agent",
     "create_agents",
     "show_agent_menu"
-    "run_web_ui"
+    "serve_agent"
 ]
 
 import os

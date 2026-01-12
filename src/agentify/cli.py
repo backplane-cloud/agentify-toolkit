@@ -14,7 +14,7 @@ from .cli_ui import show_agent_menu
 from .cli_config import set_server, get_server, add_provider, remove_provider, list_providers
 from .runtime_client import list_agents, upload_agent, delete_agent
 
-from .web import run_web_ui
+from .server import serve_agent
 
 @click.group()
 @click.version_option(version=__version__, prog_name="Agentify")
@@ -30,9 +30,7 @@ def main():
 @click.option("--model", type=str, help="Override the model ID at runtime")
 @click.option("--provider", type=str, help="Override the LLM provider at runtime")
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
-@click.option("--web", is_flag=True, help="Run agent with web UI")
-@click.option("--port", type=int, help="Set server port")
-def run(path, provider, model, server, web, port):
+def run(path, provider, model, server):
     """
     Run an agent YAML file or a folder containing agent YAMLs.
 
@@ -61,10 +59,7 @@ def run(path, provider, model, server, web, port):
 
         agent = create_agent(spec, provider=provider, model=model)
 
-        if web:
-            run_web_ui(agent, port=port)
-        else:
-            agent.chat()
+        agent.chat()
 
     elif path.is_dir():
         # Multi-agent mode
@@ -74,6 +69,35 @@ def run(path, provider, model, server, web, port):
         agent.chat()
     else:
         raise click.BadParameter(f"Path does not exist: {path}")
+
+
+@main.command()
+@click.argument("path")
+@click.option("--port", type=int, help="Set server port e.g. 8001")
+def serve(path, port):
+    """
+    Serve an agent locally via a web UI and HTTP API.
+
+    This launches a FastAPI server that exposes the agent over:
+    - Web UI at    http://127.0.0.1:<port>
+    - REST API at  /ask  /prompt  /info
+
+    If --port is not provided, the default port is 8001.
+
+    Examples:
+    agentify serve agent.yaml
+    agentify serve agent.yaml --port 8080
+
+    """
+    p = Path(path)
+    if not p.is_file():
+        raise click.BadParameter(f"{path} is not a valid agent file")
+
+    with open(p, "r") as f:
+        spec = yaml.safe_load(f)
+
+    agent = create_agent(spec)
+    serve_agent(agent, port=port)
 
 
 # -----------------------------
@@ -105,7 +129,7 @@ def list(path):
 # -----------------------------
 # Server configuration
 # -----------------------------
-@main.group()
+@main.group(hidden=True)
 def server():
     """Manage default runtime server configuration"""
     pass
@@ -146,7 +170,7 @@ def config_show():
 # -----------------------------
 # Runtime server commands
 # -----------------------------
-@main.group()
+@main.group(hidden=True)
 def runtime():
     """Manage agents on a remote runtime server"""
     pass

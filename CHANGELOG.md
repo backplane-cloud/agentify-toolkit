@@ -5,7 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.4.3-alpha.1] - 2026-01-010
+## [0.5.0] - 2026-01-12
+
+### Added
+
+- Added `agentify serve agent.yaml --port=8001` to replace `agentify run agent.yaml --web` keeps agentify run clean
+
+---
+
+## [0.4.3-alpha.1] - 2026-01-10
 
 ### Added
 
@@ -13,7 +21,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.4.2] - 2026-01-010
+## [0.4.2] - 2026-01-10
 
 ### Added
 
@@ -21,7 +29,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.3.2] - 2026-01-010
+## [0.3.2] - 2026-01-10
 
 ### Added
 
