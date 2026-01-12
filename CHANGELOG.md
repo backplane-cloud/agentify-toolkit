@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.7.0] - 2026-01-12
+
+### Added
+
+- Added `agentify agents add` sub-command to interactively create an agent
+
+---
+
 ## [0.6.0] - 2026-01-12
 
 ### Added

@@ -133,6 +133,65 @@ def agents():
     """Manage and inspect AI agent YAML files."""
     pass
 
+@agents.command("add")
+@click.argument("folder", required=False)
+def create_agent_cli(folder):
+    """
+    Interactively create a new agent YAML file.
+
+    Prompts for name, description, version, provider, model, role, and API key env.
+    The file will be saved as <name>.yaml in the specified folder.
+    """
+    click.echo("Creating a new agent YAML...\n")
+
+    # Prompt for basic info
+    name = click.prompt("Agent Name")
+    description = click.prompt("Description", default="")
+    version = click.prompt("Version", default="0.1.0")
+    
+    # Model/provider info
+    provider = click.prompt("Provider (e.g., openai, anthropic)")
+    model_id = click.prompt("Model ID")
+    api_key_env = click.prompt("API key environment variable name", default=f"{provider.upper()}_API_KEY")
+    
+    # Role
+    click.echo("Define the agent's role. Use multiple lines if needed. End with Ctrl+D (Linux/macOS) or Ctrl+Z (Windows) and Enter.")
+    role_lines = []
+    while True:
+        try:
+            line = input()
+        except EOFError:
+            break
+        role_lines.append(line)
+    role = "\n".join(role_lines).strip()
+
+    # Build agent spec
+    agent_spec = {
+        "name": name,
+        "description": description,
+        "version": version,
+        "model": {
+            "provider": provider,
+            "id": model_id,
+            "api_key_env": api_key_env
+        },
+        "role": role
+    }
+
+    # Ensure folder exists
+    folder_path = Path(folder or ".")
+    folder_path.mkdir(parents=True, exist_ok=True)
+
+    # Sanitize filename
+    filename = f"{name}.yaml"
+    file_path = folder_path / filename
+
+    # Save YAML
+    with open(file_path, "w") as f:
+        yaml.dump(agent_spec, f, sort_keys=False)
+
+    click.echo(f"\nAgent YAML saved to {file_path}")
+
 @agents.command("list")
 @click.argument("path", required=False, default=".")
 def list_agents(path):
