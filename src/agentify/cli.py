@@ -493,11 +493,11 @@ def config_show():
 
 
 @main.group()
-def providers():
+def provider():
     """Add/Remote AI Provider API Keys"""
     pass
 
-@providers.command("add")
+@provider.command("add")
 @click.argument("provider")
 @click.option("--env", "env_var", help="Environment variable name")
 @click.option("--key", help="API key (optional, will prompt if omitted)")
@@ -519,7 +519,7 @@ def providers_add(provider, env_var, key):
     click.echo("To apply in your current shell, run:\n")
     click.echo(f"export {env_var}={key}")
 
-@providers.command("list")
+@provider.command("list")
 def providers_list():
     """List configured providers with their current status"""
 
@@ -552,7 +552,7 @@ def providers_list():
 
 
 
-@providers.command("remove")
+@provider.command("remove")
 @click.argument("provider")
 def providers_remove(provider):
     """Remove a configured providers"""
