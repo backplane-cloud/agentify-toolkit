@@ -10,14 +10,17 @@ from .agents import create_agent, create_agents
 from .specs import load_agent_specs
 from .cli_ui import show_agent_menu
 from .server import serve_agent
+from .runtime import start_runtime, deploy_agents
 
 __all__ = [
     "Agent",
     "load_agent_specs",
     "create_agent",
     "create_agents",
-    "show_agent_menu"
-    "serve_agent"
+    "show_agent_menu",
+    "serve_agent",
+    "start_runtime", 
+    "deploy_agents"
 ]
 
 import os

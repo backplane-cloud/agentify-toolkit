@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.8.0] - 2026-01-13
+
+### Agentify Deploy and Runtime commands to host single and mutli agents on a single endpoint
+
+- Added `agentify runtime start` this creates an Agent Runtime on http://127.0.0.1:8001 for deploying agents to
+- Added `agentify deploy agent.yaml` and `agentify deploy examples/agents` which loads a single agents or directory of agents
+- Added `agentify runtime invoke agent_name --prompt "my prompt"` to speak to any agent
+- Added `agentify runtime list` to view all running agents available on HTTP endpoint /agents/agent_name
+- Added `agentify runtime terminate agent_name` to remove or unload the agent.
+
+---
+
 ## [0.7.0] - 2026-01-12
 
 ### Added

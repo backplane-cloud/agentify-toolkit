@@ -1,6 +1,6 @@
 # Copyright 2026 Backplane Software
 # Licensed under the Apache License, Version 2.0
-
+import requests
 import click
 from pathlib import Path
 import yaml
@@ -12,9 +12,10 @@ from .agents import create_agent, create_agents
 
 from .cli_ui import show_agent_menu
 from .cli_config import set_server, get_server, add_provider, remove_provider, list_providers
-from .runtime_client import list_agents, upload_agent, delete_agent
+# from .runtime_client import list_agents, upload_agent, delete_agent
 
 from .server import serve_agent
+from .runtime import start_runtime, deploy_agents
 
 @click.group()
 @click.version_option(version=__version__, prog_name="Agentify")
@@ -101,6 +102,209 @@ def serve(path, port):
 
     agent = create_agent(spec)
     serve_agent(agent, port=port)
+
+
+# -----------------------------
+# Agent Runtime
+# -----------------------------
+@main.group()
+def runtime():
+    """Start Agent Runtime for Hosting Agents"""
+    pass
+
+import requests
+import click
+from .cli_config import get_server
+
+# Ensure you already have the runtime group
+@main.group()
+def runtime():
+    """Start Agent Runtime for Hosting Agents"""
+    pass
+
+@runtime.command("terminate")
+@click.argument("agent_name", type=str)
+@click.option("--server", default="http://127.0.0.1:8001", help="Runtime server URL")
+def undeploy(agent_name, server):
+    """
+    Terminate an agent from the running Agentify Runtime.
+    
+    Example:
+      agentify runtime terminate my-agent
+    """
+    try:
+        resp = requests.delete(f"{server}/agents/{agent_name}/terminate")
+        print(f"{server}/agents/{agent_name}/terminate")
+        resp.raise_for_status()
+        result = resp.json()
+        
+        if result.get("success"):
+            click.echo(f"✓ Undeployed agent: {agent_name}")
+        else:
+            click.echo(f"✗ Failed to undeploy: {result.get('error', 'Unknown error')}")
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            click.echo(f"✗ Agent '{agent_name}' not found in runtime")
+        else:
+            click.echo(f"✗ Failed to contact runtime server: {e}")
+    except Exception as e:
+        click.echo(f"✗ Failed to contact runtime server at {server}: {e}")
+
+@runtime.command("list")
+@click.option("--server", default="http://127.0.0.1:8001", help="Runtime server URL")
+def runtime_list(server):
+
+    """List all agents loaded in the runtime server"""
+    url = server or get_server()
+
+    if not url:
+        click.echo("No server configured. Use 'agentify server set <url>'")
+        return
+
+    try:
+        resp = requests.get(f"{url}/agents")
+    except Exception as e:
+        click.echo(f"Failed to contact runtime server at {url}: {e}")
+        return
+
+    if resp.status_code != 200:
+        click.echo(f"Runtime error: {resp.status_code} {resp.text}")
+        return
+
+    agents = resp.json().get("agents", [])
+    if not agents:
+        click.echo("No agents loaded on the runtime server.")
+        return
+
+    # Print table
+    click.echo(f"{'NAME':20} {'MODEL':15} {'PROVIDER':15} {'DESCRIPTION'}")
+    click.echo("-" * 70)
+    for a in agents:
+        click.echo(
+            f"{a['name']:<20} {str(a.get('model','')):<15} {str(a.get('provider','')):<15} {a.get('description','')}"
+        )
+
+
+@runtime.command("invoke")
+@click.argument("agent_name")
+@click.option("--prompt", "-p", default=None, help="Prompt text for single request")
+@click.option("--server", default=None, help="Override runtime server URL")
+def runtime_invoke(agent_name, prompt, server):
+    """
+    Invoke a deployed agent on the runtime server.
+
+    - Interactive REPL mode if --prompt is not provided
+    - Single-shot mode if --prompt="..."
+    
+    Examples:
+      agentify runtime invoke my_agent
+      agentify runtime invoke my_agent --prompt "Hello!"
+    """
+
+    url = server or get_server() or "http://127.0.0.1:8001"
+    agent_endpoint = f"{url}/agents/{agent_name}/prompt"
+
+    if prompt:
+        # Single-shot mode
+        try:
+            resp = requests.post(agent_endpoint, json={"question": prompt})
+            resp.raise_for_status()
+            answer = resp.json().get("answer")
+            click.echo(f"{agent_name}: {answer}")
+        except Exception as e:
+            click.echo(f"Failed to invoke agent {agent_name}: {e}")
+        return
+
+    # Interactive REPL mode
+    click.echo(f"Interactive session with agent '{agent_name}'. Type 'exit' or Ctrl+C to quit.")
+    while True:
+        try:
+            question = click.prompt("You")
+            if question.lower() in ("exit", "quit"):
+                break
+
+            resp = requests.post(agent_endpoint, json={"question": question})
+            resp.raise_for_status()
+            answer = resp.json().get("answer")
+            click.echo(f"{agent_name}: {answer}")
+
+        except KeyboardInterrupt:
+            click.echo("\nExiting interactive session.")
+            break
+        except Exception as e:
+            click.echo(f"Error: {e}")
+
+
+@runtime.command()
+@click.option("--port", type=int, help="Set server port e.g. 8001")
+def start(port):
+    """
+    Start Agent Runtime 
+    """
+    start_runtime(port=port)
+
+
+# -----------------------------
+# DEPLOY
+# -----------------------------
+@main.command()
+@click.argument("paths", type=str)
+@click.option("--server", default="http://127.0.0.1:8001", help="Runtime server URL")
+def deploy(paths, server):
+    """
+    Deploy one or more agents to a running Agentify Runtime.
+
+    Examples:
+      agentify deploy agent.yaml
+      agentify deploy examples/agents/
+      agentify deploy examples/agents/agent1.yaml,agent2.yaml
+    """
+
+    # Split comma-separated paths (allow single file/folder too)
+    raw_paths = [p.strip() for p in paths.split(",") if p.strip()]
+    if not raw_paths:
+        click.echo("Please provide at least one file or folder path.")
+        return
+
+    yaml_files = []
+
+    # Iterate over paths, expand folders into YAML files
+    for path_str in raw_paths:
+        p = Path(path_str)
+        if p.is_file() and p.suffix in (".yaml", ".yml"):
+            yaml_files.append(p)
+        elif p.is_dir():
+            yaml_files.extend(__builtins__['list'](p.glob("*.yaml")) + __builtins__['list'](p.glob("*.yml")))
+        else:
+            click.echo(f"Skipping invalid path: {p}")
+
+    if not yaml_files:
+        click.echo("No YAML agent files found.")
+        return
+
+    # Transform YAML files to JSON specs
+    agent_specs = []
+    for file in yaml_files:
+        try:
+            with open(file, "r") as f:
+                agent_specs.append(yaml.safe_load(f))
+        except Exception as e:
+            click.echo(f"Failed to load {file}: {e}")
+
+    if not agent_specs:
+        click.echo("No valid agent specs found.")
+        return
+
+    # Send to runtime server
+    try:
+        resp = requests.post(f"{server}/agents/add", json={"agents": agent_specs})
+        resp.raise_for_status()
+    except Exception as e:
+        click.echo(f"Failed to contact runtime server at {server}: {e}")
+        return
+
+    loaded = resp.json().get("loaded", [])
+    click.echo(f"✓ Deployed {len(loaded)} agent(s): {', '.join(loaded)}")
 
 
 # -----------------------------
@@ -287,77 +491,6 @@ def config_show():
 
     click.echo(json.dumps(config_data, indent=4))
 
-
-# -----------------------------
-# Runtime server commands
-# -----------------------------
-@main.group(hidden=True)
-def runtime():
-    """Manage agents on a remote runtime server"""
-    pass
-
-@runtime.command("list")
-@click.option("--server", default=None, help="Override default server URL")
-def show_server_agents(server):
-    """List agents running on the runtime server"""
-    url = server or get_server()
-    if not url:
-        click.echo("No server configured. Use 'agentify server set <url>'")
-        return
-
-    agents = list_agents(url)
-    click.echo(f"{'NAME':20} {'STATUS':10} {'PROVIDER':10} {'MODEL'}")
-    for a in agents:
-        click.echo(f"{a['name']:20} {a['status']:10} {a['provider']:10} {a['model']}")
-
-@runtime.command("show")
-@click.argument("agent_name")
-@click.option("--server", default=None, help="Override default server URL")
-def runtime_show(agent_name, server):
-    """Show details of a specific agent on the runtime server"""
-    url = server or get_server()
-    if not url:
-        click.echo("No server configured. Use 'agentify server set <url>'")
-        return
-
-    agent = list_agents(url, filter_name=agent_name)  # or implement get_agent_details(agent_name)
-    if not agent:
-        click.echo(f"Agent not found: {agent_name}")
-        return
-
-    # Print detailed info
-    for a in agent:
-        click.echo(f"Name: {a['name']}")
-        click.echo(f"Status: {a['status']}")
-        click.echo(f"Provider: {a['provider']}")
-        click.echo(f"Model: {a['model']}")
-        click.echo(f"Version: {a.get('version', 'N/A')}")
-        click.echo("-" * 40)
-
-@runtime.command("load")
-@click.argument("path")
-@click.option("--server", default=None, help="Override default server URL")
-def upload(path, server):
-    """Upload an agent YAML file to the runtime server"""
-    url = server or get_server()
-    if not url:
-        click.echo("No server configured. Use 'agentify server set <url>'")
-        return
-    resp = upload_agent(url, path)
-    click.echo(f"Uploaded {path} -> {url}: {resp}")
-
-
-@runtime.command("delete")
-@click.argument("agent_name")
-@click.option("--server", default=None, help="Override default server URL")
-def delete(agent_name, server):
-    """Delete an agent from the runtime server"""
-    url = server or get_server()
-    if not url:
-        click.echo("No server configured. Use 'agentify server set <url>'")
-        return
-    resp = delete_agent(url, agent_name)
-    click.echo(f"Deleted {agent_name} from {url}: {resp}")
 
 @main.group()
 def providers():

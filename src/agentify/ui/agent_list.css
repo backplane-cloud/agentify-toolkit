@@ -1,0 +1,140 @@
+/* Global typography update */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  color: #23292f;
+  background: #f7f9fc;
+  line-height: 1.45;
+  padding: 32px;
+}
+
+/* Header block */
+.page-header {
+  margin-bottom: 28px;
+}
+
+.ph-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1b1f24;
+  letter-spacing: -0.2px;
+  margin-bottom: 6px;
+}
+
+.ph-subtitle {
+  font-size: 14px;
+  color: #57606a;
+}
+
+/* Agent list container */
+.agent-list {
+  margin-top: 12px;
+  border: 1px solid #e0e4e8;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(10, 12, 15, 0.04);
+}
+
+/* Rows */
+.agent-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 14px 18px;
+  border-top: 1px solid #e6e8eb;
+  gap: 12px;
+  transition: background 0.12s ease;
+}
+
+.agent-row:first-child {
+  border-top: none;
+}
+
+.agent-row:hover {
+  background: #f9fafb;
+}
+
+/* Main agent info */
+.agent-main {
+  flex: 1;
+}
+
+.agent-name {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+
+.agent-desc {
+  font-size: 13px;
+  color: #6a737d;
+  margin-bottom: 6px;
+}
+
+.agent-meta {
+  font-size: 12px;
+  color: #6a737d;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.agent-meta code {
+  font-family: ui-monospace, monospace;
+  background: #f1f3f5;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 11px;
+}
+
+/* Right side actions */
+.agent-side {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Status badges */
+.status-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+.status-running {
+  background: #d1f2d3;
+  color: #1f6f20;
+}
+
+.status-stopped {
+  background: #f5d5d3;
+  color: #7c2e2a;
+}
+
+/* Action buttons */
+.agent-action {
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid #d0d7de;
+  border-radius: 6px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.1s ease, border-color 0.1s ease;
+}
+
+.agent-action:hover {
+  background: #eef1f4;
+}
+
+.agent-action.danger {
+  border-color: #dc3545;
+  color: #dc3545;
+}
+
+.agent-action.danger:hover {
+  background: #f8e7e9;
+}

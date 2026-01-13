@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agentify Runtime</title>
+    <link rel="stylesheet" href="/ui/agent_list.css" />
+    <script src="/ui/htmx.min.js"></script>
+  </head>
+
+  <body>
+    <div id="agent-container">
+      <header class="page-header">
+        <div class="ph-title">Agent Runtime</div>
+        <div class="ph-subtitle">
+          Manage deployed AI agents and monitor their status.
+        </div>
+      </header>
+
+      <div id="agent-list" class="agent-list">{{AGENT_CARDS}}</div>
+    </div>
+  </body>
+</html>

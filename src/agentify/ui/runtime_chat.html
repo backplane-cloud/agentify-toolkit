@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat with {{AGENT_NAME}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <script src="/ui/htmx.min.js"></script>
+    <link rel="stylesheet" href="/ui/chat.css" />
+  </head>
+  <body>
+    <div id="chat-container">
+      <!-- Header with back button -->
+      <div class="chat-header-wrapper">
+        <a href="/" class="back-button" title="Back to agents">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+        </a>
+        <div>
+          <h2 id="chat-header">{{AGENT_NAME}}</h2>
+          <div class="tagline">
+            <span class="badge">{{AGENT_PROVIDER}}</span>
+            <span class="badge">{{AGENT_MODEL_ID}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat messages -->
+      <div id="chat"></div>
+
+      <!-- Input form -->
+      <form
+        id="chat-form"
+        hx-post="ask"
+        hx-target="#chat"
+        hx-swap="beforeend"
+        method="post"
+      >
+        <div class="input-wrapper">
+          <input
+            id="question-input"
+            type="text"
+            name="question"
+            placeholder="Ask your agent..."
+            required
+            autocomplete="off"
+          />
+          <button type="submit" class="send-button">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+            </svg>
+            <span>Send</span>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      const form = document.getElementById("chat-form");
+      const input = document.getElementById("question-input");
+      const chat = document.getElementById("chat");
+
+      // Format timestamp as HH:MM
+      function getTimestamp() {
+        const now = new Date();
+        return (
+          now.getHours().toString().padStart(2, "0") +
+          ":" +
+          now.getMinutes().toString().padStart(2, "0")
+        );
+      }
+
+      // Create message bubble
+      function createMessage(text, type) {
+        const bubble = document.createElement("div");
+        bubble.className = `message ${type}`;
+
+        const content = document.createElement("div");
+        content.className = "message-content";
+        content.textContent = text;
+
+        const timestamp = document.createElement("div");
+        timestamp.className = "timestamp";
+        timestamp.textContent = getTimestamp();
+
+        bubble.appendChild(content);
+        bubble.appendChild(timestamp);
+
+        return bubble;
+      }
+
+      // Create typing indicator
+      function createTypingIndicator() {
+        const bubble = document.createElement("div");
+        bubble.className = "message agent typing";
+        bubble.innerHTML = `
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            `;
+        return bubble;
+      }
+
+      // Before HTMX request
+      form.addEventListener("htmx:beforeRequest", (evt) => {
+        const userMessage = input.value.trim();
+        if (!userMessage) return;
+
+        // Add user message
+        const userBubble = createMessage(userMessage, "user");
+        chat.appendChild(userBubble);
+
+        // Clear input
+        input.value = "";
+
+        // Add typing indicator
+        const typingBubble = createTypingIndicator();
+        chat.appendChild(typingBubble);
+
+        // Scroll to bottom with smooth animation
+        setTimeout(() => {
+          chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+        }, 100);
+      });
+
+      // After HTMX swaps new content
+      document.body.addEventListener("htmx:afterSwap", (evt) => {
+        // Remove typing indicator
+        const typing = chat.querySelector(".message.typing");
+        if (typing) typing.remove();
+
+        // Add timestamp to last message
+        const lastMessage = chat.lastElementChild;
+        if (lastMessage && !lastMessage.querySelector(".timestamp")) {
+          const timestamp = document.createElement("div");
+          timestamp.className = "timestamp";
+          timestamp.textContent = getTimestamp();
+          lastMessage.appendChild(timestamp);
+        }
+
+        // Smooth scroll to bottom
+        setTimeout(() => {
+          chat.scrollTo({ top: chat.scrollHeight, behavior: "smooth" });
+        }, 100);
+      });
+
+      // Auto-focus input on load
+      window.addEventListener("load", () => {
+        input.focus();
+      });
+
+      // Handle enter key
+      input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          form.requestSubmit();
+        }
+      });
+    </script>
+  </body>
+</html>
