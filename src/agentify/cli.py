@@ -21,7 +21,13 @@ from .runtime import start_runtime, deploy_agents
 @click.version_option(version=__version__, prog_name="Agentify")
 def main():
     """
-    Agentify: A Developer Toolkit for Declarative AI Agents
+    Agentify: A Developer Toolkit for Building Declarative AI Agents
+
+    Common commands:
+    
+    agentify agent create
+
+    agentify run myagent.yaml 
 
     Use '--help' with any command for more details.
     """
@@ -305,32 +311,6 @@ def deploy(paths, server):
 
     loaded = resp.json().get("loaded", [])
     click.echo(f"✓ Deployed {len(loaded)} agent(s): {', '.join(loaded)}")
-
-
-# -----------------------------
-# List local agents (interactive)
-# -----------------------------
-@main.command()
-@click.argument("path", required=False)
-def list(path):
-    """
-    List agents in a folder and select one to run in chat mode
-    """
-    agent_path = path or "./agents"
-    path = Path(agent_path)
-    click.echo(f"Listing agents from: {path}")
-
-    if not path.is_dir():
-        raise click.BadParameter(f"Path is not a directory: {path}")
-
-    specs = load_agent_specs(path)
-    if not specs:
-        click.echo("No agent YAML files found.")
-        return
-
-    agents = create_agents(specs)
-    agent = show_agent_menu(agents)
-    agent.chat()
 
 @main.group()
 def agent():
