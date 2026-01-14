@@ -30,6 +30,15 @@ pip install agentify-toolkit
 agentify provider add <provider>
 ```
 
+For instructions on how to obtain an Model API key:
+
+| Provider  | Model  | Link                                               |
+| --------- | ------ | -------------------------------------------------- |
+| OpenAI    | GPT-4  | [How to obtain an OpenAI API Key](openai.md)       |
+| Google    | Gemini | [How to obtain an Google API Key](google.md)       |
+| Anthropic | Claude | [How to obtain an Anthropic API Key](anthropic.md) |
+| XAI       | Grok   | [How to obtain an XAI API Key](xai.md)             |
+
 Verify:
 
 ```bash
