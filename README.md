@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/backplane-cloud/agentify-toolkit/blob/main/examples/notebooks/Agentify_Developer_Quickstart.ipynb)
 
-![Agentify Toolkit Logo](agentify-logo.png)
+![Agentify Toolkit Logo](agentify-logo-lg.png)
 
 **Build and experiment with AI agents using simple declarative specs.**
 
