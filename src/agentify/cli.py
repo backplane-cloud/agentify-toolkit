@@ -548,7 +548,7 @@ def providers_list():
             loaded = click.style("READY", fg="green")  # green for ready
         else:
             loaded = click.style(
-                f"MISSING - run command: agentify providers add {name}", fg="yellow"
+                f"MISSING - run command: agentify provider add {name}", fg="yellow"
             )  # yellow for not set
 
         click.echo(f"• {name}")
