@@ -91,11 +91,11 @@ role: |
 agentify run agent.yaml
 ```
 
-** You've just built your first AI Agent with Agentify! **
+**You've just built your first AI Agent with Agentify!**
 
 #### TIPS
 
-** Running multiple agents **
+**Running multiple agents**
 
 If you have multipel agents, put them in a single folder and run:
 
@@ -105,7 +105,7 @@ agentify run <folder_name>
 
 Agentify will provide an interactive menu to choose which agent to run.
 
-** Overriding the model **
+**Overriding the model**
 
 Experiment with a different model using:
 
