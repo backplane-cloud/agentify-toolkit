@@ -2,7 +2,7 @@
 
 This quickstart will get you up and running with Agentify-Toolkit.
 
-In this Quick start you will:
+In this quickstart you will:
 
 1. Install the Agentify-Toolkit
 2. Add Model Provider API Keys
