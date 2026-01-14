@@ -134,19 +134,20 @@ agentify runtime start
 
 #### Deploy Agents
 
-````bash
+```bash
 
 # Single Agent
 agentify deploy agent.yaml
 
 # Multiple agents from folder
 agentify deploy examples/agents
+```
 
 #### List Deployed Agents
 
-```bash
+```
 agentify runtime list
-````
+```
 
 #### Invoke an Agent
 
