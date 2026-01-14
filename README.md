@@ -15,6 +15,8 @@ Agentify is a lightweight, declarative-first toolkit for prototyping AI agents. 
 
 ## Quickstart
 
+For a more detailed step-by-step [Quickstart](QUICKSTART.md).
+
 ### 1. Install the Agentify-Toolkit
 
 ```bash
@@ -157,15 +159,15 @@ response = agent.run("Which AI LLM is the best in 1 sentence?")
 print(response)
 ```
 
-### CLI Reference
+### Quick CLI Reference
 
-| Action                    | Command                      |
-| ------------------------- | ---------------------------- |
-| Run from YAML             | `agentify run agent.yaml`    |
-| Run folder of agents      | `agentify run agents/`       |
-| List agents interactively | `agentify list agents`       |
-| Add a provider API key    | `agentify providers add <p>` |
-| List provider credentials | `agentify providers list`    |
+| Action                    | Command                               |
+| ------------------------- | ------------------------------------- |
+| Run from YAML             | `agentify run agent.yaml`             |
+| Run folder of agents      | `agentify run agents/`                |
+| List agents interactively | `agentify agent list [<folder_name>]` |
+| Add a provider API key    | `agentify provider add <p>`           |
+| List provider credentials | `agentify provider list`              |
 
 ## Supported Providers & Keys
 
