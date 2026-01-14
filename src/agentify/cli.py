@@ -145,9 +145,9 @@ def undeploy(agent_name, server):
         result = resp.json()
         
         if result.get("success"):
-            click.echo(f"✓ Undeployed agent: {agent_name}")
+            click.echo(f"✓ Terminated agent: {agent_name}")
         else:
-            click.echo(f"✗ Failed to undeploy: {result.get('error', 'Unknown error')}")
+            click.echo(f"✗ Failed to terminate: {result.get('error', 'Unknown error')}")
     except requests.exceptions.HTTPError as e:
         if e.response.status_code == 404:
             click.echo(f"✗ Agent '{agent_name}' not found in runtime")
@@ -317,7 +317,7 @@ def agent():
     """Manage and inspect AI agent YAML files."""
     pass
 
-@agent.command("add")
+@agent.command("create")
 @click.argument("folder", required=False)
 def create_agent_cli(folder):
     """
@@ -334,12 +334,12 @@ def create_agent_cli(folder):
     version = click.prompt("Version", default="0.1.0")
     
     # Model/provider info
-    provider = click.prompt("Provider (e.g., openai, anthropic)")
+    provider = click.prompt("Provider (e.g., openai, anthropic, xai, google, bedrock)")
     model_id = click.prompt("Model ID")
     api_key_env = click.prompt("API key environment variable name", default=f"{provider.upper()}_API_KEY")
     
     # Role
-    click.echo("Define the agent's role. Use multiple lines if needed. End with Ctrl+D (Linux/macOS) or Ctrl+Z (Windows) and Enter.")
+    click.echo("Define the agent's role. Use multiple lines if needed. Enter + Ctrl+D (Linux/macOS) or Enter + Ctrl+Z (Windows)")
     role_lines = []
     while True:
         try:
@@ -395,6 +395,10 @@ def list_agents(path):
         return
 
     click.echo(f"Found {len(specs)} agent(s) in {path}:")
+
+       # Print table
+    click.echo(f"{'NAME':20} {'PROVIDER':20} {'MODEL':20} {'DESCRIPTION'}")
+    click.echo("-" * 80)
     for s in specs:
         name = s.get("name", "Unnamed")
         desc = s.get("description", "")
@@ -402,31 +406,52 @@ def list_agents(path):
         model = s.get("model","").get("id")
         click.echo(f"{name:<20} {provider:<20} {model:<20} {desc}")
 
+    click.echo(f"\nUse: agentify agent show <agent_name> for metadata")
+
 
 
 @agent.command("show")
-@click.argument("agent_file", required=True)
-def show_agent(agent_file):
+@click.argument("agent_name_or_file", required=True)
+def show_agent(agent_name_or_file):
     """
-    Show details of a single agent YAML file.
+    Show details of a single agent
 
-    Example:
-      agentify agents show ./examples/agents/agent1.yaml
+    Usage:
+
+      agentify agent show agent.yaml\n
+
+      agentify agent show <agent_name>
     """
-    p = Path(agent_file)
-    if not p.is_file():
-        raise click.BadParameter(f"{agent_file} is not a valid file")
 
-    with open(p, "r") as f:
+    p = Path(agent_name_or_file)
+
+    # If user passed bare name (no extension), add ".yaml"
+    if p.suffix == "":
+        p = p.with_suffix(".yaml")
+
+    # Optional: if the file isn't found locally, look in ./agents or ./examples
+    search_paths = [Path("."), Path("./agents"), Path("./examples/agents")]
+
+    resolved = None
+    for base in search_paths:
+        candidate = base / p
+        if candidate.is_file():
+            resolved = candidate
+            break
+
+    if not resolved:
+        raise click.BadParameter(f"Agent file '{p}' not found in: {', '.join(str(sp) for sp in search_paths)}")
+
+    with open(resolved, "r") as f:
         spec = yaml.safe_load(f)
 
-    # Pretty print key fields
     click.echo(f"Name       : {spec.get('name', 'Unnamed')}")
     click.echo(f"Description: {spec.get('description', '')}")
     click.echo(f"Version    : {spec.get('version', 'N/A')}")
     click.echo(f"Role       : {spec.get('role', '').strip()}")
     model = spec.get("model", {})
     click.echo(f"Model      : {model.get('id', 'N/A')} ({model.get('provider', '')})")
+
 
 
 
@@ -474,7 +499,7 @@ def config_show():
 
 @main.group()
 def provider():
-    """Add/Remote AI Provider API Keys"""
+    """Add/Remove Model Providers"""
     pass
 
 @provider.command("add")

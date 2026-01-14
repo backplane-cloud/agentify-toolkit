@@ -204,10 +204,18 @@ Windows:
 $env:OPENAI_API_KEY="..."
 ```
 
-Installation from PyPI:
+## Installation
+
+Install from PyPI:
 
 ```bash
 pip install agentify-toolkit
+```
+
+Or install directly from GitHub Release:
+
+```bash
+pip install https://github.com/backplane-cloud/agentify-toolkit/releases/download/v0.8.0/agentify_toolkit-0.8.0-py3-none-any.whl
 ```
 
 From source:
