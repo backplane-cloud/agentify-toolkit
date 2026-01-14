@@ -15,39 +15,18 @@ Agentify is a lightweight, declarative-first toolkit for prototyping AI agents. 
 
 > Note: Agentify is not a workflow orchestrator, runtime platform, or production framework. It’s for rapid Agent building, experimentation and prototyping.
 
-## Why Agentify ?
-
-Most agent frameworks optimise for running agents - orchestration, routing, retries, supervision, cloud execution.
-
-But before production comes a more important phase:
-**figuring out what the agent should even do.**
-
-Agentify optimises for that phase.
-
-### Designed For:
-
-✔ Rapid agent prototyping & ideation
-
-✔ Teams exploring internal AI use cases
-
-✔ Startups validating agent product ideas
-
-✔ Teaching & education (low cognitive overhead)
-
-✔ Provider portability (no early lock-in)
-
 ## Quickstart
 
-### 1. Install
+### 1. Install Agentify-Toolkit
 
 ```bash
 pip install agentify-toolkit
 ```
 
-### 2. Add an LLM Provider Key
+### 2. Add an Model Provider API KEY
 
 ```bash
-# anthropic | openai | xai | google | bedrock
+# e.g. anthropic | openai | xai | google | bedrock
 agentify providers add <provider>
 ```
 
@@ -65,12 +44,12 @@ Example Output:
   status: READY
 ```
 
-### 3. Create an Agent (YAML)
+### 3. Create an Agent
 
 Via CLI:
 
 ```bash
-agentify agent add
+agentify agent create
 ```
 
 Or manually create `agent.yaml`:
