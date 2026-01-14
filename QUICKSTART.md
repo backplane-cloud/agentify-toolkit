@@ -93,11 +93,11 @@ agentify run agent.yaml
 
 **You've just built your first AI Agent with Agentify!**
 
-#### TIPS
+### TIPS:
 
 **Running multiple agents**
 
-If you have multipel agents, put them in a single folder and run:
+If you have multiple agents, put them in a single folder and run:
 
 ```bash
 agentify run <folder_name>
