@@ -74,6 +74,8 @@ An Agent Runtime acts as a deploy target for agents for CLI, Web and Programmati
 | `agentify runtime terminate` | <agent_name> |                       | Terminate an agent                                        |
 | `agentify runtime invoke `   | <agent_name> | `--prompt "a prompt"` | Delete an agent from the runtime server.                  |
 
+> Note: You must ensure that the API keys for your model providers have been loaded into the environment before starting the Agent Runtime server. Use `agentify provider list` to double-check and `agentify provider add <provider_name>`
+
 <!-- ## Config
 
 | Command                             | Arguments / Options | Description                                                         |
