@@ -1,6 +1,6 @@
 # 📦 Agentify - Declarative AI Agent Toolkit
 
-[![PyPI](https://img.shields.io/pypi/v/agentify)](https://pypi.org/project/agentify-toolkit/)
+[![PyPI](https://img.shields.io/pypi/v/agentify-toolkit)](https://pypi.org/project/agentify-toolkit/)
 [![Python Version](https://img.shields.io/pypi/pyversions/agentify)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/backplane-cloud/agentify-toolkit/blob/main/examples/notebooks/Agentify_Developer_Quickstart.ipynb)
