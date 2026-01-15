@@ -1,6 +1,6 @@
 from anthropic import Anthropic
 
-def run_anthropic(model_id: str, user_prompt: str) -> str:
+def run_anthropic(model_id: str, user_prompt: str, config: dict = None) -> str:
     client = Anthropic()  
     message = client.messages.create(
         model= model_id,
