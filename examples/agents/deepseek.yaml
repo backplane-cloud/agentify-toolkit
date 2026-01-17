@@ -1,0 +1,10 @@
+name: deepseek
+description: AI Engineer
+version: 0.1.0
+model:
+  provider: deepseek
+  id: deepseek-chat
+  api_key_env: DEEPSEEK_API_KEY
+role: |
+  You are an AI Security Engineer.
+  Provide concise, practical answers with examples.
