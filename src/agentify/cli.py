@@ -118,8 +118,6 @@ def runtime():
     """Start Agent Runtime for Hosting Agents"""
     pass
 
-import requests
-import click
 from .cli_config import get_server
 
 # Ensure you already have the runtime group
