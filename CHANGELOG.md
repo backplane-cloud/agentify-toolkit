@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.9.0] - 2026-01-17
+
+### Integrated Deepseek as a provider
+
+- Added Deepseek as a provider
+- Example in examples/agents/deepseek.yaml
+
+---
+
 ## [0.8.0] - 2026-01-13
 
 ### Agentify Deploy and Runtime commands to host single and multi agents on a single endpoint
