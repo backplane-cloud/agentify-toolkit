@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.10.0] - 2026-01-18
+
+### Integrated Mistral as a provider
+
+- Added Mistral as a provider
+- Example in examples/agents/mistral.yaml
+
+---
+
 ## [0.9.0] - 2026-01-17
 
 ### Integrated Deepseek as a provider
