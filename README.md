@@ -9,6 +9,8 @@
 
 ![Agentify Toolkit Logo](https://raw.githubusercontent.com/backplane-cloud/agentify-toolkit/main/agentify-logo-lg.png)
 
+![agent](https://raw.githubusercontent.com/backplane-cloud/agentify-toolkit/main/agent.png)
+
 Agentify is a lightweight, declarative-first toolkit for prototyping AI agents. It lets you define agents as YAML specs and test them rapidly from the CLI or Python, without committing to a framework or model provider.
 
 > Note: Agentify is not a workflow orchestrator or production framework. It’s simply for agent building, experimentation and prototyping.
