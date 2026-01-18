@@ -8,7 +8,7 @@ Description: Agentify class to build multi-model AI Agents
 from dataclasses import dataclass, field
 from typing import Optional
 
-from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_x, run_deepseek
+from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_x, run_deepseek, run_mistral
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -41,6 +41,8 @@ class Agent:
                 return run_x(self.model_id, user_prompt)
             case "deepseek":
                 return run_deepseek(self.model_id, user_prompt)
+            case "mistral":
+                return run_mistral(self.model_id, user_prompt)
             case _:
                 raise ValueError(f"Unsupported provider: {self.provider}")
 
