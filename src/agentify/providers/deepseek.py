@@ -2,9 +2,9 @@
 import os
 from openai import OpenAI
 
-client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY'), base_url="https://api.deepseek.com/v1")
 
 def run_deepseek(model_id: str, user_prompt: str) -> str:
+    client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY'), base_url="https://api.deepseek.com/v1")
 
     response = client.chat.completions.create(
         model=model_id,

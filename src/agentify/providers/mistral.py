@@ -1,10 +1,10 @@
 import os
 from mistralai import Mistral
 
-api_key = os.environ["MISTRAL_API_KEY"]
+
 
 def run_mistral(model_id: str, user_prompt: str) -> str:
-    
+    api_key = os.environ["MISTRAL_API_KEY"]
     client = Mistral(api_key=api_key)
 
     response = client.chat.complete(
