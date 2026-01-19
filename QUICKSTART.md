@@ -17,38 +17,50 @@ For a full list of CLI commands refer to the [CLI Reference](CLI_REFERENCE.md)
 pip install agentify-toolkit
 ```
 
-### 2. Add a Model Provider API Key
+### 2. Add an Model Provider API KEY
+
+Copy the example environment file:
 
 ```bash
-# e.g. anthropic | openai | xai | google | bedrock
-agentify provider add <provider>
+cp .env.example .env
 ```
 
-> Note: you will need to copy and paste the export command provided into your terminal and press enter in order to persist the API Key as an environment variable.
+Open the `.env` and populate with your API keys:
+
+```bash
+# OpenAI
+OPENAI_API_KEY=your-openai-key
+
+# Anthropic
+ANTHROPIC_API_KEY=your-anthropic-key
+
+# DeepSeek
+DEEPSEEK_API_KEY=your-deepseek-key
+
+# Mistral AI
+MISTRAL_API_KEY=your-mistral-key
+
+# X AI
+XAI_API_KEY=your-xai-key
+
+# Google
+GOOGLE_API_KEY=your-google-key
+
+# AWS Bedrock
+BEDROCK_API_KEY=your-bedrock-key
+```
+
+All providers will automatically pick up the keys from `.env`.
 
 #### Getting API Keys
 
-To use Agentify, you need an API key from your chosen AI provider (e.g., Anthropic, OpenAI/XAI, Google, Amazon Bedrock).
+To use Agentify, you need an API key from your chosen AI provider (e.g., Anthropic, OpenAI/XAI, Google, Amazon Bedrock). Instructions can be found in the root of the repo \<MODEL PROVIDER\>.md
 
 **General guidance:**
 
 1. Visit your provider’s developer or API dashboard.
 2. Sign in or create an account if you don’t have one.
 3. Generate a new API key and copy it.
-
-Verify that your provider has been added:
-
-```bash
-agentify provider list
-```
-
-Example output:
-
-```bash
-anthropic
-  env: ANTHROPIC_API_KEY
-  status: READY
-```
 
 ### 3. Create an Agent
 

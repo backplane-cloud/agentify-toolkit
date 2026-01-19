@@ -27,10 +27,42 @@ pip install agentify-toolkit
 
 ### 2. Add an Model Provider API KEY
 
+Copy the example environment file:
+
 ```bash
-# e.g. anthropic | openai | xai | google | bedrock
-agentify provider add <provider>
+cp .env.example .env
 ```
+
+Open the `.env` and populate with your API keys:
+
+```bash
+# OpenAI
+OPENAI_API_KEY=your-openai-key
+
+# Anthropic
+ANTHROPIC_API_KEY=your-anthropic-key
+
+# DeepSeek
+DEEPSEEK_API_KEY=your-deepseek-key
+
+# Mistral AI
+MISTRAL_API_KEY=your-mistral-key
+
+# X AI
+XAI_API_KEY=your-xai-key
+
+# Google
+GOOGLE_API_KEY=your-google-key
+
+# AWS Bedrock
+BEDROCK_API_KEY=your-bedrock-key
+```
+
+All providers will automatically pick up the keys from `.env`.
+
+> Note: The old workflow using `agenitfy provider add <provider>` has been deprecated.
+> This command required you to manually paste your API keys and export them into your shell.
+> It added friction and was error-prone, especially for new contributors.
 
 For instructions on how to obtain an Model API key:
 
