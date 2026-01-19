@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.11.0] - 2026-01-18
+
+### Added python-dotenv for better developer experience with environment variables
+
+- Added `.env.examples`
+- Providers retrieve API KEYS from dotenv as standard pattern
+
+---
+
 ## [0.10.0] - 2026-01-18
 
 ### Integrated Mistral as a provider
