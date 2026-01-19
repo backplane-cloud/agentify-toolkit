@@ -495,7 +495,7 @@ def config_show():
     click.echo(json.dumps(config_data, indent=4))
 
 
-@main.group()
+@main.group(hidden=True)
 def provider():
     """Add/Remove Model Providers"""
     pass
