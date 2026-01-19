@@ -13,3 +13,8 @@ build/
 # Virtual environments
 venv/
 .env/
+.env
+.env.*
+
+# allow example template
+!.env.example
