@@ -25,53 +25,60 @@ For a more detailed step-by-step [Quickstart](QUICKSTART.md).
 pip install agentify-toolkit
 ```
 
-### 2. Add an Model Provider API KEY
+### 2. Configure Provider API Keys
 
-Copy the example environment file:
+You can configure provider keys either via the CLI or manually through `.env`.
+
+#### Option A - Using the CLI
+
+```bash
+agentify provider add <provider>
+```
+
+This updates (or creates) your `.env` file and stores the key for the selected provider.
+
+To list all configured providers:
+
+```bash
+agentify provider list
+```
+
+To remove a provider key:
+
+```bash
+agentify provider remove <provider>
+```
+
+#### Option B - Using a `.env` File
 
 ```bash
 cp .env.example .env
 ```
 
-Open the `.env` and populate with your API keys:
+Populate `.env `with your provider keys:
 
 ```bash
-# OpenAI
-OPENAI_API_KEY=your-openai-key
-
-# Anthropic
-ANTHROPIC_API_KEY=your-anthropic-key
-
-# DeepSeek
-DEEPSEEK_API_KEY=your-deepseek-key
-
-# Mistral AI
-MISTRAL_API_KEY=your-mistral-key
-
-# X AI
-XAI_API_KEY=your-xai-key
-
-# Google
-GOOGLE_API_KEY=your-google-key
-
-# AWS Bedrock
-BEDROCK_API_KEY=your-bedrock-key
+OPENAI_API_KEY=<your-openai-key>
+ANTHROPIC_API_KEY=<your-anthropic-key>
+XAI_API_KEY=<your-xai-key>
+GOOGLE_API_KEY=<your-google-key>
+BEDROCK_API_KEY=<your-bedrock-key>
+MISTRAL_API_KEY=<your-mistral-key>
+DEEPSEEK_API_KEY=<your-deepseek-key>
+OLLAMA_API_KEY=<your-deepseek-key>
 ```
 
-All providers will automatically pick up the keys from `.env`.
-
-> Note: The old workflow using `agenitfy provider add <provider>` has been deprecated.
-> This command required you to manually paste your API keys and export them into your shell.
-> It added friction and was error-prone, especially for new contributors.
+Any configured provider will be automatically detected at runtime.
 
 For instructions on how to obtain an Model API key:
 
-| Provider  | Model  | Link                                               |
-| --------- | ------ | -------------------------------------------------- |
-| OpenAI    | GPT-4  | [How to obtain an OpenAI API Key](OPENAI.md)       |
-| Google    | Gemini | [How to obtain an Google API Key](GOOGLE.md)       |
-| Anthropic | Claude | [How to obtain an Anthropic API Key](ANTHROPIC.md) |
-| XAI       | Grok   | [How to obtain an XAI API Key](XAI.md)             |
+| Provider   | Model   | Link                                               |
+| ---------- | ------- | -------------------------------------------------- |
+| OpenAI     | GPT-4   | [How to obtain an OpenAI API Key](OPENAI.md)       |
+| Google     | Gemini  | [How to obtain an Google API Key](GOOGLE.md)       |
+| Anthropic  | Claude  | [How to obtain an Anthropic API Key](ANTHROPIC.md) |
+| XAI        | Grok    | [How to obtain an XAI API Key](XAI.md)             |
+| Mistral AI | Mistral | [How to obtain an Mistra AI API Key](MISTRAL.md)   |
 
 Verify:
 
@@ -82,29 +89,37 @@ agentify provider list
 Example Output:
 
 ```bash
- anthropic
-  env: ANTHROPIC_API_KEY
-  status: READY
+Configured Providers:
+  ✓ openai     (sk-s****)
+  ✓ anthropic  (sk-a****)
+  ✓ deepseek   (sk-5****)
+  ✓ mistral    (XOsY****)
+  ✓ xai        (xai-****)
+  ✓ google     (AIza****)
+  ✓ bedrock    (ABSK****)
+  ✓ ollama     (4163****)
 ```
 
 ### 3. Create an Agent
 
-Via CLI:
+You can generate an agent spec via the CLI:
 
 ```bash
 agentify agent create
 ```
 
-Or manually create `agent.yaml`:
+Or define one manually by creating `agent.yaml`:
 
 ```yaml
 name: claude
 description: AI Engineer
 version: 0.1.0
+
 model:
   provider: anthropic
   id: claude-sonnet-4-5
   api_key_env: ANTHROPIC_API_KEY
+
 role: |
   You are an AI Security Engineer.
   Provide concise, practical answers with examples.
@@ -112,23 +127,33 @@ role: |
 
 ### 4. Run the Agent
 
+Run an agent directly from its YAML spec:
+
 ```bash
 agentify run agent.yaml
 ```
 
-**You’ve just built your first AI agent with Agentify!**
+You’ve just built and executed your first AI agent with Agentify.
 
-> 💡 Tip: Running multiple agents
+#### Running Multiple Agents
 
-If you have multiple agents, put them in a single folder and run `agentify run <foldername>`. Agentify will provide an interactive menu so you can choose which agent you want to experiment with.
+You’ve just built and executed your first AI agent with Agentify.
 
-> 💡 Tip: Overriding the model
+```bash
+agentify run examples/agents
+```
 
-If you want to experiment with a different model, simply add `--provider=openai model=gpt-5-nano` to your call. Ensure you have registered the appropriate provider API key.
+Agentify will present an interactive selector so you can choose which agent to execute.
+
+#### Overriding the Model at Runtime
+
+Models and providers can be swapped without editing the YAML. For example:
 
 ```bash
 agentify run agent.yaml --provider=openai --model=gpt-5-nano
 ```
+
+Using overrides is useful for experimentation or benchmarking. Ensure the required API key is configured.
 
 ## Core Ideas
 
