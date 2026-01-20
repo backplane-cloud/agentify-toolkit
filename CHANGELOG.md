@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.12.0] - 2026-01-20
+
+### Added support for Ollama Cloud and Ollama Local
+
+- Install Ollama models locally and run Ollama server
+- `agentify run examples/agents/ollama.yaml` and `ollama_local.yaml` examples
+
+---
+
 ## [0.11.0] - 2026-01-18
 
 ### Added python-dotenv for better developer experience with environment variables
