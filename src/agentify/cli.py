@@ -13,6 +13,7 @@ from .agents import create_agent, create_agents
 from .cli_ui import show_agent_menu
 from .cli_config import set_server, get_server, add_provider, remove_provider, list_providers
 # from .runtime_client import list_agents, upload_agent, delete_agent
+from agentify.utils.env_manager import set_provider_key, remove_provider, display_providers
 
 from .server import serve_agent
 from .runtime import start_runtime, deploy_agents
@@ -495,80 +496,29 @@ def config_show():
     click.echo(json.dumps(config_data, indent=4))
 
 
-@main.group(hidden=True)
+@main.group(hidden=False)
 def provider():
     """Add/Remove Model Providers"""
     pass
 
 @provider.command("add")
-@click.argument("provider")
-@click.option("--env", "env_var", help="Environment variable name")
-@click.option("--key", help="API key (optional, will prompt if omitted)")
-def providers_add(provider, env_var, key):
-    """Add an AI Provider and API KEY"""
-
-    provider = provider.lower()
-    env_var = env_var or f"{provider.upper()}_API_KEY"
-
-    if not key:
-        key = click.prompt(
-            f"Enter API key for {provider}",
-            hide_input=True,
-        )
-
-    add_provider(provider, env_var)
-
-    click.echo(f"✓ Provider '{provider}' added to local config\n")
-    click.echo("To apply in your current shell, run:\n")
-    click.echo(f"export {env_var}={key}")
+@click.argument("provider_name")
+def add_provider(provider_name):
+    """
+    Adds or updates provider API keys in .env
+    """
+    set_provider_key(provider_name)
 
 @provider.command("list")
-def providers_list():
-    """List configured providers with their current status"""
-
-    providers = list_providers()
-
-    if not providers:
-        click.echo("No providers configured.")
-        return
-
-    # click.echo("Configured providers:\n")
-    # for name, cfg in providers.items():
-    #     click.echo(f"• {name}")
-    #     click.echo(f"  env: {cfg['env']}\n")
-
-    click.echo("Configured providers:\n")
-    for name, cfg in providers.items():
-        env_var = cfg.get("env")
-    
-        # Check if the env var is present in the current shell
-        if env_var in os.environ and os.environ[env_var]:
-            loaded = click.style("READY", fg="green")  # green for ready
-        else:
-            loaded = click.style(
-                f"MISSING - run command: agentify provider add {name}", fg="yellow"
-            )  # yellow for not set
-
-        click.echo(f"• {name}")
-        click.echo(f"  env: {env_var}")
-        click.echo(f"  status: {loaded}\n")
-
+def list_provider():
+    display_providers()
 
 
 @provider.command("remove")
-@click.argument("provider")
-def providers_remove(provider):
-    """Remove a configured providers"""
-
-    env_var = remove_provider(provider)
-
-    if not env_var:
-        click.echo(f"Provider not found: {provider}")
-        return
-
-    click.echo(f"✓ Provider '{provider}' removed from config\n")
-    click.echo("To remove from your current shell, run:\n")
-    click.echo(f"unset {env_var}")
+@click.argument("provider_name")
+def remove_provider_cmd(provider_name):
+    remove_provider(provider_name)
+    
 
 
 if __name__ == "__main__":

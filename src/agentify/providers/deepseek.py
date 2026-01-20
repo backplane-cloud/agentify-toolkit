@@ -9,6 +9,8 @@ def run_deepseek(model_id: str, user_prompt: str) -> str:
         raise RuntimeError(
             "Missing DEEPSEEK_API_KEY environment variable. "
             "Please set it in your shell or in a .env file."
+            "Use Command: agentify provider add deepseek"
+
         )
     client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com/v1")
 

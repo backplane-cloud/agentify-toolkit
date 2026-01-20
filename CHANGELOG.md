@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.13.0] - 2026-01-20
+
+### Added
+
+- agentify provider add <provider_name>, remove, and list commands for managing API keys in .env
+- Simplifies key management by storing keys directly in .env, no manual editing required
+- Provides a beginner-friendly alternative to .env copy/edit workflows
+
+---
+
 ## [0.12.0] - 2026-01-20
 
 ### Added support for Ollama Cloud and Ollama Local
