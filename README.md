@@ -157,66 +157,12 @@ agentify run agent.yaml --provider=openai --model=gpt-5-nano
 
 Using overrides is useful for experimentation or benchmarking. Ensure the required API key is configured.
 
-## Core Ideas
-
-### 1. Declarative Agents (YAML-first)
-
-Agents become artifacts:
-
-- version controlled
-- diffable
-- shareable
-- auditable
-
-### 2. Provider Abstraction Without Lock-in
-
-Most ecosystems ask:
-
-> “Am I building on OpenAI, Anthropic, Bedrock, XAI, or Google?”
-
-Agentify flips it:
-
-> “The agent spec stays the same - only the provider changes.”
-
-### 3. CLI-first Exploration
-
-CLI interaction is fast, ergonomic, and repeatable:
-
-```bash
-agentify run agent.yaml
-```
-
-### 4. Agent = Single File
-
-Agents collapse to a spec, not a codebase
-
-### Key Features
-
-- Declarative agent definitions via YAML
-
-- Multi-provider LLM support (OpenAI, Anthropic, XAI, Gemini, Bedrock)
-
-- Interactive CLI and TUI for exploring agents
-
-- Programmatic API for custom workflows
-
-- Lightweight: Click + Rich + PyYAML
-
-### Documentation & Notebooks
-
-Prefer a guided walkthrough?
-
-- Developer Quickstart (Notebook)
-  `examples/notebooks/Agentify_Developer_Quickstart.ipynb`
-
-- YAML Deep Dive
-  `examples/notebooks/Agentify_YAML_Deep_Dive.ipynb`
-
 ## Programmatic Usage
 
 ```python
 from agentify import Agent
 
+# Create Agent
 agent = Agent(
     name="Grok",
     description="X's Grok Agent",
@@ -225,6 +171,7 @@ agent = Agent(
     role="You are an AI Security Architect specialising in X AI Grok models"
 )
 
+# Sent Prompt
 response = agent.run("Which AI LLM is the best in 1 sentence?")
 print(response)
 ```
@@ -234,7 +181,7 @@ print(response)
 | Action                    | Command                               |
 | ------------------------- | ------------------------------------- |
 | Run from YAML             | `agentify run agent.yaml`             |
-| Run folder of agents      | `agentify run agents/`                |
+| Run folder of agents      | `agentify run examples/agents`        |
 | List agents interactively | `agentify agent list [<folder_name>]` |
 | Add a provider API key    | `agentify provider add <p>`           |
 | List provider credentials | `agentify provider list`              |
@@ -261,12 +208,6 @@ Install from PyPI:
 
 ```bash
 pip install agentify-toolkit
-```
-
-Or install directly from GitHub Release:
-
-```bash
-pip install https://github.com/backplane-cloud/agentify-toolkit/releases/download/v0.8.0/agentify_toolkit-0.8.0-py3-none-any.whl
 ```
 
 From source:
