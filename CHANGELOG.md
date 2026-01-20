@@ -5,6 +5,14 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.13.1] - 2026-01-20
+
+### Added
+
+- fixed missing Ollama Cloud: `agentify provider add ollama`
+
+---
+
 ## [0.13.0] - 2026-01-20
 
 ### Added
