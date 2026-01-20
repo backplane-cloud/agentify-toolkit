@@ -72,13 +72,15 @@ Any configured provider will be automatically detected at runtime.
 
 For instructions on how to obtain an Model API key:
 
-| Provider   | Model   | Link                                               |
-| ---------- | ------- | -------------------------------------------------- |
-| OpenAI     | GPT-4   | [How to obtain an OpenAI API Key](OPENAI.md)       |
-| Google     | Gemini  | [How to obtain an Google API Key](GOOGLE.md)       |
-| Anthropic  | Claude  | [How to obtain an Anthropic API Key](ANTHROPIC.md) |
-| XAI        | Grok    | [How to obtain an XAI API Key](XAI.md)             |
-| Mistral AI | Mistral | [How to obtain an Mistra AI API Key](MISTRAL.md)   |
+| Provider   | Model               | Link                                                              |
+| ---------- | ------------------- | ----------------------------------------------------------------- |
+| OpenAI     | GPT-4               | [How to obtain an OpenAI API Key](docs/providers/OPENAI.md)       |
+| Google     | Gemini              | [How to obtain an Google API Key](docs/providers/GOOGLE.md)       |
+| Anthropic  | Claude              | [How to obtain an Anthropic API Key](docs/providers/ANTHROPIC.md) |
+| XAI        | Grok                | [How to obtain an XAI API Key](docs/providers/XAI.md)             |
+| Mistral AI | Mistral             | [How to obtain an Mistra AI API Key](docs/providers/MISTRAL.md)   |
+| Deepseek   | deepseek-chat       | [How to obtain an Deepseek API Key](docs/providers/DEEPSEEK.md)   |
+| Ollama     | evstral-small-2:24b | [How to obtain an Ollama Cloud API Key](docs/providers/OLLAMA.md) |
 
 Verify:
 
