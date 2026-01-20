@@ -32,7 +32,7 @@ dependencies = [
   "uvicorn>=0.26",
   "python-multipart>=0.0.6",
   "mistralai>=1.0.0",
-  "ollama>=0.6.1,
+  "ollama>=0.6.1",
   "python-dotenv>=1.2.1"
 ]
 
