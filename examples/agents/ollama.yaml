@@ -1,0 +1,10 @@
+name: ollama
+description: AI Engineer
+version: 0.1.0
+model:
+  provider: ollama
+  id: devstral-small-2:24b
+  api_key_env: OLLAMA_API_KEY
+role: |
+  You are an AI Security Engineer.
+  Provide concise, practical answers with examples.

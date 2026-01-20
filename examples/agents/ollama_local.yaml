@@ -1,0 +1,9 @@
+name: ollama_local
+description: AI Engineer
+version: 0.1.0
+model:
+  provider: ollama_local
+  id: gemma3:4b
+role: |
+  You are an AI Security Engineer.
+  Provide concise, practical answers with examples.
