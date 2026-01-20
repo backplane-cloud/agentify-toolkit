@@ -9,6 +9,7 @@ def run_anthropic(model_id: str, user_prompt: str) -> str:
         raise RuntimeError(
             "Missing ANTHROPIC_API_KEY environment variable. "
             "Please set it in your shell or in a .env file."
+            "Use Command: agentify provider add anthropic"
         )
     
     client = Anthropic(api_key=api_key) 

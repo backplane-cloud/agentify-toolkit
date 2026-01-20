@@ -9,6 +9,8 @@ def run_ollama(model_id: str, user_prompt: str) -> str:
         raise RuntimeError(
             "Missing OLLAMA_API_KEY environment variable. "
             "Please set it in your shell or in a .env file."
+            "Use Command: agentify provider add ollama"
+
         )
     
     client = Client(

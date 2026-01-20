@@ -10,6 +10,8 @@ def run_x(model_id: str, user_prompt: str) -> str:
         raise RuntimeError(
             "Missing XAI_API_KEY environment variable. "
             "Please set it in your shell or in a .env file."
+            "Use Command: agentify provider add xai"
+
         )
     
     client = Client(api_key=api_key)
