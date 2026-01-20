@@ -14,6 +14,7 @@ PROVIDER_ENV_MAP = {
     "xai": "XAI_API_KEY",
     "google": "GOOGLE_API_KEY",
     "bedrock": "BEDROCK_API_KEY",
+    "ollama": "OLLAMA_API_KEY",
 }
 
 def list_providers():
@@ -94,6 +95,7 @@ def load_or_create_env() -> list[str]:
             "XAI_API_KEY=",
             "GOOGLE_API_KEY=",
             "BEDROCK_API_KEY=",
+            "OLLAMA_API_KEY="
         ]
 
     # Write the new .env skeleton
