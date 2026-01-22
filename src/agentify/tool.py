@@ -29,6 +29,7 @@ class Action:
 class Tool:
     name: str
     description: str
+    vendor: str
     endpoint: str
     actions: dict = field(default_factory=dict)
     version: Optional[str] = field(default="0.0.0")

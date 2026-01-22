@@ -18,6 +18,7 @@ def create_tool(spec: dict) -> Tool:
     tool = Tool(
         name=spec["name"],
         description=spec.get("description", ""),
+        vendor=spec.get("vendor", ""),
         endpoint=spec.get("endpoint", ""),
         actions=actions,
         version=spec.get("version", "0.0.0")

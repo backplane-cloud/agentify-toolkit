@@ -7,7 +7,7 @@ import yaml
 import os
 
 from agentify import __version__
-from .specs import load_agent_specs, load_tool_specs
+from .specs import load_agent_specs, load_tool_spec, load_tool_specs
 from .agents import create_agent, create_agents
 from .tools import create_tool
 
@@ -23,15 +23,7 @@ from .runtime import start_runtime, deploy_agents
 @click.version_option(version=__version__, prog_name="Agentify")
 def main():
     """
-    Agentify: A Developer Toolkit for Building Declarative AI Agents
-
-    Common commands:
-    
-    agentify agent create
-
-    agentify run myagent.yaml 
-
-    Use '--help' with any command for more details.
+    Agentify Toolkit is a developer-focused platform for building, running, and managing AI agents declaratively.
     """
     pass
 
@@ -75,7 +67,7 @@ def run(path, provider, model, server):
         if agent.tool_names:
             for tool_name in agent.tool_names:
                 tool_path = f"examples/agents/tools/{tool_name}.yaml"
-                tool_spec = load_tool_specs(tool_path)
+                tool_spec = load_tool_spec(tool_path)
                 tool = create_tool(tool_spec)
                 agent.tools[tool.name] = tool
 
@@ -320,12 +312,125 @@ def deploy(paths, server):
     loaded = resp.json().get("loaded", [])
     click.echo(f"✓ Deployed {len(loaded)} agent(s): {', '.join(loaded)}")
 
+
+# -----------------------------
+# TOOL
+# -----------------------------
+
 @main.group()
-def agent():
-    """Manage and inspect AI agent YAML files."""
+def tool():
+    """Manage and inspect tool YAML files"""
     pass
 
-@agent.command("create")
+# Plural for tools list
+tool_alias = click.Group(
+    name="tools", 
+    commands=tool.commands, 
+    hidden=True
+)
+main.add_command(tool_alias)
+
+@tool.command("list")
+@click.argument("path", required=False, default=".")
+def list_tools(path):
+    """
+    List all tool YAML files in a directory.
+
+    Example:
+      agentify tool list ./examples/agents/tools
+    """
+    p = Path(path)
+    if not p.is_dir():
+        raise click.BadParameter(f"{path} is not a directory")
+
+    specs = load_tool_specs(p)
+    if not specs:
+        click.echo("No tool YAML files found.")
+        return
+
+    click.echo(f"Found {len(specs)} tool(s) in {path}:")
+
+       # Print table
+    click.secho(f"{'NAME':15} {'DESCRIPTION':30} {'VENDOR':20} {'ENDPOINT'}", fg="cyan")
+    click.echo("-" * 80)
+    for s in specs:
+        name = s.get("name", "Unnamed")
+        description = s.get("description", "")
+        vendor = s.get("vendor","")
+        endpoint = s.get("endpoint","")
+        
+        click.echo(f"{name:<15} {description:<30} {vendor:<20} {endpoint}")
+
+    click.secho(f"\nUse: agentify tool show <tool_name> for metadata", fg="yellow")
+
+@tool.command("show")
+@click.argument("tool_name_or_file", required=True)
+def show_agent(tool_name_or_file):
+    """
+    Show details of a single tool
+
+    Usage:
+
+      agentify tool show tool.yaml\n
+
+      agentify tool show <tool_name>
+    """
+
+    p = Path(tool_name_or_file)
+
+    # If user passed bare name (no extension), add ".yaml"
+    if p.suffix == "":
+        p = p.with_suffix(".yaml")
+
+    # Optional: if the file isn't found locally, look in ./agents or ./examples
+    search_paths = [Path("."), Path("./tools"), Path("./examples/agents/tools")]
+
+    resolved = None
+    for base in search_paths:
+        candidate = base / p
+        if candidate.is_file():
+            resolved = candidate
+            break
+
+    if not resolved:
+        raise click.BadParameter(f"Tool file '{p}' not found in: {', '.join(str(sp) for sp in search_paths)}")
+
+    with open(resolved, "r") as f:
+        spec = yaml.safe_load(f)
+
+    click.echo(f"Name           : {spec.get('name', 'Unnamed')}")
+    click.echo(f"Version         : {spec.get('version', 'N/A')}")
+    click.echo(f"Description    : {spec.get('description', '')}")
+    click.echo(f"Vendor         : {spec.get('vendor', 'N/A')}")
+    click.echo(f"Endpoint       : {spec.get('endpoint', '')}")
+    actions = spec.get("actions", {})
+    click.echo(f"Actions:")
+    for name, action in actions.items():
+        method = action.get("method", "N/A")
+        path = action.get("path", "")
+        click.secho(f"  --> {name} [{method} {path}]", fg="red")
+
+
+# -----------------------------
+# AGENT
+# -----------------------------
+
+
+@main.group()
+def agent():
+    """Manage and inspect agent YAML files."""
+    pass
+
+# Plural for tools list
+agent_alias = click.Group(
+    name="agents", 
+    commands=agent.commands, 
+    hidden=True
+)
+main.add_command(agent_alias)
+
+
+@agent.command("new")
 @click.argument("folder", required=False)
 def create_agent_cli(folder):
     """
@@ -384,6 +489,15 @@ def create_agent_cli(folder):
 
     click.echo(f"\nAgent YAML saved to {file_path}")
 
+agent.add_command(create_agent_cli, name="create")
+create_alias = click.Command(
+    name="create",
+    callback=create_agent_cli,
+    hidden=True,
+    help=create_agent_cli.help,
+)
+agent.add_command(create_alias)
+
 @agent.command("list")
 @click.argument("path", required=False, default=".")
 def list_agents(path):
@@ -405,7 +519,7 @@ def list_agents(path):
     click.echo(f"Found {len(specs)} agent(s) in {path}:")
 
        # Print table
-    click.echo(f"{'NAME':20} {'PROVIDER':20} {'MODEL':20} {'DESCRIPTION'}")
+    click.secho(f"{'NAME':20} {'PROVIDER':20} {'MODEL':20} {'DESCRIPTION'}", fg="cyan")
     click.echo("-" * 80)
     for s in specs:
         name = s.get("name", "Unnamed")
@@ -414,7 +528,7 @@ def list_agents(path):
         model = s.get("model","").get("id")
         click.echo(f"{name:<20} {provider:<20} {model:<20} {desc}")
 
-    click.echo(f"\nUse: agentify agent show <agent_name> for metadata")
+    click.secho(f"\nUse: agentify agent show <agent_name> for metadata", fg="yellow")
 
 
 
