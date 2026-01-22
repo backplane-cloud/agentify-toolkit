@@ -1,15 +1,15 @@
 # Quickstart
 
-This quickstart will get you up and running with Agentify-Toolkit.
+This quickstart will get you up and running with Agentify Toolkit.
 
 In this quickstart you will:
 
-1. Install the Agentify-Toolkit
+1. Install the Agentify Toolkit
 2. Add Model Provider API Keys
 3. Create your Agent
 4. Run, Serve and Deploy the Agent
 
-For a full list of CLI commands refer to the [CLI Reference](CLI_REFERENCE.md)
+For a full list of CLI commands refer to the [CLI Reference](docs/CLI_REFERENCE.md)
 
 ### 1. Install the Agentify-Toolkit
 
@@ -67,8 +67,10 @@ To use Agentify, you need an API key from your chosen AI provider (e.g., Anthrop
 #### Option A: via CLI
 
 ```bash
-agentify agent create
+agentify agent new
 ```
+
+> Note: `new` is used in preference to `create`. `create` remains an alias.
 
 #### Interactive fields:
 
