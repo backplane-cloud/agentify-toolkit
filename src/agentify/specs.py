@@ -14,6 +14,19 @@ def load_agent_specs(agent_dir: Path | str = "agents") -> list[dict]:
             specs.append(spec)
     return specs
 
+def load_tool_specs(tool_path: Path | str) -> dict:
+    """
+    Load a single tool YAML file and return its spec as a dictionary.
+    """
+    tool_path = Path(tool_path)
+    with open(tool_path, "r") as f:
+        spec = yaml.safe_load(f)
+    
+    # optional metadata
+    spec["_file"] = tool_path.name
+    spec["_path"] = str(tool_path)
+    
+    return spec
 
 
 

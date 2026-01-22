@@ -6,21 +6,26 @@ Description: Lightweight Python toolkit to build multi-model AI agents.
 """
 
 from .agentify import Agent
+from .tool import Tool, Action
 from .agents import create_agent, create_agents
-from .specs import load_agent_specs
+from .tools import create_tool
+from .specs import load_agent_specs, load_tool_specs
 from .cli_ui import show_agent_menu
 from .server import serve_agent
 from .runtime import start_runtime, deploy_agents
 
 __all__ = [
     "Agent",
+    "Tool", 
+    "Action"
     "load_agent_specs",
     "create_agent",
     "create_agents",
     "show_agent_menu",
     "serve_agent",
     "start_runtime", 
-    "deploy_agents"
+    "deploy_agents",
+    "create_tool"
 ]
 
 import os

@@ -7,8 +7,9 @@ import yaml
 import os
 
 from agentify import __version__
-from .specs import load_agent_specs
+from .specs import load_agent_specs, load_tool_specs
 from .agents import create_agent, create_agents
+from .tools import create_tool
 
 from .cli_ui import show_agent_menu
 from .cli_config import set_server, get_server, add_provider, remove_provider, list_providers
@@ -69,6 +70,14 @@ def run(path, provider, model, server):
             spec = yaml.safe_load(f)
 
         agent = create_agent(spec, provider=provider, model=model)
+
+        # Load Tools into Agent if available
+        if agent.tool_names:
+            for tool_name in agent.tool_names:
+                tool_path = f"examples/agents/tools/{tool_name}.yaml"
+                tool_spec = load_tool_specs(tool_path)
+                tool = create_tool(tool_spec)
+                agent.tools[tool.name] = tool
 
         agent.chat()
 
@@ -450,6 +459,7 @@ def show_agent(agent_name_or_file):
     click.echo(f"Role       : {spec.get('role', '').strip()}")
     model = spec.get("model", {})
     click.echo(f"Model      : {model.get('id', 'N/A')} ({model.get('provider', '')})")
+    click.echo(f"Tools       : {spec.get('tools', '')}")
 
 
 

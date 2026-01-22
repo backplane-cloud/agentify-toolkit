@@ -28,6 +28,8 @@ def create_agent(spec: dict, provider: str = None, model: str = None) -> Agent:
     if api_key_env:
         api_key = os.getenv(api_key_env)
     
-    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version)
+    tool_names = spec.get("tools")
+
+    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names)
 
     return agent

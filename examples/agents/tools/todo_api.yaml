@@ -1,0 +1,21 @@
+name: todo_api
+version: "1.0.0"
+description: Manage users in the system
+endpoint: "https://jsonplaceholder.typicode.com/"
+
+actions:
+  list_todos:
+    method: GET
+    path: /todo
+    params:
+      query:
+        page: integer
+        limit: integer
+
+  create_todos:
+    method: POST
+    path: /todo
+    params:
+      body:
+        name: string
+        email: string
