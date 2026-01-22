@@ -84,6 +84,7 @@ Example: user_api.yaml
 name: user_api
 version: "1.0.0"
 description: Manage users in the system
+vendor: jsonplaceholder
 endpoint: "https://jsonplaceholder.typicode.com/"
 
 actions:
