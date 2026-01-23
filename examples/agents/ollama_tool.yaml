@@ -10,4 +10,5 @@ role: |
   Provide concise, practical answers with examples.
 tools:
   - user_api
-  - todo_api
+  - post_api
+  - random_user

@@ -1,21 +1,21 @@
-name: todo_api
+name: post_api
 version: "1.0.0"
-description: Manage users in the system
+description: Manage posts in the system
 vendor: jsonplaceholder
 endpoint: "https://jsonplaceholder.typicode.com/"
 
 actions:
-  list_todos:
+  list_posts:
     method: GET
-    path: /todo
+    path: /posts
     params:
       query:
         page: integer
         limit: integer
 
-  create_todos:
+  create_post:
     method: POST
-    path: /todo
+    path: /posts
     params:
       body:
         name: string
