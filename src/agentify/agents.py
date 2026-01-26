@@ -7,9 +7,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 import json
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.prompt import Prompt
+
 
 
 @dataclass
@@ -42,7 +40,7 @@ class Agent:
                 return run_google(self.model_id, user_prompt)
             case "bedrock":
                 return run_bedrock(self.model_id, user_prompt)
-            case "x":
+            case "xai":
                 return run_x(self.model_id, user_prompt)
             case "deepseek":
                 return run_deepseek(self.model_id, user_prompt)
@@ -58,6 +56,9 @@ class Agent:
 
 
     def chat(agent: "Agent"):
+        from rich.console import Console
+        from rich.panel import Panel
+        from rich.prompt import Prompt
         console = Console()
         
         # Print agent header
