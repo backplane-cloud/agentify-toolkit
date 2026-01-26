@@ -5,14 +5,14 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pathlib import Path
 import uvicorn
 
-from .agents import create_agent
+from ..agents import create_agent
 
 app = FastAPI()
 
 # global state container
 app.state.agents = {}  # name -> Agent instance
 
-ui_path = Path(__file__).parent / "ui"
+ui_path = Path(__file__).resolve().parents[1] / "ui"
 app.mount("/ui", StaticFiles(directory=ui_path), name="ui")
 
 @app.get("/", response_class=HTMLResponse)
@@ -20,7 +20,7 @@ async def home():
     """
     Home page - show list of available agents with links to their chat interfaces.
     """
-    HTML_PATH = Path(__file__).parent / "ui" / "agent_list.html"
+    HTML_PATH = Path(__file__).parent.parent / "ui" / "agent_list.html"
     
     with open(HTML_PATH, "r", encoding="utf-8") as f:
         html_content = f.read()
@@ -88,7 +88,7 @@ async def agent_chat_ui(agent_name: str):
             detail=f"Agent '{agent_name}' not found"
         )
     
-    HTML_PATH = Path(__file__).parent / "ui" / "runtime_chat.html"
+    HTML_PATH = Path(__file__).parent.parent / "ui" / "runtime_chat.html"
     with open(HTML_PATH, "r", encoding="utf-8") as f:
         html_content = f.read()
 
@@ -199,7 +199,12 @@ async def remove_agent(agent_name: str):
         status_code=404
     )
 
-
+@app.on_event("startup")
+async def startup_event():
+    print("\n" + "="*40)
+    print("Agentify Runtime Server is now running!")
+    print("Click or copy this link: http://127.0.0.1:8001")
+    print("="*40 + "\n")
 
 def start_runtime(port=None):
     """
