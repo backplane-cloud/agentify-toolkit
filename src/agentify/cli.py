@@ -3,11 +3,11 @@ from agentify import __version__
 from .commands import (
     run_command,
     serve_command,
+    deploy_command,
     runtime_group,
     tool_group,
     agent_group,
-    provider_group,
-    deploy_command
+    provider_group
 )
 
 @click.group()
