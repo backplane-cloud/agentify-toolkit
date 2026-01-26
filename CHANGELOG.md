@@ -18,6 +18,7 @@ tools:
 ```
 
 - The tools are loaded into the agent e.g. agent.tools.
+- Performance: lazy loading of Click CLI for instant CLI responsiveness
 
 ---
 
