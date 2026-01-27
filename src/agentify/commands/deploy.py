@@ -11,7 +11,7 @@ from pathlib import Path
 )
 def deploy_command(paths, server):
     """
-    Deploy one or more agent YAML files to a running Agentify Runtime.
+    Deploy agent YAML files to Agent Runtime server.
 
     Examples:
       agentify deploy agent.yaml

@@ -3,7 +3,7 @@ from pathlib import Path
 
 @click.group("tool")
 def tool_group():
-    """Manage and inspect tool YAML files"""
+    """List and Show tool YAML files"""
     pass
 
 
