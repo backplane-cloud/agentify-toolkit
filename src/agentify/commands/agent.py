@@ -52,6 +52,14 @@ def create_agent_cli(folder):
 
     click.echo(f"\nAgent YAML saved to {file_path}")
 
+agent_group.add_command(create_agent_cli, name="create")
+create_alias = click.Command(
+    name="create",
+    callback=create_agent_cli,
+    hidden=True,
+    help=create_agent_cli.help,
+)
+agent_group.add_command(create_alias)
 
 @agent_group.command("list")
 @click.argument("path", required=False, default=".")
