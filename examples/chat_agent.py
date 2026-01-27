@@ -38,7 +38,7 @@ def main():
         name="Grok", 
         version="0.1.0",
         description="X's Grok Agent",
-        provider="x", 
+        provider="xai", 
         model_id="grok-4", 
         role="You are an AI Security Architect specialising in X AI Grok models" 
     )

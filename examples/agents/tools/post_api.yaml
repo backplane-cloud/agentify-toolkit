@@ -1,0 +1,22 @@
+name: post_api
+version: "1.0.0"
+description: Manage posts in the system
+vendor: jsonplaceholder
+endpoint: "https://jsonplaceholder.typicode.com/"
+
+actions:
+  list_posts:
+    method: GET
+    path: /posts
+    params:
+      query:
+        page: integer
+        limit: integer
+
+  create_post:
+    method: POST
+    path: /posts
+    params:
+      body:
+        name: string
+        email: string

@@ -107,7 +107,7 @@ Configured Providers:
 You can generate an agent spec via the CLI:
 
 ```bash
-agentify agent create
+agentify agent new
 ```
 
 Or define one manually by creating `agent.yaml`:

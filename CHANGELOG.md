@@ -5,6 +5,23 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.14.0] - 2026-01-21
+
+### Added
+
+- Agent now supports tools:
+
+```bash
+tools:
+    - tool_1
+    - tool_2
+```
+
+- The tools are loaded into the agent e.g. agent.tools.
+- Performance: refactoring of cli.py to implement lazy loading to address CLI responsiveness
+
+---
+
 ## [0.13.1] - 2026-01-20
 
 ### Added
