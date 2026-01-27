@@ -18,9 +18,9 @@ class Agent:
     model_id: str
     role: str
     version: Optional[str] = field(default="0.0.0")
-    tool_names: list = field(default_factory=list) # From agent.yaml
-    tools: dict = field(default_factory=dict) # Tool Objects
-
+    tool_names: list = field(default_factory=list)
+    tools: dict = field(default_factory=dict)
+    conversation_history: list = field(default_factory=list)
 
     def get_model(self) -> str:
         return self.model_id
@@ -59,6 +59,7 @@ class Agent:
         from rich.console import Console
         from rich.panel import Panel
         from rich.prompt import Prompt
+
         console = Console()
         
         # Print agent header
@@ -69,9 +70,6 @@ class Agent:
             f"Tools: {agent.tool_names}",
             border_style="cyan"
         ))
-
-        # Initialize conversation history
-        conversation_history = []
 
         # Precompute tool schemas if any
         tool_schemas = [tool.to_schema() for tool in agent.tools.values()] if agent.tools else None
@@ -86,11 +84,11 @@ class Agent:
                 break
 
             # Add user input to conversation history
-            conversation_history.append({"role": "user", "content": prompt})
+            agent.conversation_history.append({"role": "user", "content": prompt})
 
             # Build full prompt from last N turns (e.g., last 6)
             full_prompt = f"You must assume the role of {agent.role} when responding to these prompts:\n\n"
-            for turn in conversation_history[-6:]:
+            for turn in agent.conversation_history[-6:]:
                 role = turn["role"]
                 content = turn["content"]
                 full_prompt += f"{role.upper()}: {content}\n"
@@ -136,7 +134,7 @@ class Agent:
                 tool_result_str = json.dumps(tool_result, separators=(',', ':'))
 
                 # Add tool output to conversation history
-                conversation_history.append({"role": "tool", "content": tool_result_str})
+                agent.conversation_history.append({"role": "tool", "content": tool_result_str})
 
                 # Ask model to display tool output naturally
                 analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
@@ -144,13 +142,13 @@ class Agent:
                     response = agent.run(analysis_prompt)
 
                 # Store agent response in history
-                conversation_history.append({"role": "agent", "content": response})
-
+                agent.conversation_history.append({"role": "agent", "content": response})
                 console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+
 
             except (json.JSONDecodeError, ValueError):
                 # Treat as normal chat response
-                conversation_history.append({"role": "agent", "content": response})
+                agent.conversation_history.append({"role": "agent", "content": response})
                 console.print(Panel.fit(response, title="Agent Response", border_style="green"))
 
 def create_agents(specs: list) -> dict[str, Agent]:
