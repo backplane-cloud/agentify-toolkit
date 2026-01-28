@@ -29,7 +29,7 @@ class Agent:
         return self.tools.keys()
     
     def run(self, user_prompt: str) -> str:
-        from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_ollama_stream
+        from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local
 
         match self.provider.lower():
             case "openai":
