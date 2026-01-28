@@ -29,7 +29,7 @@ class Agent:
         return self.tools.keys()
     
     def run(self, user_prompt: str) -> str:
-        from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_ollama_stream
+        from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_ollama_stream
 
         match self.provider.lower():
             case "openai":
@@ -39,7 +39,9 @@ class Agent:
             case "google":
                 return run_google(self.model_id, user_prompt)
             case "bedrock":
-                return run_bedrock(self.model_id, user_prompt)
+                return run_bedrock(self.model_id, user_prompt),
+            case "github":
+                return run_github(self.model_id, user_prompt)
             case "xai":
                 return run_x(self.model_id, user_prompt)
             case "deepseek":
