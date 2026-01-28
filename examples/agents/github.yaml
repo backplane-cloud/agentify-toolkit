@@ -1,0 +1,8 @@
+name: github
+description: This is an example Github Models agent
+version: 0.1.0
+model:
+  provider: github
+  id: openai/gpt-4
+  api_key_env: GITHUB_API_KEY
+role: you are a github expert

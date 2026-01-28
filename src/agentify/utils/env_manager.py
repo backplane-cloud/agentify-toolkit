@@ -14,6 +14,7 @@ PROVIDER_ENV_MAP = {
     "xai": "XAI_API_KEY",
     "google": "GOOGLE_API_KEY",
     "bedrock": "BEDROCK_API_KEY",
+    "github": "GITHUB_API_KEY",
     "ollama": "OLLAMA_API_KEY",
 }
 

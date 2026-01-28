@@ -25,35 +25,36 @@ def main():
     # )
 
     # Anthropic Claude Agent
-    # agent = Agent(
-    #     name="Anthropic", 
-    #     description="Anthropic's Claude Sonnet Agent",
-    #     provider="Anthropic", 
-    #     model_id="claude-sonnet-4-5", 
-    #     role="You are an AI Security Architect specialising in Anthropic's models" 
-    # )
+    agent = Agent(
+        name="Anthropic", 
+        description="Anthropic's Claude Sonnet Agent",
+        provider="Anthropic", 
+        model_id="claude-sonnet-4-5", 
+        role="You are an AI Security Architect specialising in Anthropic's models",
+        tool_names=["random_user"]
+    )
+
+    # Ollama Agent
+    agent = Agent(
+        name="Ollama", 
+        description="Ollama Agent",
+        provider="ollama", 
+        model_id="devstral-small-2:24b", 
+        role="You are an AI Security Architect specialising in Anthropic's models",
+        tool_names=["random_user"]
+    )
 
     # X's Grok Agent
     # agent = Agent(
-    #     name="Grok",
+    #     name="Grok", 
+    #     version="0.1.0",
     #     description="X's Grok Agent",
-    #     provider="x", 
+    #     provider="xai", 
     #     model_id="grok-4", 
-    #     role="You are an AI Security Architect specialising in X AI Grok models" 
+    #     role="You are an AI Security Architect specialising in X AI Grok models"
     # )
 
-    agent = Agent(
-        name="Github Models",
-        description="Github ModelAgent",
-        provider="github", 
-        model_id="microsoft/Phi-4", 
-        role="You are an AI Security Architect specialising in Microsoft Phi AI Model" 
-    )
-
-    response = agent.run("Which AI LLM is the best in 1 sentence ?")
-    print(response)
-
-
+    agent.chat()
     
 if __name__ == "__main__":
     main()
