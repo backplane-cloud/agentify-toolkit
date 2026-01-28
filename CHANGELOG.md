@@ -5,9 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.15.0] - 2026-01-28
+
+### New Feature / Github-Models
+
+- Integrated Github Models
+- Use github as a model (gateway) provider similar to Bedrock
+- `agentify provider add github` refer to [documentation](docs/providers/GITHUB.md)
+
+---
+
 ## [0.14.0] - 2026-01-21
 
-### Added
+### New Feature / Tools
 
 - Agent now supports tools:
 
