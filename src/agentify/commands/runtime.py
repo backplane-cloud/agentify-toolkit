@@ -17,6 +17,8 @@ def start_cmd(port):
 @click.argument("agent_name", type=str)
 @click.option("--server", default="http://127.0.0.1:8001", help="Runtime server URL")
 def undeploy(agent_name, server):
+    """Terminate a deployed Agent"""
+
     import requests
     try:
         resp = requests.delete(f"{server}/agents/{agent_name}/terminate")
@@ -38,6 +40,7 @@ def undeploy(agent_name, server):
 @runtime_group.command("list")
 @click.option("--server", default="http://127.0.0.1:8001", help="Runtime server URL")
 def runtime_list(server):
+    """List agents loaded on Agent Runtime"""
     import requests
     from ..cli_config import get_server
     url = server or get_server()
@@ -68,6 +71,8 @@ def runtime_list(server):
 @click.option("--prompt", "-p", default=None, help="Prompt text for single request")
 @click.option("--server", default=None, help="Override runtime server URL")
 def runtime_invoke(agent_name, prompt, server):
+    """Invoke agent with prompt --prompt"""
+
     import requests
     from ..cli_config import get_server
 
