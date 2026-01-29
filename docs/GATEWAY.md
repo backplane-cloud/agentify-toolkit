@@ -1,4 +1,4 @@
-# Agentify Model Gateway (v0.15.0)
+# Agentify Model Gateway (v0.16.0)
 
 > **TL;DR:** Agents can now use provider: `agentify` to route calls via a centralised gateway, enabling runtime model selection and simplified multi-agent workflows.
 
