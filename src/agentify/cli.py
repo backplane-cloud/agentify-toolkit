@@ -4,6 +4,7 @@ from .commands import (
     run_command,
     serve_command,
     deploy_command,
+    gateway_command,
     runtime_group,
     tool_group,
     agent_group,
@@ -20,10 +21,12 @@ def main():
 main.add_command(run_command)
 main.add_command(serve_command)
 main.add_command(deploy_command)
+main.add_command(gateway_command)
 main.add_command(runtime_group)
 main.add_command(tool_group)
 main.add_command(agent_group)
 main.add_command(provider_group)
+
 
 if __name__ == "__main__":
     main()
