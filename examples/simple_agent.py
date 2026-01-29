@@ -42,12 +42,20 @@ def main():
     #     role="You are an AI Security Architect specialising in X AI Grok models" 
     # )
 
+    # agent = Agent(
+    #     name="Github Models",
+    #     description="Github Model Agent",
+    #     provider="github", 
+    #     model_id="microsoft/Phi-4", 
+    #     role="You are an AI Security Architect specialising in Microsoft Phi AI Model" 
+    # )
+
     agent = Agent(
-        name="Github Models",
-        description="Github ModelAgent",
-        provider="github", 
-        model_id="microsoft/Phi-4", 
-        role="You are an AI Security Architect specialising in Microsoft Phi AI Model" 
+        name="Agentify",
+        description="Agentify Model Demo Agent",
+        provider="agentify", 
+        model_id="openai/gpt-4", 
+        role="You are an AI Security Architect specialising in Agentify Model Gateway" 
     )
 
     response = agent.run("Which AI LLM is the best in 1 sentence ?")

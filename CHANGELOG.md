@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.16.0] - 2026-01-29
+
+### New Feature / Model Gateway
+
+- `agentify gateway start` starts Model Gateway provider called agentify
+- Create agent with the provider set to `agentify`
+- This will use the agentify provider which proxies the request ot the Model Gateway
+
+---
+
 ## [0.15.0] - 2026-01-28
 
 ### New Feature / Github-Models
