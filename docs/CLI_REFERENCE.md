@@ -10,6 +10,7 @@
 | [serve](#serve)       | Serve an agent locally via HTTP API and Web UI           |
 | [deploy](#deploy)     | Deploy one or more agents to a running Agentify Runtime. |
 | [runtime](#runtime)   | Start Agent Runtime for Hosting Agents                   |
+| [gateway](#gateway)   | Unified API Endpoint (Model Gateway)                     |
 
 > View the CLI workflow here: [cli-workflow](#cli-workflow)
 
@@ -75,6 +76,12 @@ An Agent Runtime acts as a deploy target for agents for CLI, Web and Programmati
 | `agentify runtime invoke `   | <agent_name> | `--prompt "a prompt"` | Delete an agent from the runtime server.                  |
 
 > Note: You must ensure that the API keys for your model providers have been loaded into the environment before starting the Agent Runtime server. Use `agentify provider list` to double-check and `agentify provider add <provider_name>`
+
+## Gateway
+
+| Command                  | Arguments | Options           | Description                         |
+| ------------------------ | :-------: | ----------------- | ----------------------------------- |
+| `agentify gateway start` |           | `--port 8001` TBC | Starts the Model Gateway API Server |
 
 <!-- ## Config
 

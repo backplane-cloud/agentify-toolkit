@@ -1,18 +1,14 @@
 # Backlog
 
-- The design philosophy of Agentify Toolkit is AI as Code.
+## Features
 
-- Agents should be _lightweight_, _ephemeral_, _disposable_ and easily _composable_.
-
-## Features:
-
-| Features            | Description                                                   | Status                           |
-| ------------------- | ------------------------------------------------------------- | -------------------------------- |
-| Model Gateway       | Model Gateway e.g. host provider that acts as a model router. | Not started                      |
-| Tool/Agent Registry | To store Agent and Tool YAMLs                                 | Not started                      |
-| Token Cost          | Record Token Usage of Agent / Model / Provider                | Not started                      |
-| Memory              | Agent Memory                                                  | Not started                      |
-| [Tools](TOOLS.md)   | Ability to add Tools to Agents                                | Implemented (v0.14.0) 28.01.2026 |
+| Features                         | Description                                                   | Status                           |
+| -------------------------------- | ------------------------------------------------------------- | -------------------------------- |
+| [Model Gateway](docs/GATEWAY.md) | Model Gateway e.g. host provider that acts as a model router. | Implemented (v0.16.0)            |
+| [Tools](TOOLS.md)                | Ability to add Tools to Agents                                | Implemented (v0.14.0) 28.01.2026 |
+| Tool/Agent Registry              | To store Agent and Tool YAMLs                                 | Not started                      |
+| Token Cost                       | Record Token Usage of Agent / Model / Provider                | Not started                      |
+| Memory                           | Agent Memory                                                  | Not started                      |
 
 # Model Gateway
 

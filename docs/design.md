@@ -1,4 +1,36 @@
-# Agentify Design Principles
+# Design
+
+## Architecture
+
+```mermaid
+flowchart TB
+%% Top level
+LibraryCLI["Library + CLI"]
+App["App"]
+
+    LibraryCLI --> App
+
+    %% App outputs
+    App -->|push / pull| AgentRegistry["Agent <br/>Registry"]
+    App -->|deploy| AgentRuntime["Agent <br/>Runtime"]
+    App -->|prompt| ModelGateway["Model <br/>Gateway"]
+
+    %% Direct prompt path
+    App -.->|direct prompt| DirectLLM["LLM"]
+
+    %% Model Gateway downstream LLMs
+    ModelGateway -.-> LLM1["LLM"]
+    ModelGateway -.-> LLM2["LLM"]
+    ModelGateway -.-> LLM3["LLM"]
+
+    %% Styling for dashed LLM boxes
+    style DirectLLM stroke-dasharray: 5 5
+    style LLM1 stroke-dasharray: 5 5
+    style LLM2 stroke-dasharray: 5 5
+    style LLM3 stroke-dasharray: 5 5
+```
+
+## Agentify Design Principles
 
 - Declarative-first: YAML is the primary interface; Python is optional.
 - Minimalism: Small, predictable API surface (run, chat, list).
@@ -45,7 +77,7 @@
 - Optional advanced parameters for experimentation
 - Always additive: new features **do not break existing YAML agents**
 
-# Architecture
+## Architecture
 
 ```mermaid
 flowchart LR
@@ -58,34 +90,4 @@ flowchart LR
     D[LLM<br/>API] --> G[Gemini]
     D[LLM<br/>API] --> H[Grok]
 
-```
-
-# Ecosystem
-
-```mermaid
-flowchart TB
-%% Top level
-LibraryCLI["Library + CLI"]
-App["App"]
-
-    LibraryCLI --> App
-
-    %% App outputs
-    App -->|push / pull| AgentRegistry["Agent <br/>Registry"]
-    App -->|deploy| AgentRuntime["Agent <br/>Runtime"]
-    App -->|prompt| ModelGateway["Model <br/>Gateway"]
-
-    %% Direct prompt path
-    App -.->|direct prompt| DirectLLM["LLM"]
-
-    %% Model Gateway downstream LLMs
-    ModelGateway -.-> LLM1["LLM"]
-    ModelGateway -.-> LLM2["LLM"]
-    ModelGateway -.-> LLM3["LLM"]
-
-    %% Styling for dashed LLM boxes
-    style DirectLLM stroke-dasharray: 5 5
-    style LLM1 stroke-dasharray: 5 5
-    style LLM2 stroke-dasharray: 5 5
-    style LLM3 stroke-dasharray: 5 5
 ```
