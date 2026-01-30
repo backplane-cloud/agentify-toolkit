@@ -2,7 +2,7 @@
 
 > **TL;DR:** Agents can now use provider: `agentify` to route calls via a centralised gateway, enabling runtime model selection and simplified multi-agent workflows.
 
-The Agentify Toolkit v0.15.0 introduces the Model Gateway, allowing Agentify to serve as a model provider.
+The Agentify Toolkit v0.16.0 introduces the Model Gateway, allowing Agentify to serve as a model provider.
 
 Agents can now route requests to different models dynamically, without per-agent provider configuration.
 
