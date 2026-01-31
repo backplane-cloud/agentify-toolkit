@@ -17,11 +17,14 @@ def create_tool(spec: dict) -> Tool:
     # Create the Tool object
     tool = Tool(
         name=spec["name"],
+        type=spec.get("type" or "remote"),
         description=spec.get("description", ""),
         vendor=spec.get("vendor", ""),
         endpoint=spec.get("endpoint", ""),
         actions=actions,
-        version=spec.get("version", "0.0.0")
+        version=spec.get("version", "0.0.0"),
+        module=spec.get("module", ""),
+        function=spec.get("function", "")
     )
     
     return tool

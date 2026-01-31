@@ -30,30 +30,68 @@ class Tool:
     name: str
     description: str
     vendor: str
-    endpoint: str
-    actions: dict = field(default_factory=dict)
+    type: str   # "internal" or "remote"
+    module: Optional[str] = None # for internal
+    function: Optional[str] = None # for internal
+    endpoint: Optional[str] = None # for remote
     version: Optional[str] = field(default="0.0.0")
+    actions: dict = field(default_factory=dict)
+    params: dict = field(default_factory=dict)
+
 
     def to_schema(self) -> dict:
-        return {
+        base = {
             "name": self.name,
             "description": self.description or f"Tool {self.name}",
-            "actions": [
-                action.to_schema()
-                for action in self.actions.values()
-            ]
         }
 
-    def invoke(self, action_name: str, args: dict):
+        # Internal tool → params
+        if self.type == "internal":
+            base["params"] = self.params or {}
+            return base
+
+        # Remote tool → actions
+        base["actions"] = [
+            action.to_schema()
+            for action in self.actions.values()
+        ]
+        return base
+
+    def invoke(self, action_name: Optional[str] = None, args: dict = None):
+        args = args or {}
+
+        # Internal Tool
+        if self.type == "internal":
+            if not self.module or not self.function:
+                raise RuntimeError(f"Internal tool '{self.name}' missing module/function info")
+
+            import importlib
+            import sys
+            from pathlib import Path
+
+            # TEMPORARY ASSUMPTION:
+            # agentify is run as: agentify run examples/solution/internal_demo.yaml
+            # so tools live in examples/solution/tools/
+            agent_root = Path("examples/solution").resolve()
+
+            if str(agent_root) not in sys.path:
+                sys.path.insert(0, str(agent_root))
+
+            module = importlib.import_module(self.module)  # tools.add_numbers
+            func = getattr(module, self.function)
+            return func(**args)
+
+        # Remote Tool
+        if not action_name:
+            raise ValueError(f"Action name required for remote tool '{self.name}'")
+
         # find action
         action = self.actions.get(action_name)
         if not action:
             raise ValueError(f"Unknown action '{action_name}' for tool '{self.name}'")
 
-        # build URL
+        # build URL and route based on action.method
         url = f"{self.endpoint}{action.path}"
-
-        # route based on action.method
         method = action.method.upper()
 
         if method == "GET":
