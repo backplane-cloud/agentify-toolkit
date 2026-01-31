@@ -1,0 +1,13 @@
+name: internal_demo
+description: AI Engineer
+version: 0.1.0
+model:
+  provider: anthropic
+  id: claude-sonnet-4-5
+  api_key_env: ANTHROPIC_API_KEY
+role: |
+  You are an AI Security Engineer.
+  Provide concise, practical answers with examples.
+tools:
+  - add_numbers
+  - random_user

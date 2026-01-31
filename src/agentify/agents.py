@@ -102,7 +102,8 @@ class Agent:
                 full_prompt += """
                 Rules for responding:
 
-                1. Only produce JSON when a tool must be invoked. Do NOT include markdown (```json), code fences, or extra text.
+                If you receive the command list tools, just list them in this pattern 1. <tool name>: <description>: <arguments>: local or remote as per type
+                1. When invoking a tool, respond with ONLY the raw JSON object. Do not wrap it in markdown, code fences, backticks, or any other formatting. Your response must be parseable directly as JSON. 
                 2. If the request can be answered naturally, respond in plain language.
                 3. When producing JSON, follow this exact format:
                 {
@@ -111,7 +112,7 @@ class Agent:
                     "args": {...}
                 }
                 4. Never hallucinate tool use. If unsure whether a tool is needed, respond in plain language.
-                5. If asked to list available tools, respond in a single line: <toolname> <action> <args>. Do NOT use JSON or extra text.
+                5. If asked what tools do you have, respond with the name and description of the tool.
                 """
                 full_prompt += tools_block
 
@@ -121,18 +122,35 @@ class Agent:
 
             # Try parsing JSON (tool invocation)
             try:
-                data = json.loads(response)
+                # Strip common wrapping patterns                                                   
+                cleaned = response.strip()                                                         
+
+                # Remove markdown code fences                                                      
+                if cleaned.startswith('```'):                                                      
+                    cleaned = cleaned.split('```')[1]                                              
+                
+                if cleaned.startswith('json'):                                                 
+                    cleaned = cleaned[4:]                                                      
+                    cleaned = cleaned.strip()     
+    
+
+                data = json.loads(cleaned)
                 tool_name = data.get("tool")
                 action_name = data.get("action")
                 args = data.get("args", {})
-
                 tool = agent.tools.get(tool_name)
                 if not tool:
                     raise ValueError(f"Tool '{tool_name}' not found on agent")
 
-                # Invoke tool
-                console.print(f"[yellow]INVOKING TOOL: '{tool_name}' action '{action_name}' with args: {args}[/yellow]", style="bold black on yellow")
-                tool_result = tool.invoke(action_name, args)
+                # TOOL HANDLING
+                if tool.type == "internal":
+                    # INTERNAL TOOL
+                    console.print(f"[yellow]INVOKING INTERNAL TOOL: '{tool_name}' with args: {args}[/yellow]", style="bold black on yellow")
+                    tool_result = tool.invoke(args=args)
+                else: 
+                    # REMOTE TOOL
+                    console.print(f"[yellow]INVOKING REMOTE TOOL: '{tool_name}' action '{action_name}' with args: {args}[/yellow]", style="bold black on yellow")
+                    tool_result = tool.invoke(action_name, args)    
 
                 # Minify JSON to avoid confusing model in next prompt
                 tool_result_str = json.dumps(tool_result, separators=(',', ':'))
