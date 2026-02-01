@@ -27,7 +27,6 @@ def run_command(path, model, provider, server, debug):
     if server:
         if not path.is_file():
             raise click.BadParameter("Remote run only supports a single YAML file")
-        # resp = upload_agent(server, str(path))
         click.echo(f"Would upload agent to server {server}")
         return
 
@@ -36,14 +35,6 @@ def run_command(path, model, provider, server, debug):
             spec = yaml.safe_load(f)
 
         agent = create_agent(spec, provider=provider, model=model, agent_file=path.resolve())
-
-        # # Tool Instantiation
-        # for tool_name in getattr(agent, "tool_names", []) or []:
-        #     tool_path = path.parent / "tools" / f"{tool_name}.yaml" # Load /tools relative to agent.yaml not cwd
-        #     tool_spec = load_tool_spec(tool_path)
-        #     tool = create_tool(tool_spec)
-        #     agent.tools[tool.name] = tool
-    
         agent.chat(debug=debug)
 
     elif path.is_dir():
