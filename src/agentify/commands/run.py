@@ -9,6 +9,7 @@ from pathlib import Path
 def run_command(path, model, provider, server):
     """Run an agent from a YAML file or directory."""
     import yaml
+    import sys
     from ..agents import create_agent, create_agents
     from ..specs import load_agent_specs, load_tool_spec
     from ..tools import create_tool
@@ -18,6 +19,9 @@ def run_command(path, model, provider, server):
     agent_path = path or "./agents"
     path = Path(agent_path)
     click.echo(f"Loading agents from: {path}")
+
+    if str(path.parent) not in sys.path:
+        sys.path.insert(0, str(path.parent))
 
     if server:
         if not path.is_file():
@@ -33,7 +37,7 @@ def run_command(path, model, provider, server):
         agent = create_agent(spec, provider=provider, model=model)
 
         for tool_name in getattr(agent, "tool_names", []) or []:
-            tool_path = f"examples/agents/tools/{tool_name}.yaml"
+            tool_path = path.parent / "tools" / f"{tool_name}.yaml" # Load /tools relative to agent.yaml not cwd
             tool_spec = load_tool_spec(tool_path)
             tool = create_tool(tool_spec)
             agent.tools[tool.name] = tool
