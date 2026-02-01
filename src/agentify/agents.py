@@ -6,6 +6,10 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 import json
+from .specs import load_tool_spec
+from .tools import create_tool
+from pathlib import Path
+
 
 @dataclass
 class Agent:
@@ -15,9 +19,50 @@ class Agent:
     model_id: str
     role: str
     version: Optional[str] = field(default="0.0.0")
+    
     tool_names: list = field(default_factory=list)
     tools: dict = field(default_factory=dict)
+
+    agent_file: Path | None = None
+    _tools_loaded: bool = field(default=False, init=False)
+
     conversation_history: list = field(default_factory=list)
+
+    def load_tools(self, tool_path_override: str | Path | None = None):
+        """
+        Load tools for this agent. 
+
+        - Defaults to <agent_file parent>/tools
+        - Optional override via tool_path_override
+        - Users do not need to worry about paths
+        """
+        if self._tools_loaded:
+            return
+
+        # Determine tools directory
+        if tool_path_override:
+            tools_dir = Path(tool_path_override).resolve()
+        elif self.agent_file:
+            tools_dir = Path(self.agent_file).resolve().parent / "tools"
+        else:
+            # fallback only if agent_file not set
+            tools_dir = Path.cwd() / "tools"
+
+        if not tools_dir.exists():
+            raise FileNotFoundError(f"Tools directory does not exist: {tools_dir}")
+
+        # Load each tool
+        self.tools = {}  # reset
+        for tool_name in self.tool_names or []:
+            tool_file = tools_dir / f"{tool_name}.yaml"
+            if not tool_file.exists():
+                raise FileNotFoundError(f"Tool '{tool_name}' not found at {tool_file}")
+
+            spec = load_tool_spec(tool_file)  # your YAML loader
+            tool = create_tool(spec)          # your tool factory
+            self.tools[tool.name] = tool
+
+        self._tools_loaded = True
 
     def get_model(self) -> str:
         return self.model_id
@@ -60,6 +105,10 @@ class Agent:
         from rich.console import Console
         from rich.panel import Panel
         from rich.prompt import Prompt
+        
+        # Load Tools
+        if not agent._tools_loaded:
+            agent.load_tools()
 
         console = Console()
         
@@ -72,6 +121,7 @@ class Agent:
             border_style="cyan"
         ))
 
+        
         # Precompute tool schemas if any
         tool_schemas = [tool.to_schema() for tool in agent.tools.values()] if agent.tools else None
         tools_block = ""
@@ -176,10 +226,11 @@ def create_agents(specs: list) -> dict[str, Agent]:
         agents[agent.name] = agent
     return agents
 
-def create_agent(spec: dict, provider: str = None, model: str = None) -> Agent:
+def create_agent(spec: dict, provider: str = None, model: str = None, agent_file: Path | None = None) -> Agent:
     """
     Create an Agent from a YAML/spec dictionary, optionally overriding model or provider.
     """
+
     name = spec.get("name")
     description = spec.get("description")
     version = spec.get("version")
@@ -195,6 +246,6 @@ def create_agent(spec: dict, provider: str = None, model: str = None) -> Agent:
     
     tool_names = spec.get("tools")
 
-    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names)
+    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names, agent_file=agent_file)
 
     return agent
