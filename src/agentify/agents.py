@@ -107,7 +107,7 @@ class Agent:
         from rich.prompt import Prompt
         
         # Load Tools
-        if not agent._tools_loaded:
+        if agent.tool_names and not agent._tools_loaded:
             agent.load_tools()
 
         console = Console()
