@@ -24,7 +24,8 @@ def create_tool(spec: dict) -> Tool:
         actions=actions,
         version=spec.get("version", "0.0.0"),
         module=spec.get("module", ""),
-        function=spec.get("function", "")
+        function=spec.get("function", ""),
+        params=spec.get("params", "")
     )
     
     return tool
