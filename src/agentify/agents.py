@@ -7,9 +7,6 @@ from dataclasses import dataclass, field
 from typing import Optional
 import json
 
-
-
-
 @dataclass
 class Agent:
     name: str
@@ -59,7 +56,7 @@ class Agent:
 
 
 
-    def chat(agent: "Agent"):
+    def chat(agent: "Agent", debug: bool = False):
         from rich.console import Console
         from rich.panel import Panel
         from rich.prompt import Prompt
@@ -80,6 +77,9 @@ class Agent:
         tools_block = ""
         if tool_schemas:
             tools_block = "\n\nTOOLS:\n" + json.dumps(tool_schemas, indent=2)
+
+        if debug:
+            console.print(tool_schemas)
 
         while True:
             prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)").strip()
@@ -122,18 +122,14 @@ class Agent:
 
             # Try parsing JSON (tool invocation)
             try:
-                # Strip common wrapping patterns                                                   
-                cleaned = response.strip()                                                         
-
-                # Remove markdown code fences                                                      
+                # Clean JSON                           
+                cleaned = response.strip()                                                                                                                 
                 if cleaned.startswith('```'):                                                      
                     cleaned = cleaned.split('```')[1]                                              
-                
                 if cleaned.startswith('json'):                                                 
                     cleaned = cleaned[4:]                                                      
                     cleaned = cleaned.strip()     
     
-
                 data = json.loads(cleaned)
                 tool_name = data.get("tool")
                 action_name = data.get("action")
