@@ -18,7 +18,6 @@ model:
   provider: anthropic
   id: claude-sonnet-4-5
   api_key_env: ANTHROPIC_API_KEY
-tools: []
 """)
 
     user_input = "/exit\n"
