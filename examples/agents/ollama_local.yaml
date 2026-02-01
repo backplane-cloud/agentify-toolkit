@@ -7,3 +7,5 @@ model:
 role: |
   You are an AI Security Engineer.
   Provide concise, practical answers with examples.
+tools:
+  - add_numbers
