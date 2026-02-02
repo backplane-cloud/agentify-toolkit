@@ -7,7 +7,7 @@ from pathlib import Path
 def serve_command(path, port):
     """Serve an agent locally via HTTP API and Web UI"""
     import yaml
-    from ..agents import create_agent
+    from ..agent import create_agent
     from ..server import serve_agent
 
     p = Path(path)

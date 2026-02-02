@@ -24,5 +24,5 @@ if os.path.exists(os.path.join(os.path.dirname(__file__), "..", "pyproject.toml"
     if not __version__.endswith("-dev"):
         __version__ += "-dev"
 
-from .agents import Agent
+from .agent import Agent
 __all__ = ["Agent"]

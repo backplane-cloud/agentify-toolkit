@@ -11,7 +11,7 @@ def run_command(path, model, provider, server, debug):
     """Run an agent from a YAML file or directory."""
     import yaml
     import sys
-    from ..agents import create_agent, create_agents
+    from ..agent import create_agent, create_agents
     from ..specs import load_agent_specs
     from ..cli_ui import show_agent_menu
     # from ..runtime_client import upload_agent  # Optional
