@@ -8,4 +8,5 @@ model:
 role: cost expert on aws cloud services
 tools:
   - add_numbers
+  - multiply_numbers
   - random_user
