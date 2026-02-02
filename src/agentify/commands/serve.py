@@ -8,7 +8,7 @@ def serve_command(path, port):
     """Serve an agent locally via HTTP API and Web UI"""
     import yaml
     from ..agent import create_agent
-    from ..server import serve_agent
+    from ..server.server import serve_agent
 
     p = Path(path)
     if not p.is_file():
