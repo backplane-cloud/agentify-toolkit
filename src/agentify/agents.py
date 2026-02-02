@@ -67,8 +67,8 @@ class Agent:
     def get_model(self) -> str:
         return self.model_id
 
-    def get_tools(self) -> str:
-        return self.tools.keys()
+    def get_tools(self) -> list[str]:
+        return list(self.tools.keys())
     
     def run(self, user_prompt: str) -> str:
         from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_gateway_http
@@ -81,7 +81,7 @@ class Agent:
             case "google":
                 return run_google(self.model_id, user_prompt)
             case "bedrock":
-                return run_bedrock(self.model_id, user_prompt),
+                return run_bedrock(self.model_id, user_prompt)
             case "github":
                 return run_github(self.model_id, user_prompt)
             case "agentify":
@@ -132,7 +132,7 @@ class Agent:
             console.print(tool_schemas)
 
         while True:
-            prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)").strip()
+            prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)")
             if prompt.lower() in ["/exit", "quit"]:
                 console.print("[yellow]Exiting. Goodbye![/yellow]")
                 break
