@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 import json
 from .specs import load_tool_spec
-from .tools import create_tool
+from .tool import create_tool
 from pathlib import Path
 
 

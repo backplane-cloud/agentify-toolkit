@@ -12,8 +12,7 @@ def run_command(path, model, provider, server, debug):
     import yaml
     import sys
     from ..agents import create_agent, create_agents
-    from ..specs import load_agent_specs, load_tool_spec
-    from ..tools import create_tool
+    from ..specs import load_agent_specs
     from ..cli_ui import show_agent_menu
     # from ..runtime_client import upload_agent  # Optional
 
