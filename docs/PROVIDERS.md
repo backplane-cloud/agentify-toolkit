@@ -50,13 +50,13 @@ flowchart LR
 | Name        | Command                  | API Key instructions                     |
 | ----------- | ------------------------ | ---------------------------------------- |
 | OpenAI      | `agentify add openai`    | [Instructions](./providers/OPENAI.md)    |
-| Anthropic   | `agenitfy add anthropic` | [Instructions](./providers/ANTHROPIC.md) |
+| Anthropic   | `agentify add anthropic` | [Instructions](./providers/ANTHROPIC.md) |
 | Deepseek    | `agentify add deepseek`  | [Instructions](./providers/DEEPSEEK.md)  |
 | Mistral     | `agentify add mistral`   | [Instructions](./providers/MISTRAL.md)   |
 | XAI         | `agentify add xai`       | [Instructions](./providers/XAI.md)       |
 | Google      | `agentify add google`    | [Instructions](./providers/GOOGLE.md)    |
 | AWS Bedrock | `agentify add bedrock`   |                                          |
-| Github      | `agenitfy add github`    | [Instructions](./providers/GITHUB.md)    |
-| Ollama      | `agenify add ollama`     | [Instructions](./providers/OLLAMA.md)    |
+| Github      | `agentify add github`    | [Instructions](./providers/GITHUB.md)    |
+| Ollama      | `agentify add ollama`    | [Instructions](./providers/OLLAMA.md)    |
 
 > Local-only providers (e.g. Ollama) do not require API keys
