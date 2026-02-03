@@ -11,12 +11,13 @@
 | [deploy](#deploy)     | Deploy one or more agents to a running Agentify Runtime. |
 | [runtime](#runtime)   | Start Agent Runtime for Hosting Agents                   |
 | [gateway](#gateway)   | Unified API Endpoint (Model Gateway)                     |
+| [tool](#tool)         | List and Show tool YAML files                            |
 
 > View the CLI workflow here: [cli-workflow](#cli-workflow)
 
 ## Provider
 
-Agentify requires providers to be regsitered so that their API Keys can be used by the Agent when making calls.
+Agentify requires providers to be registered so that their API Keys can be used by the Agent when making calls.
 
 | Command                    | Arguments [optional] | Description                                           | Example                              |
 | -------------------------- | :------------------: | ----------------------------------------------------- | ------------------------------------ |
@@ -30,7 +31,14 @@ Agentify requires providers to be regsitered so that their API Keys can be used 
 | ----------------------- | :-------------------------: | -------------------------------------------- | ------------------------------------- |
 | `agentify agent create` |       [<folder_path>]       | Create an Agent, outputs `<agent_name>.yaml` | `agentify agent create myagent`       |
 | `agentify agent list `  |       [<folder_path>]       | Lists all agents in the current directory    | `agentify agent list examples/agents` |
-| `agentify agent show`   | <file_name> \| <agent_name> | View the metadata of the Agent               |
+| `agentify agent show`   | <file_name> \| <agent_name> | View the metadata of the Agent               |                                       |
+
+## Tool
+
+| Commands              |    Arguments [optional]    | Description                              | Example                                                     |
+| --------------------- | :------------------------: | ---------------------------------------- | ----------------------------------------------------------- |
+| `agentify tool list ` |      [<folder_path>]       | Lists all tools in the current directory | `agentify tool list examples/agents/tools`                  |
+| `agentify tool show ` | <tool_name> \| <tool_name> | Lists all tools in the current directory | `agentify tool list examples/agents/tools/add_numbers.yaml` |
 
 ## Run
 

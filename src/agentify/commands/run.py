@@ -6,12 +6,13 @@ from pathlib import Path
 @click.option("--model", type=str, help="Override the model ID at runtime")
 @click.option("--provider", type=str, help="Override the LLM provider at runtime")
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
-def run_command(path, model, provider, server):
+@click.option("--debug", is_flag=True, help="Turn on debugging to see raw prompt")
+def run_command(path, model, provider, server, debug):
     """Run an agent from a YAML file or directory."""
     import yaml
-    from ..agents import create_agent, create_agents
-    from ..specs import load_agent_specs, load_tool_spec
-    from ..tools import create_tool
+    import sys
+    from ..agent import create_agent, create_agents
+    from ..specs import load_agent_specs
     from ..cli_ui import show_agent_menu
     # from ..runtime_client import upload_agent  # Optional
 
@@ -19,10 +20,12 @@ def run_command(path, model, provider, server):
     path = Path(agent_path)
     click.echo(f"Loading agents from: {path}")
 
+    if str(path.parent) not in sys.path:
+        sys.path.insert(0, str(path.parent))
+
     if server:
         if not path.is_file():
             raise click.BadParameter("Remote run only supports a single YAML file")
-        # resp = upload_agent(server, str(path))
         click.echo(f"Would upload agent to server {server}")
         return
 
@@ -30,15 +33,8 @@ def run_command(path, model, provider, server):
         with open(path, "r") as f:
             spec = yaml.safe_load(f)
 
-        agent = create_agent(spec, provider=provider, model=model)
-
-        for tool_name in getattr(agent, "tool_names", []) or []:
-            tool_path = f"examples/agents/tools/{tool_name}.yaml"
-            tool_spec = load_tool_spec(tool_path)
-            tool = create_tool(tool_spec)
-            agent.tools[tool.name] = tool
-
-        agent.chat()
+        agent = create_agent(spec, provider=provider, model=model, agent_file=path.resolve())
+        agent.chat(debug=debug)
 
     elif path.is_dir():
         specs = load_agent_specs(path)

@@ -6,8 +6,9 @@ import os
 from dataclasses import dataclass, field
 from typing import Optional
 import json
-
-
+from .specs import load_tool_spec
+from .tool import create_tool
+from pathlib import Path
 
 
 @dataclass
@@ -18,15 +19,56 @@ class Agent:
     model_id: str
     role: str
     version: Optional[str] = field(default="0.0.0")
+    
     tool_names: list = field(default_factory=list)
     tools: dict = field(default_factory=dict)
+
+    agent_file: Path | None = None
+    _tools_loaded: bool = field(default=False, init=False)
+
     conversation_history: list = field(default_factory=list)
+
+    def load_tools(self, tool_path_override: str | Path | None = None):
+        """
+        Load tools for this agent. 
+
+        - Defaults to <agent_file parent>/tools
+        - Optional override via tool_path_override
+        - Users do not need to worry about paths
+        """
+        if self._tools_loaded:
+            return
+
+        # Determine tools directory
+        if tool_path_override:
+            tools_dir = Path(tool_path_override).resolve()
+        elif self.agent_file:
+            tools_dir = Path(self.agent_file).resolve().parent / "tools"
+        else:
+            # fallback only if agent_file not set
+            tools_dir = Path.cwd() / "tools"
+
+        if not tools_dir.exists():
+            raise FileNotFoundError(f"Tools directory does not exist: {tools_dir}")
+
+        # Load each tool
+        self.tools = {}  # reset
+        for tool_name in self.tool_names or []:
+            tool_file = tools_dir / f"{tool_name}.yaml"
+            if not tool_file.exists():
+                raise FileNotFoundError(f"Tool '{tool_name}' not found at {tool_file}")
+
+            spec = load_tool_spec(tool_file)  # your YAML loader
+            tool = create_tool(spec)          # your tool factory
+            self.tools[tool.name] = tool
+
+        self._tools_loaded = True
 
     def get_model(self) -> str:
         return self.model_id
 
-    def get_tools(self) -> str:
-        return self.tools.keys()
+    def get_tools(self) -> list[str]:
+        return list(self.tools.keys())
     
     def run(self, user_prompt: str) -> str:
         from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_gateway_http
@@ -39,7 +81,7 @@ class Agent:
             case "google":
                 return run_google(self.model_id, user_prompt)
             case "bedrock":
-                return run_bedrock(self.model_id, user_prompt),
+                return run_bedrock(self.model_id, user_prompt)
             case "github":
                 return run_github(self.model_id, user_prompt)
             case "agentify":
@@ -59,10 +101,14 @@ class Agent:
 
 
 
-    def chat(agent: "Agent"):
+    def chat(agent: "Agent", debug: bool = False):
         from rich.console import Console
         from rich.panel import Panel
         from rich.prompt import Prompt
+        
+        # Load Tools
+        if agent.tool_names and not agent._tools_loaded:
+            agent.load_tools()
 
         console = Console()
         
@@ -75,14 +121,18 @@ class Agent:
             border_style="cyan"
         ))
 
+        
         # Precompute tool schemas if any
         tool_schemas = [tool.to_schema() for tool in agent.tools.values()] if agent.tools else None
         tools_block = ""
         if tool_schemas:
             tools_block = "\n\nTOOLS:\n" + json.dumps(tool_schemas, indent=2)
 
+        if debug:
+            console.print(tool_schemas)
+
         while True:
-            prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)").strip()
+            prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)")
             if prompt.lower() in ["/exit", "quit"]:
                 console.print("[yellow]Exiting. Goodbye![/yellow]")
                 break
@@ -102,7 +152,8 @@ class Agent:
                 full_prompt += """
                 Rules for responding:
 
-                1. Only produce JSON when a tool must be invoked. Do NOT include markdown (```json), code fences, or extra text.
+                If you receive the command list tools, just list them in this pattern 1. <tool name>: <description>: <arguments>: local or remote as per type
+                1. When invoking a tool, respond with ONLY the raw JSON object. Do not wrap it in markdown, code fences, backticks, or any other formatting. Your response must be parseable directly as JSON. 
                 2. If the request can be answered naturally, respond in plain language.
                 3. When producing JSON, follow this exact format:
                 {
@@ -111,7 +162,7 @@ class Agent:
                     "args": {...}
                 }
                 4. Never hallucinate tool use. If unsure whether a tool is needed, respond in plain language.
-                5. If asked to list available tools, respond in a single line: <toolname> <action> <args>. Do NOT use JSON or extra text.
+                5. If asked what tools do you have, respond with the name and description of the tool.
                 """
                 full_prompt += tools_block
 
@@ -121,18 +172,31 @@ class Agent:
 
             # Try parsing JSON (tool invocation)
             try:
-                data = json.loads(response)
+                # Clean JSON                           
+                cleaned = response.strip()                                                                                                                 
+                if cleaned.startswith('```'):                                                      
+                    cleaned = cleaned.split('```')[1]                                              
+                if cleaned.startswith('json'):                                                 
+                    cleaned = cleaned[4:]                                                      
+                    cleaned = cleaned.strip()     
+    
+                data = json.loads(cleaned)
                 tool_name = data.get("tool")
                 action_name = data.get("action")
                 args = data.get("args", {})
-
                 tool = agent.tools.get(tool_name)
                 if not tool:
                     raise ValueError(f"Tool '{tool_name}' not found on agent")
 
-                # Invoke tool
-                console.print(f"[yellow]INVOKING TOOL: '{tool_name}' action '{action_name}' with args: {args}[/yellow]", style="bold black on yellow")
-                tool_result = tool.invoke(action_name, args)
+                # TOOL HANDLING
+                if tool.type == "internal":
+                    # INTERNAL TOOL
+                    console.print(f"[yellow]INVOKING INTERNAL TOOL: '{tool_name}' with args: {args}[/yellow]", style="bold black on yellow")
+                    tool_result = tool.invoke(args=args)
+                else: 
+                    # REMOTE TOOL
+                    console.print(f"[yellow]INVOKING REMOTE TOOL: '{tool_name}' action '{action_name}' with args: {args}[/yellow]", style="bold black on yellow")
+                    tool_result = tool.invoke(action_name, args)    
 
                 # Minify JSON to avoid confusing model in next prompt
                 tool_result_str = json.dumps(tool_result, separators=(',', ':'))
@@ -162,10 +226,11 @@ def create_agents(specs: list) -> dict[str, Agent]:
         agents[agent.name] = agent
     return agents
 
-def create_agent(spec: dict, provider: str = None, model: str = None) -> Agent:
+def create_agent(spec: dict, provider: str = None, model: str = None, agent_file: Path | None = None) -> Agent:
     """
     Create an Agent from a YAML/spec dictionary, optionally overriding model or provider.
     """
+
     name = spec.get("name")
     description = spec.get("description")
     version = spec.get("version")
@@ -181,6 +246,6 @@ def create_agent(spec: dict, provider: str = None, model: str = None) -> Agent:
     
     tool_names = spec.get("tools")
 
-    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names)
+    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names, agent_file=agent_file)
 
     return agent

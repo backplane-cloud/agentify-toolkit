@@ -12,3 +12,4 @@ tools:
   - user_api
   - post_api
   - random_user
+  - add_numbers

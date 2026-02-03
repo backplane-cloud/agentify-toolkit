@@ -1,0 +1,14 @@
+name: random_user
+version: "1.0.0"
+description: Generate random user data
+vendor: RandomUser
+endpoint: "https://randomuser.me/api/"
+
+actions:
+  get_user:
+    method: GET
+    path: /
+    params:
+      query:
+        page: integer
+        limit: integer

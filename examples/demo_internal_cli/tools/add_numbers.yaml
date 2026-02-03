@@ -1,0 +1,14 @@
+name: add_numbers
+type: internal
+version: "1.0.0"
+description: Add two numbers using internal Python function
+vendor: built-in
+module: tools.add_numbers
+function: add_numbers
+params:
+  a:
+    type: number
+    required: true
+  b:
+    type: number
+    required: true

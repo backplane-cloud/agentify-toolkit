@@ -1,0 +1,12 @@
+name: costman
+description: ""
+version: 0.1.0
+model:
+  provider: openai
+  id: gpt-4
+  api_key_env: OPENAI_API_KEY
+role: cost expert on aws cloud services
+tools:
+  - add_numbers
+  - multiply_numbers
+  - random_user

@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pathlib import Path
 import uvicorn
 
-from ..agents import create_agent
+from ..agent import create_agent
 
 app = FastAPI()
 

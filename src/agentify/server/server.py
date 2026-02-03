@@ -9,13 +9,12 @@ import uvicorn
 app = FastAPI()
 
 # app.mount("/static", StaticFiles(directory="static"), name="static")
-ui_path = Path(__file__).parent / "ui"
-
+ui_path = Path(__file__).resolve().parents[1] / "ui"
 app.mount("/ui", StaticFiles(directory=ui_path), name="ui")
 
 @app.get("/", response_class=HTMLResponse)
 async def home():
-    HTML_PATH = Path(__file__).parent / "ui" / "chat.html"
+    HTML_PATH = Path(__file__).parent.parent / "ui" / "chat.html"
     with open(HTML_PATH, "r", encoding="utf-8") as f:
         html_content = f.read()
 

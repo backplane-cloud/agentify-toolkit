@@ -5,9 +5,18 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.17.0] - 2026-01-1
+
+### Feature / Internal Tools
+
+- tool.yaml now supports `type: internal` which points to the `function_name.py` allowing declarative python functions to be available to agents
+- Debug flag added to view tool schema being sent to LLM: Example: `agentify run agent.yaml --debug`
+
+---
+
 ## [0.16.0] - 2026-01-29
 
-### New Feature / Model Gateway
+### Feature / Model Gateway
 
 - `agentify gateway start` starts Model Gateway provider called agentify
 - Create agent with the provider set to `agentify`
@@ -17,7 +26,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.15.0] - 2026-01-28
 
-### New Feature / Github-Models
+### Feature / Github-Models
 
 - Integrated Github Models
 - Use github as a model (gateway) provider similar to Bedrock
@@ -27,7 +36,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.14.0] - 2026-01-21
 
-### New Feature / Tools
+### Feature / Tools
 
 - Agent now supports tools:
 

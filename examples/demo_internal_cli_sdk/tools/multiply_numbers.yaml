@@ -1,0 +1,14 @@
+name: multiply_numbers
+type: internal
+version: "1.0.0"
+description: Multiply two numbers using internal Python function
+vendor: built-in
+module: tools.multiply_numbers
+function: multiply_numbers
+params:
+  a:
+    type: number
+    required: true
+  b:
+    type: number
+    required: true
