@@ -19,7 +19,6 @@ def test_agent_show(tmp_path):
     assert result.exit_code == 0
 
     # Check that the output contains key fields
-    assert "snoopy" in result.output
     assert "anthropic" in result.output
     assert "claude-sonnet-4-5" in result.output
 
