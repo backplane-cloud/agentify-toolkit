@@ -13,11 +13,11 @@
 
 ## Delivered
 
-| Feature                          | Description                                                   | Branch                   | Status              |
-| -------------------------------- | ------------------------------------------------------------- | ------------------------ | ------------------- |
-| [Model Gateway](docs/GATEWAY.md) | Model Gateway e.g. host provider that acts as a model router. | `feature/model-gateway`  | Delivered (v0.16.0) |
-| [Tools](TOOLS.md)                | Ability to add Tools to Agents                                | `feature/tools`          | Delivered (v0.14.0) |
-| Internal Tools                   | Internal tools e.g. internal.py                               | `feature/internal-tools` | In Progress         |
+| Feature                                     | Description                                                   | Branch                   | Status              |
+| ------------------------------------------- | ------------------------------------------------------------- | ------------------------ | ------------------- |
+| [Internal Tools](docs/tools/tools-local.md) | Internal tools e.g. internal.py                               | `feature/internal-tools` | Delivered (v0.17.0) |
+| [Model Gateway](docs/GATEWAY.md)            | Model Gateway e.g. host provider that acts as a model router. | `feature/model-gateway`  | Delivered (v0.16.0) |
+| [Tools](TOOLS.md)                           | Ability to add Tools to Agents                                | `feature/tools`          | Delivered (v0.14.0) |
 
 ## Proposed
 
