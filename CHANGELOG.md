@@ -5,7 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [0.17.0] - 2026-01-1
+## [0.18.0] - 2026-02-05
+
+### Feature / Provider Validation
+
+- agentify provider validate openai/gpt-4
+- makes API call to verify API KEY is valid
+
+---
+
+## [0.17.0] - 2026-02-1
 
 ### Feature / Internal Tools
 
