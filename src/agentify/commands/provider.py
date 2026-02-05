@@ -41,11 +41,11 @@ def validate_provider(provider_name):
 
       
     try:
-        with console.status(f"[yellow]Validating {provider_name}[/yellow]", spinner="dots"):
+        with console.status(f"[yellow]Validating {provider_name}[/yellow]", spinner="dots", spinner_style="yellow"):
             result = validate_provider(provider_name)
 
-        click.secho(f"✓ {provider_name} response received: {result}", fg="green")
-        click.secho(f"✓ {provider_name.upper()}_API_KEY validated", fg="green")
+        click.secho(f"✓ {provider_name} API KEY validated: {result}", fg="green")
+        # click.secho(f"✓ {provider_name.upper()}_API_KEY validated", fg="green")
 
     except Exception as e:
         click.secho(f"✗ Validation failed: {e}", fg="red")
