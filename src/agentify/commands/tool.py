@@ -35,18 +35,22 @@ def list_tools(path):
     click.secho("\nUse: agentify tool show <tool_name> for metadata", fg="yellow")
 
 
+
 @tool_group.command("show")
 @click.argument("tool_name_or_file", required=True)
 def show_tool(tool_name_or_file):
     """Show details of a single tool"""
     import yaml
+    from rich.console import Console
+    from rich.syntax import Syntax
+    console = Console(force_terminal=True, color_system="truecolor")
 
+    # Resolve file
     p = Path(tool_name_or_file)
     if p.suffix == "":
         p = p.with_suffix(".yaml")
 
     search_paths = [Path("."), Path("./tools"), Path("./examples/agents/tools")]
-
     resolved = None
     for base in search_paths:
         candidate = base / p
@@ -55,18 +59,16 @@ def show_tool(tool_name_or_file):
             break
 
     if not resolved:
-        raise click.BadParameter(f"Tool file '{p}' not found in: {', '.join(str(sp) for sp in search_paths)}")
+        raise click.BadParameter(
+            f"Agent file '{p}' not found in: {', '.join(str(sp) for sp in search_paths)}"
+        )
 
+    # Load YAML spec
     with open(resolved, "r") as f:
         spec = yaml.safe_load(f)
 
-    click.echo(f"Name       : {spec.get('name', 'Unnamed')}")
-    click.echo(f"Version    : {spec.get('version', 'N/A')}")
-    click.echo(f"Description: {spec.get('description', '')}")
-    click.echo(f"Vendor     : {spec.get('vendor', 'N/A')}")
-    click.echo(f"Endpoint   : {spec.get('endpoint', '')}")
-    click.echo("Actions:")
-    for name, action in spec.get("actions", {}).items():
-        method = action.get("method", "N/A")
-        path = action.get("path", "")
-        click.secho(f"  --> {name} [{method} {path}]", fg="red")
+
+    # Pretty YAML output with syntax highlighting
+    yaml_text = yaml.dump(spec, sort_keys=False, default_flow_style=False)
+    syntax = Syntax(yaml_text, "yaml", theme="monokai", line_numbers=False)
+    console.print(syntax)
