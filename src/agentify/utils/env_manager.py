@@ -3,6 +3,7 @@ import getpass
 import click
 from pathlib import Path
 
+
 ENV_FILE = Path(".env")
 ENV_EXAMPLE_FILE = Path(".env.example")
 
@@ -146,3 +147,31 @@ def set_provider_key(provider: str):
     update_env_key(env_key, api_key)
 
     print(f"✓ Updated {env_key} in .env")
+
+def validate_provider(provider: str) -> str:
+    """
+    Validate a provider by performing a minimal model invocation.
+
+    A provider is considered valid if a one-shot prompt completes
+    successfully and returns a response.
+
+    Args:
+        provider: Provider name (e.g. "openai", "anthropic")
+
+    Returns:
+        The raw response returned by the provider.
+
+    Raises:
+        Exception: if provider loading, authentication, or invocation fails
+    """
+    from ..providers import run_agentify
+          
+    response = run_agentify(
+        model_id=provider,
+        user_prompt="respond with ok"
+    )
+
+    if not response or not response.strip():
+        raise RuntimeError("Provider returned an empty response")
+
+    return response
