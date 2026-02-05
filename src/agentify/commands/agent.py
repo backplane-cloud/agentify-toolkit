@@ -70,7 +70,7 @@ def show_agent(agent_name_or_file):
     import yaml
     from rich.console import Console
     from rich.syntax import Syntax
-    console = Console()
+    console = Console(force_terminal=True, color_system="truecolor")
 
     # Resolve file
     p = Path(agent_name_or_file)

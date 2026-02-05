@@ -37,9 +37,8 @@ def validate_provider(provider_name):
 
     from ..utils.env_manager import validate_provider
     from rich.console import Console
-    console = Console()
+    console = Console(force_terminal=True)
 
-      
     try:
         with console.status(f"[yellow]Validating {provider_name}[/yellow]", spinner="dots", spinner_style="yellow"):
             result = validate_provider(provider_name)
