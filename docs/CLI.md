@@ -19,11 +19,12 @@
 
 Agentify requires providers to be registered so that their API Keys can be used by the Agent when making calls.
 
-| Command                    | Arguments [optional] | Description                                           | Example                              |
-| -------------------------- | :------------------: | ----------------------------------------------------- | ------------------------------------ |
-| `agentify provider add`    |   <provider_name>    | Add an AI Model Provider API KEY                      | `agentify provider add anthropic`    |
-| `agentify provider remove` |      <provider>      | Remove a provider from local providers.yaml           | `agentify provider remove anthropic` |
-| `agentify provider list`   |                      | List of registered Model Providers and API Key status |                                      |
+| Command                      | Arguments [optional] | Description                                           | Example                                  |
+| ---------------------------- | :------------------: | ----------------------------------------------------- | ---------------------------------------- |
+| `agentify provider add`      |   <provider_name>    | Add an AI Model Provider API KEY                      | `agentify provider add anthropic`        |
+| `agentify provider remove`   |      <provider>      | Remove a provider from local providers.yaml           | `agentify provider remove anthropic`     |
+| `agentify provider list`     |                      | List of registered Model Providers and API Key status |                                          |
+| `agentify provider validate` |   <provider/model>   | Validates API KEY for provider                        | `agentify provider validate openai/gt-4` |
 
 ## Agent
 
