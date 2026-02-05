@@ -61,32 +61,6 @@ create_alias = click.Command(
 )
 agent_group.add_command(create_alias)
 
-@agent_group.command("list")
-@click.argument("path", required=False, default=".")
-def list_agents(path):
-    """List all agent YAML files in a directory"""
-    from ..specs import load_agent_specs
-
-    p = Path(path)
-    if not p.is_dir():
-        raise click.BadParameter(f"{path} is not a directory")
-
-    specs = load_agent_specs(p)
-    if not specs:
-        click.echo("No agent YAML files found.")
-        return
-
-    click.echo(f"Found {len(specs)} agent(s) in {path}:")
-    click.secho(f"{'NAME':20} {'PROVIDER':20} {'MODEL':20} {'DESCRIPTION'}", fg="cyan")
-    click.echo("-" * 80)
-    for s in specs:
-        name = s.get("name", "Unnamed")
-        desc = s.get("description", "")
-        provider = s.get("model","").get("provider")
-        model = s.get("model","").get("id")
-        click.echo(f"{name:<20} {provider:<20} {model:<20} {desc}")
-
-    click.secho("\nUse: agentify agent show <agent_name> for metadata", fg="yellow")
 
 
 @agent_group.command("show")
@@ -94,7 +68,11 @@ def list_agents(path):
 def show_agent(agent_name_or_file):
     """Show details of a single agent"""
     import yaml
+    from rich.console import Console
+    from rich.syntax import Syntax
+    console = Console()
 
+    # Resolve file
     p = Path(agent_name_or_file)
     if p.suffix == "":
         p = p.with_suffix(".yaml")
@@ -108,15 +86,55 @@ def show_agent(agent_name_or_file):
             break
 
     if not resolved:
-        raise click.BadParameter(f"Agent file '{p}' not found in: {', '.join(str(sp) for sp in search_paths)}")
+        raise click.BadParameter(
+            f"Agent file '{p}' not found in: {', '.join(str(sp) for sp in search_paths)}"
+        )
 
+    # Load YAML spec
     with open(resolved, "r") as f:
         spec = yaml.safe_load(f)
 
-    click.echo(f"Name       : {spec.get('name', 'Unnamed')}")
-    click.echo(f"Description: {spec.get('description', '')}")
-    click.echo(f"Version    : {spec.get('version', 'N/A')}")
-    click.echo(f"Role       : {spec.get('role', '').strip()}")
-    model = spec.get("model", {})
-    click.echo(f"Model      : {model.get('id', 'N/A')} ({model.get('provider', '')})")
-    click.echo(f"Tools      : {spec.get('tools', '')}")
+
+    # Pretty YAML output with syntax highlighting
+    yaml_text = yaml.dump(spec, sort_keys=False, default_flow_style=False)
+    syntax = Syntax(yaml_text, "yaml", theme="monokai", line_numbers=False)
+    console.print(syntax)
+
+
+@agent_group.command("list")
+@click.argument("path", required=False, default=".")
+def list_agents(path):
+    """List all agent YAML files in a directory"""
+    from rich.console import Console
+    from rich.table import Table
+    from rich.theme import Theme
+    from ..specs import load_agent_specs
+
+    console = Console(theme=Theme({"header": "bold cyan", "highlight": "magenta"}))
+
+    p = Path(path)
+    if not p.is_dir():
+        raise click.BadParameter(f"{path} is not a directory")
+
+    specs = load_agent_specs(p)
+    if not specs:
+        console.print("No agent YAML files found.", style="yellow")
+        return
+
+    # Table without borders
+    table = Table(show_lines=False, show_header=True, header_style="header", box=None)
+    table.add_column("Name", style="white", no_wrap=True)
+    table.add_column("Provider", style="magenta")
+    table.add_column("Model", style="green")
+    table.add_column("Description", style="white")
+
+    for s in specs:
+        name = s.get("name", "Unnamed")
+        desc = s.get("description", "")
+        model_info = s.get("model", {})
+        provider = model_info.get("provider", "N/A")
+        model = model_info.get("id", "N/A")
+        table.add_row(name, provider, model, desc)
+
+    console.print(table)
+    console.print("Use: [yellow]agentify agent show <agent_name>[/yellow] for metadata")
