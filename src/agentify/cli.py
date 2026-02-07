@@ -8,7 +8,8 @@ from .commands import (
     runtime_group,
     tool_group,
     agent_group,
-    provider_group
+    provider_group,
+    mcp_group
 )
 
 @click.group()
@@ -26,6 +27,7 @@ main.add_command(runtime_group)
 main.add_command(tool_group)
 main.add_command(agent_group)
 main.add_command(provider_group)
+main.add_command(mcp_group)
 
 
 if __name__ == "__main__":
