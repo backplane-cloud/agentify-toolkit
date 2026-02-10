@@ -5,6 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.19.0] - 2026-02-06
+
+### Feature / MCP Server
+
+- Agentify can run it's own MCP server e.g. `agentify mcp start`
+- Agent tools can be local or remote via MCP
+
+---
+
 ## [0.18.0] - 2026-02-05
 
 ### Feature / Provider Validation
