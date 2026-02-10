@@ -13,11 +13,11 @@ def start_cmd(port):
     start_runtime(port=port)
 
 
-@runtime_group.command("terminate")
+@runtime_group.command("remove")
 @click.argument("agent_name", type=str)
 @click.option("--server", default="http://127.0.0.1:8001", help="Runtime server URL")
 def undeploy(agent_name, server):
-    """Terminate a deployed Agent"""
+    """Remove a deployed Agent"""
 
     import requests
     try:
