@@ -1,5 +1,7 @@
 import click
 from pathlib import Path
+import yaml
+import requests
 
 @click.group("tool")
 def tool_group():
@@ -72,3 +74,50 @@ def show_tool(tool_name_or_file):
     yaml_text = yaml.dump(spec, sort_keys=False, default_flow_style=False)
     syntax = Syntax(yaml_text, "yaml", theme="monokai", line_numbers=False)
     console.print(syntax)
+
+@tool_group.command()
+@click.argument(
+    "tool_yaml",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "--server", default="http://localhost:3333",
+    required=True,
+    help="MCP server URL (e.g. http://localhost:3333)",
+)
+def publish(tool_yaml: Path, server: str):
+    """
+    Publish a tool to an MCP server from a YAML definition.
+    """
+    # 1. Load YAML
+    try:
+        with tool_yaml.open("r") as f:
+            tool_spec = yaml.safe_load(f)
+    except Exception as e:
+        raise click.ClickException(f"Failed to load YAML: {e}")
+
+    if not isinstance(tool_spec, dict):
+        raise click.ClickException("Tool YAML must define a mapping/object")
+
+    # 2. POST to MCP server
+    url = f"{server.rstrip('/')}/tools"
+
+    try:
+        response = requests.post(url, json=tool_spec, timeout=10)
+    except requests.RequestException as e:
+        raise click.ClickException(f"Failed to connect to MCP server: {e}")
+
+    # 3. Handle response
+    if response.status_code != 200:
+        try:
+            detail = response.json().get("detail")
+        except Exception:
+            detail = response.text
+        raise click.ClickException(
+            f"Failed to publish tool ({response.status_code}): {detail}"
+        )
+
+    result = response.json()
+    tool_name = result.get("tool", "<unknown>")
+
+    click.echo(f"✓ Tool published: {tool_name}")
