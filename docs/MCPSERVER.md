@@ -165,3 +165,28 @@ With MCP in Agentify you can:
 - Build agents that consume capabilities, not implementations
 
 This keeps Agentify modular, composable, and ready to scale.
+
+## Publish existing tools to the MCP Server
+
+```bash
+# Start MCP Server on port 3333
+agentify mcp start
+
+# List MCP Server build in tools
+agentify mcp list
+
+# Show a tool
+agentify mcp show echo
+agentify mcp show add
+
+# Invoke built-in Tool
+agentify mcp invoke add --args '{"a": 1, "b": 100}'
+
+# Publish a tool to the MCP Server
+agentify tool publish examples/agents/tools/random_user.yaml
+
+# Invoke the tool
+agentify mcp invoke random_user
+
+
+```
