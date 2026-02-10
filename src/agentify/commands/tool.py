@@ -75,7 +75,7 @@ def show_tool(tool_name_or_file):
     syntax = Syntax(yaml_text, "yaml", theme="monokai", line_numbers=False)
     console.print(syntax)
 
-@tool_group.command()
+@tool_group.command("deploy")
 @click.argument(
     "tool_yaml",
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
@@ -85,9 +85,9 @@ def show_tool(tool_name_or_file):
     required=True,
     help="MCP server URL (e.g. http://localhost:3333)",
 )
-def publish(tool_yaml: Path, server: str):
+def deploy_tool(tool_yaml: Path, server: str):
     """
-    Publish a tool to an MCP server from a YAML definition.
+    Deploy a tool to an MCP server from a YAML definition.
     """
     # 1. Load YAML
     try:
@@ -114,10 +114,10 @@ def publish(tool_yaml: Path, server: str):
         except Exception:
             detail = response.text
         raise click.ClickException(
-            f"Failed to publish tool ({response.status_code}): {detail}"
+            f"Failed to deploy tool ({response.status_code}): {detail}"
         )
 
     result = response.json()
     tool_name = result.get("tool", "<unknown>")
 
-    click.echo(f"✓ Tool published: {tool_name}")
+    click.echo(f"✓ Tool deployed: {tool_name}")

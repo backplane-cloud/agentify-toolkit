@@ -59,9 +59,9 @@ class InvokeResponse(BaseModel):
 #
 
 @app.post("/tools")
-async def publish_tool(request: Request):
+async def deploy_tool(request: Request):
     """
-    Publish a new tool from JSON spec.
+    Deploy a new tool from JSON spec.
     Expects JSON of the form:
     {
         "name": "random_user",
