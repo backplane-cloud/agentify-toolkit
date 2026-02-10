@@ -39,7 +39,7 @@
 
 | Feature                      | Description                                                                                 | Branch                       | Status      |
 | ---------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------- | ----------- |
-| MCP Server                   | Agents can connect to MCP servers for tools e.g. `agentify mcp start`                       | `feature/mcp`                | Not started |
+| MCP Server                   | Agents can connect to MCP servers for tools e.g. `agentify mcp start`                       | `feature/mcp`                | In progress |
 | Agent & Tool Registry        | To store Agent and Tool YAMLs                                                               | `feature/registry`           | Not started |
 | Token Usage                  | Record Token Usage of Agent / Model / Provider                                              | `feature/token-usage`        | Not started |
 | Memory                       | Agent Memory                                                                                | `feature/memory`             | Not started |
