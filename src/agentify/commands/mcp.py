@@ -22,7 +22,7 @@ def mcp_group():
 @click.option("--host", default="127.0.0.1", help="Host to bind MCP server")
 @click.option("--port", default=3333, help="Port to bind MCP server")
 def start(host: str, port: int):
-    """Start the MCP server"""
+    """Start MCP Server"""
     click.echo(f"Starting MCP server on {host}:{port}")
     start_mcp_server(host=host, port=port)
 
@@ -79,7 +79,7 @@ def list_tools(endpoint: str):
     help="MCP server endpoint",
 )
 def invoke_tool(tool_name: str, args: str, endpoint: str):
-    """Invoke a tool exposed by the MCP server"""
+    """Invoke a published tool"""
     try:
         arguments = json.loads(args)
     except json.JSONDecodeError as e:
@@ -114,3 +114,70 @@ def invoke_tool(tool_name: str, args: str, endpoint: str):
         console.print(Panel(syntax, title="Result"))
     else:
         console.print(Panel(str(result), title="Result"))
+
+@mcp_group.command()
+@click.argument("tool_name")
+@click.option(
+    "--server", default="http://localhost:3333",
+    required=False,
+    help="MCP server URL (e.g. http://localhost:3333)",
+)
+def remove(tool_name: str, server: str):
+    """
+    Remove a tool from the MCP server.
+    """
+    url = f"{server.rstrip('/')}/tools/{tool_name}"
+
+    try:
+        response = requests.delete(url, timeout=10)
+    except requests.RequestException as e:
+        raise click.ClickException(f"Failed to connect to MCP server: {e}")
+
+    if response.status_code != 200:
+        try:
+            detail = response.json().get("detail")
+        except Exception:
+            detail = response.text
+        raise click.ClickException(
+            f"Failed to remove tool ({response.status_code}): {detail}"
+        )
+
+    click.echo(f"✓ Tool removed: {tool_name}")
+
+@mcp_group.command("show")
+@click.argument("tool_name")
+@click.option("--server", default="http://localhost:3333", help="MCP server URL")
+def show_tool(tool_name, server):
+    """Show details for a single MCP tool."""
+    import requests
+    import sys
+    from rich.console import Console
+    from rich.table import Table
+    from rich.json import JSON
+
+    console = Console()
+
+    try:
+        resp = requests.get(f"{server}/tools/{tool_name}")
+        resp.raise_for_status()
+    except requests.HTTPError as e:
+        console.print(f"[red]Error:[/red] {e.response.text}")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"[red]Error:[/red] {e}")
+        sys.exit(1)
+
+    tool = resp.json()
+
+    table = Table(title=f"MCP Tool: {tool['name']}", show_header=False)
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+
+    table.add_row("Name", tool["name"])
+    table.add_row("Description", tool.get("description", ""))
+
+    console.print(table)
+
+    if "input_schema" in tool:
+        console.print("\n[bold]Input Schema[/bold]")
+        console.print(JSON.from_data(tool["input_schema"]))
