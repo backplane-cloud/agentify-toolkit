@@ -132,7 +132,7 @@ def create_tool(spec: dict) -> Tool:
     
     # Create the Tool object
     tool = Tool(
-        name=spec["name"],
+        name=f"local.{spec["name"]}",
         type=spec.get("type" or "remote"),
         description=spec.get("description", ""),
         vendor=spec.get("vendor", ""),

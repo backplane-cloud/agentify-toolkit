@@ -8,7 +8,7 @@ import uvicorn
 app = FastAPI(
     title="Agentify MCP Server",
     version="0.1.0",
-    description="Minimal HTTP MCP server for tool discovery and invocation",
+    description="Minimal HTTP MCP server for tool discovery and invocation"
 )
 
 #
@@ -109,7 +109,7 @@ async def deploy_tool(request: Request):
     # Create and register the Tool
     try:
         tool = Tool(
-            name=name,
+            name=f"mcp.{name}",
             description=description,
             input_schema=input_schema,
             handler=handler,
@@ -197,7 +197,7 @@ def add_tool(args: Dict[str, Any]) -> Any:
 
 register_tool(
     Tool(
-        name="echo",
+        name="mcp.echo",
         description="Echo back the provided arguments",
         input_schema={
             "type": "object",
@@ -210,7 +210,7 @@ register_tool(
 
 register_tool(
     Tool(
-        name="add",
+        name="mcp.add",
         description="Add two numbers",
         input_schema={
             "type": "object",
