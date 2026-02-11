@@ -116,9 +116,11 @@ class Agent:
             self.load_tools()
 
         # MCP Tool load
-        # mcp_tool_names = [t["name"] for t in self.mcp_tools]
-        mcp_tools = self.mcp_client.list_tools()
-        mcp_tool_names = [t["name"] for t in mcp_tools]
+        if self.mcp_client:
+            mcp_tools = self.mcp_client.list_tools()
+            mcp_tool_names = [t["name"] for t in mcp_tools]
+        else:
+            mcp_tool_names = []
 
         console = Console()
         
@@ -288,7 +290,7 @@ def create_agent(spec: dict, provider: str = None, model: str = None, agent_file
     tool_names = spec.get("tools")
 
     # MCP Tools via MCP Server http://localhost:3333
-    mcp_tools = []
+    mcp_client = None
     mcp_spec = spec.get("mcp")
     if mcp_spec:
         endpoint = mcp_spec.get("endpoint")
