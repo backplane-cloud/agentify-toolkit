@@ -219,14 +219,18 @@ agentify mcp remove <tool_name>
 Add MCP configuration to `agent.yaml`:
 
 ```yaml
-name: ollama
+name: buzz
+description: An AI Agent
+version: 0.1.0
 model:
-  provider: ollama
-  id: devstral-small-2:24b
-
+  provider: openai
+  id: gpt-4
+  api_key_env: OPENAI_API_KEY
+role: |
+  You are an OpenAI expert agent who can find random users and add numbers
 tools:
   - random_user
-
+  - add_numbers
 mcp:
   endpoint: http://localhost:3333
 ```
