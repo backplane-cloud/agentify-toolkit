@@ -50,26 +50,19 @@ class MCPClientHTTP:
 
         if "error" in data:
             raise Exception(f"MCP Error: {data['error']}")
-
         return data.get("result")
-
 
     def initialize(self):
         """Call MCP server initialize method."""
         return self._rpc("initialize", {})
 
-
     def list_tools(self):
         response = self._rpc("tools/list")
-
         if not response:
             return []
-
         if "tools" not in response:
             raise Exception(f"Invalid response from server: {response}")
-
         return response["tools"]
-
 
     def call_tool(self, name: str, arguments: dict = None):
         """Call a tool by name with optional arguments dict."""
@@ -77,3 +70,13 @@ class MCPClientHTTP:
         if arguments:
             params["arguments"] = arguments
         return self._rpc("tools/call", params)
+    
+    def register_tools(self, path: str):
+        """Register a YAML tool or directory of tools on the MCP Server"""
+        params = {"path": path}
+        return self._rpc("tools/register", params)
+
+    def deregister_tool(self, tool_name: str):
+        """Deregister a registered tool from the MCP Server by name."""
+        params = {"name": tool_name}
+        return self._rpc("tools/deregister", params)

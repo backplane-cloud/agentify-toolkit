@@ -96,15 +96,12 @@ def invoke_tool(tool_name: str, args: str, endpoint: str, debug: bool = False):
         client.initialize()
         arguments = json.loads(args)
         response = client.call_tool(tool_name, arguments)
-        result = response.get("result", {})
-        structured = result.get("structuredContent", {})
-        tool_result = structured.get("result", None)
-
+        
         if debug: 
-            console.print(f"Call {tool_name} tool: {tool_result}")
+            console.print(f"Call {tool_name} tool: {response}")
             return
         
-        result_json = json.dumps(tool_result, indent=2)
+        result_json = json.dumps(response, indent=2)
         console.print(result_json)
 
             
@@ -130,3 +127,44 @@ def show_schema(tool_name: str, endpoint: str):
 
     except Exception as e:
         print(f"Error fetching schema for {tool_name}: {e}")
+
+
+@mcp2_group.command("register")
+@click.argument("path")
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+def register_tools(path: str, endpoint: str):
+    """
+    Register a Tool or directory of tools to the MCP Server from YAML
+    """
+    try:
+        client = MCPClientHTTP(endpoint)
+        client.initialize()
+        response = client.register_tools(path)
+        console.print(json.dumps(response, indent=2))
+
+    except Exception as e:
+        print(f"Error registering tools at {path}: {e}")
+
+
+@mcp2_group.command("deregister")
+@click.argument("tool_name")
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+@click.option("--debug", is_flag=True, help="Enable debug output")
+def remove_tool_cli(tool_name: str, endpoint: str, debug: bool):
+    """
+    Remove a registered tool from the MCP Server by name.
+    """
+    try:
+        client = MCPClientHTTP(endpoint)
+        client.initialize()
+
+        if debug:
+            console.print(f"Deregistering tool: {tool_name} from {endpoint}")
+
+        response = client.deregister_tool(tool_name)
+        if response.get("status") == "ok":
+            console.print(f"{tool_name} successfully deregistered")
+            # console.print(json.dumps(response, indent=2))
+
+    except Exception as e:
+        console.print(f"[red]Error deregistering tool {tool_name}: {e}[/red]")

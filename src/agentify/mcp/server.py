@@ -1,22 +1,36 @@
+from typing import Any, Callable, Dict, List
 from fastapi import FastAPI, Request
 import uvicorn
 import inspect
-
-from mcp_serializer.registry import MCPRegistry
-from mcp_serializer.initializer import MCPInitializer
-from mcp_serializer.serializers import MCPSerializer
-
-registry = MCPRegistry()
-initializer = MCPInitializer()
-serializer = MCPSerializer(initializer=initializer, registry=registry)
+import os
+import yaml
+import requests
 
 app = FastAPI()
 
+class Tool:
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        input_schema: Dict[str, Any],
+        handler: Callable[[Dict[str, Any]], Any],
+    ):
+        self.name = name
+        self.description = description
+        self.input_schema = input_schema
+        self.handler = handler
 
-# MCP Tool Metadata Store
-TOOL_SCHEMAS = {}
+_TOOL_REGISTRY: Dict[str, Tool] = {}
+
+def register_tool(tool: Tool) -> None:
+    if tool.name in _TOOL_REGISTRY:
+        raise ValueError(f"Tool already registered: {tool.name}")
+    _TOOL_REGISTRY[tool.name] = tool
+
 
 # Helpers to build inputSchema
+
 def python_type_to_json_type(py_type):
     mapping = {
         int: "integer",
@@ -54,66 +68,64 @@ def build_schema_from_function(func, name, description):
     }
 
 
-def register_tool(name: str, description: str):
-    """
-    Decorator that:
-    1. Registers tool with MCPRegistry
-    2. Builds and stores JSON schema for MCP introspection
-    """
-    def decorator(func):
-        registry.tool(name=name, description=description)(func)
+# Local Tools (Functions)
 
-        TOOL_SCHEMAS[name] = build_schema_from_function(
-            func=func,
-            name=name,
-            description=description
-        )
+def echo(args: Dict[str, Any]) -> Any:
+    return args
 
-        return func
+def add(args: Dict[str, Any]) -> Any:
+    return args.get("a", 0) + args.get("b", 0)
 
-    return decorator
+def greet(args: Dict[str, Any]) -> Any:
+    return f"Hello, {args.get("name")}!"
 
+# Register Tools
 
+register_tool(
+    Tool(
+        name="mcp.echo",
+        description="Echo back the provided arguments",
+        input_schema={
+            "type": "object",
+            "properties": {},
+            "additionalProperties": True,
+        },
+        handler=echo,
+    )
+)
 
-# Tool Registration
+register_tool(
+    Tool(
+        name="mcp.add",
+        description="Add two numbers",
+        input_schema={
+            "type": "object",
+            "properties": {
+                "a": {"type": "number"},
+                "b": {"type": "number"},
+            },
+            "required": ["a", "b"],
+        },
+        handler=add,
+    )
+)
 
+register_tool(
+    Tool(
+        name="mcp.greet",
+        description="Return a greeting for a user",
+        input_schema={
+            "type": "str",
+            "properties": {
+                "name": {"type": "string"},
+            },
+            "required": ["name"],
+        },
+        handler=greet,
+    )
+)
 
-@register_tool("add", "Add two numbers together")
-def add(a: int, b: int) -> dict:
-    return {"result": a + b}
-
-@register_tool("greet", "Return a greeting for a user")
-def greet(name: str) -> dict:
-    return {"result": f"Hello, {name}!"}
-
-@register_tool(name="random_user", description="Generate random user data")
-def random_user(page: int = 1, limit: int = 1) -> dict:
-    """
-    Calls the RandomUser API and returns user data.
-
-    Args:
-        page (int): page number to fetch, default 1
-        limit (int): number of results to return, default 1
-
-    Returns:
-        dict: {"result": <list of users>}
-    """
-    import requests
-
-    url = "https://randomuser.me/api/"
-    params = {
-        "page": page,
-        "results": limit
-    }
-
-    response = requests.get(url, params=params)
-    response.raise_for_status()  # Raise exception on HTTP errors
-
-    data = response.json()
-    return {"result": data.get("results", [])}
-
-
-# MCP Server endpoint
+# MCP Server
 
 @app.post("/mcp")
 async def mcp_endpoint(request: Request):
@@ -152,11 +164,11 @@ async def mcp_endpoint(request: Request):
     # tools/list
     if method == "tools/list":
         tools_list = []
-        for name, schema in TOOL_SCHEMAS.items():
+        for tool in _TOOL_REGISTRY.values():
             tools_list.append({
-                "name": name,
-                "description": schema.get("description", ""),
-                "inputSchema": schema.get("inputSchema")
+                "name": tool.name,
+                "description": tool.description,
+                "inputSchema": tool.input_schema
             })
 
         return {
@@ -167,14 +179,173 @@ async def mcp_endpoint(request: Request):
 
     # tools/call
     if method == "tools/call":
-        print(f"DEBUG:{body}")
-        result = serializer.process_request(body).response_data
-        return {"jsonrpc": "2.0", "id": response_id, "result": result}
+        tool_name = params.get("name")
+        arguments = params.get("arguments", {})
+
+        if tool_name not in _TOOL_REGISTRY:
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "error": {"code": -32601, "message": "Tool not found"}
+            }
+        
+        tool = _TOOL_REGISTRY[tool_name]
+
+        try:
+            result = tool.handler(arguments)
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "result": result
+            }
+        except Exception as e:
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "error": {"code": -32000, "message": str(e)}
+            }
+    
+    if method == "tools/register":
+        path = params.get("path")
+
+        if not path:
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "error": {"code": -32602, "message": "Missing 'path' parameter"}
+            }
+
+        try:
+            yaml_specs = load_yaml_tools(path)
+            registered = []
+
+            for tool_spec in yaml_specs:
+                tool = build_tool_from_yaml(tool_spec)
+                register_tool(tool)
+                registered.append(tool.name)
+
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "result": {"registered": registered}
+            }
+
+        except Exception as e:
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "error": {"code": -32000, "message": str(e)}
+            }
+        
+    # Remove Tool from internal registry
+    if method == "tools/deregister":
+        tool_name = params.get("name")
+
+        if not tool_name:
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "error": {"code": -32602, "message": "Missing 'name' parameter"}
+            }
+
+        if tool_name not in _TOOL_REGISTRY:
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "error": {"code": -32601, "message": f"Tool '{tool_name}' not found"}
+            }
+
+        try:
+            del _TOOL_REGISTRY[tool_name]
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "result": {"status": "ok", "deregistered": tool_name}
+            }
+        except Exception as e:
+            return {
+                "jsonrpc": "2.0",
+                "id": response_id,
+                "error": {"code": -32000, "message": str(e)}
+            }
+
+
+
+# YAML Loader Utility - read in tool.yaml and /path/to/tools/*.yaml
+def load_yaml_tools(path: str) -> List[dict]:
+    tools = []
+    
+    if os.path.isfile(path):
+        with open(path, "r") as f:
+            tools.append(yaml.safe_load(f))
+
+    elif os.path.isdir(path):
+        for file in os.listdir(path):
+            if file.endswith(".yaml") or file.endswith(".yml"):
+                full_path = os.path.join(path, file)
+                with open(full_path, "r") as f:
+                    tools.append(yaml.safe_load(f))
+    else:
+        raise ValueError(f"Invalid path: {path}")
+
+    return tools
+
+# Tool Factory
+
+def build_tool_from_yaml(tool_spec: dict) -> Tool:
+    name = tool_spec["name"]
+    description = tool_spec.get("description", "")
+    endpoint = tool_spec.get("endpoint")
+    actions = tool_spec.get("actions", {})
+
+    input_schema = {
+        "type": "object",
+        "properties": {
+            "action": {"type": "string"},
+            "params": {"type": "object"}
+        },
+        "required": ["action"]
+    }
+
+    def handler(args: dict):
+        import requests
+
+        action = args.get("action")
+        params = args.get("params", {})
+
+        if action not in actions:
+            raise ValueError(f"Unknown action: {action}")
+
+        action_def = actions[action]
+        method = action_def.get("method", "GET").upper()
+        path = action_def.get("path", "/")
+
+        url = endpoint.rstrip("/") + path
+
+        try:
+            if method == "GET":
+                resp = requests.get(url, params=params)
+            elif method == "POST":
+                resp = requests.post(url, json=params)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+
+            resp.raise_for_status()
+            return resp.json()
+
+        except Exception as e:
+            raise RuntimeError(f"API call failed: {e}")
+
+    return Tool(
+        name=f"mcp.{name}",
+        description=description,
+        input_schema=input_schema,
+        handler=handler
+    )
 
 
 def start_mcp2_server(host: str = "127.0.0.1", port: int = 3333):
     uvicorn.run(app, host=host, port=port)
-
 
 if __name__ == "__main__":
     start_mcp2_server()
