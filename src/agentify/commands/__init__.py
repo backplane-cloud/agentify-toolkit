@@ -7,6 +7,7 @@ from .provider import provider_group
 from .deploy import deploy_command
 from .gateway import gateway_command
 from .mcp import mcp_group
+from .mcp2 import mcp2_group
 
 __all__ = [
     "run_command",
@@ -17,5 +18,6 @@ __all__ = [
     "agent_group",
     "provider_group",
     "gateway_command",
-    "mcp_group"
+    "mcp_group",
+    "mcp2_group"
 ]
