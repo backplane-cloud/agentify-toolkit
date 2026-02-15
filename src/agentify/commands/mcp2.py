@@ -34,6 +34,7 @@ def start(host: str, port: int):
     click.echo(f"Starting MCP server on {host}:{port}")
     start_mcp2_server(host=host, port=port)
 
+
 @mcp2_group.command("list")
 @click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
 @click.option("--debug", is_flag=True, help="Enable debug mode")
@@ -54,11 +55,24 @@ def list_tools(endpoint: str, debug: bool):
                 )
             )
 
-        console.print("\n=== Tools available ===")
         tools = client.list_tools()
-        for t in tools:
-            desc = t.get("description", "")
-            console.print(f"- {t['name']}: {desc}")
+      
+        # Display Tools in Table
+        table = Table(show_header=True, header_style="bold magenta", box=box.SIMPLE)
+        table.add_column("Name", style="cyan", no_wrap=True)
+        table.add_column("Description", style="green")
+        table.add_column("Input Schema", style="yellow")
+
+        if debug:
+            print(tools)
+            return
+        for tool in tools:
+            # Optional: pretty-print schema as compact JSON string
+            
+            schema_str = json.dumps(tool["inputSchema"], indent=None)
+            table.add_row(tool["name"], tool["description"], schema_str)
+
+        console.print(table)
 
     except ConnectionError:
         print("⚠️  Could not connect to MCP server.")
@@ -70,20 +84,12 @@ def list_tools(endpoint: str, debug: bool):
         print(f"Please start the server by running: agentify mcp start{e}")
 
 
-
 @mcp2_group.command("invoke")
 @click.argument("tool_name")
-@click.option(
-    "--args",
-    default="{}",
-    help="JSON string of arguments to pass to the tool",
-)
-@click.option(
-    "--endpoint",
-    default=DEFAULT_ENDPOINT,
-    help="MCP server endpoint",
-)
-def invoke_tool(tool_name: str, args: str, endpoint: str):
+@click.option("--args",default="{}",help="JSON string of arguments to pass to the tool")
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+@click.option("--debug", is_flag=True, help="Enable debug mode")
+def invoke_tool(tool_name: str, args: str, endpoint: str, debug: bool = False):
     """Invoke a published tool"""
     try:
         client = MCPClientHTTP(endpoint)
@@ -93,8 +99,16 @@ def invoke_tool(tool_name: str, args: str, endpoint: str):
         result = response.get("result", {})
         structured = result.get("structuredContent", {})
         tool_result = structured.get("result", None)
-        console.print(f"Call {tool_name} tool: {tool_result}")
 
+        if debug: 
+            console.print(f"Call {tool_name} tool: {tool_result}")
+            return
+        
+        result_json = json.dumps(tool_result, indent=2)
+        console.print(result_json)
+
+            
+        
     except json.JSONDecodeError as e:
         console.print(f"[red]Invalid JSON for --args:[/red] {e}")
         raise SystemExit(1)
@@ -110,8 +124,9 @@ def show_schema(tool_name: str, endpoint: str):
     try:
         client = MCPClientHTTP(endpoint)
         client.initialize()
-        response = client._rpc("tools/schema", {"tool_name": tool_name})
-        console.print(json.dumps(response, indent=2))
+        tools = client.list_tools()
+        tool_schema = next(t for t in tools if t["name"] == tool_name)["inputSchema"]
+        console.print(json.dumps(tool_schema, indent=2))
 
     except Exception as e:
         print(f"Error fetching schema for {tool_name}: {e}")

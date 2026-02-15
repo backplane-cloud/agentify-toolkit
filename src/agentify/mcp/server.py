@@ -12,17 +12,11 @@ serializer = MCPSerializer(initializer=initializer, registry=registry)
 
 app = FastAPI()
 
-# -----------------------------
-# MCP Tool Metadata Store
-# -----------------------------
 
+# MCP Tool Metadata Store
 TOOL_SCHEMAS = {}
 
-
-# -----------------------------
-# Helpers
-# -----------------------------
-
+# Helpers to build inputSchema
 def python_type_to_json_type(py_type):
     mapping = {
         int: "integer",
@@ -33,7 +27,6 @@ def python_type_to_json_type(py_type):
         list: "array"
     }
     return mapping.get(py_type, "string")
-
 
 def build_schema_from_function(func, name, description):
     sig = inspect.signature(func)
@@ -53,7 +46,7 @@ def build_schema_from_function(func, name, description):
     return {
         "name": name,
         "description": description or "",
-        "parameters": {
+        "inputSchema": {
             "type": "object",
             "properties": properties,
             "required": required
@@ -81,23 +74,19 @@ def register_tool(name: str, description: str):
     return decorator
 
 
-# -----------------------------
+
 # Tool Registration
-# -----------------------------
+
 
 @register_tool("add", "Add two numbers together")
 def add(a: int, b: int) -> dict:
     return {"result": a + b}
 
-
 @register_tool("greet", "Return a greeting for a user")
 def greet(name: str) -> dict:
     return {"result": f"Hello, {name}!"}
 
-@register_tool(
-    name="random_user",
-    description="Generate random user data"
-)
+@register_tool(name="random_user", description="Generate random user data")
 def random_user(page: int = 1, limit: int = 1) -> dict:
     """
     Calls the RandomUser API and returns user data.
@@ -124,10 +113,7 @@ def random_user(page: int = 1, limit: int = 1) -> dict:
     return {"result": data.get("results", [])}
 
 
-
-# -----------------------------
-# MCP Endpoint
-# -----------------------------
+# MCP Server endpoint
 
 @app.post("/mcp")
 async def mcp_endpoint(request: Request):
@@ -144,9 +130,7 @@ async def mcp_endpoint(request: Request):
 
     response_id = body.get("id", 1)
 
-    # -------------------------
     # initialize
-    # -------------------------
     if method == "initialize":
         result = {
             "protocolVersion": "2.0",
@@ -164,59 +148,28 @@ async def mcp_endpoint(request: Request):
         }
         return {"jsonrpc": "2.0", "id": response_id, "result": result}
 
-    # -------------------------
+
     # tools/list
-    # -------------------------
     if method == "tools/list":
         tools_list = []
         for name, schema in TOOL_SCHEMAS.items():
             tools_list.append({
                 "name": name,
-                "description": schema.get("description", "")
+                "description": schema.get("description", ""),
+                "inputSchema": schema.get("inputSchema")
             })
+
         return {
             "jsonrpc": "2.0",
             "id": response_id,
             "result": {"tools": tools_list}
         }
 
-    # -------------------------
-    # tools/schema
-    # -------------------------
-    if method == "tools/schema":
-        tool_name = params.get("tool_name")
-        if not tool_name:
-            return {
-                "jsonrpc": "2.0",
-                "id": response_id,
-                "error": {"code": -32602, "message": "Missing 'tool_name'"}
-            }
-
-        schema = TOOL_SCHEMAS.get(tool_name)
-        if not schema:
-            return {
-                "jsonrpc": "2.0",
-                "id": response_id,
-                "error": {"code": -32601, "message": f"Tool '{tool_name}' not found"}
-            }
-
-        return {"jsonrpc": "2.0", "id": response_id, "result": schema}
-
-    # -------------------------
     # tools/call
-    # -------------------------
     if method == "tools/call":
+        print(f"DEBUG:{body}")
         result = serializer.process_request(body).response_data
         return {"jsonrpc": "2.0", "id": response_id, "result": result}
-
-    # -------------------------
-    # unknown method
-    # -------------------------
-    return {
-        "jsonrpc": "2.0",
-        "id": response_id,
-        "error": {"code": -32601, "message": f"Unknown method '{method}'"}
-    }
 
 
 def start_mcp2_server(host: str = "127.0.0.1", port: int = 3333):
