@@ -1,7 +1,4 @@
-# agentify/commands/mcp.py
-
 import click
-import requests
 import json
 
 # Agentify

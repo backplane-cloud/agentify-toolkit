@@ -219,8 +219,8 @@ async def mcp_endpoint(request: Request):
             yaml_specs = load_yaml_tools(path)
             registered = []
 
-            for tool_spec in yaml_specs:
-                tool = build_tool_from_yaml(tool_spec)
+            for yaml_path, tool_spec in yaml_specs:
+                tool = build_tool_from_yaml(yaml_path, tool_spec)
                 register_tool(tool)
                 registered.append(tool.name)
 
@@ -272,76 +272,175 @@ async def mcp_endpoint(request: Request):
 
 
 # YAML Loader Utility - read in tool.yaml and /path/to/tools/*.yaml
-def load_yaml_tools(path: str) -> List[dict]:
+def load_yaml_tools(path: str):
     tools = []
     
     if os.path.isfile(path):
         with open(path, "r") as f:
-            tools.append(yaml.safe_load(f))
+            tools.append((path, yaml.safe_load(f)))
 
     elif os.path.isdir(path):
         for file in os.listdir(path):
             if file.endswith(".yaml") or file.endswith(".yml"):
                 full_path = os.path.join(path, file)
                 with open(full_path, "r") as f:
-                    tools.append(yaml.safe_load(f))
+                    tools.append((full_path, yaml.safe_load(f)))
     else:
         raise ValueError(f"Invalid path: {path}")
 
     return tools
 
+
+
+
+from pathlib import Path
+import importlib.util
+import sys
+from typing import Callable
+
+def load_python_function_from_file(yaml_path: str, func_name: str) -> Callable:
+    """
+    Load a Python function from a .py file located next to the YAML.
+    """
+    yaml_path = Path(yaml_path).resolve()
+    py_file = yaml_path.with_suffix(".py")  # same base name, .py extension
+
+    if not py_file.exists():
+        raise FileNotFoundError(f"Python file not found next to YAML: {py_file}")
+
+    module_name = py_file.stem  # e.g., add_numbers
+    spec = importlib.util.spec_from_file_location(module_name, py_file)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)  # type: ignore
+
+    if not hasattr(module, func_name):
+        raise AttributeError(f"Function '{func_name}' not found in {py_file}")
+
+    return getattr(module, func_name)
+
+
+# Build hanlder for internal
+import inspect
+from typing import Dict, Any
+
+def build_handler_for_internal(func: Callable, params_yaml: Dict[str, Any]) -> Callable[[Dict[str, Any]], Any]:
+    """
+    Wrap a Python function as an MCP tool handler.
+
+    Args:
+        func: Python function to wrap
+        params_yaml: dict describing expected params from YAML
+
+    Returns:
+        handler: callable taking args dict
+    """
+    sig = inspect.signature(func)
+    
+    def handler(args: Dict[str, Any]) -> Any:
+        func_args = {}
+        for param in sig.parameters.values():
+            name = param.name
+            if name in args:
+                func_args[name] = args[name]
+            elif param.default != inspect.Parameter.empty:
+                func_args[name] = param.default
+            else:
+                raise ValueError(f"Missing required argument: {name}")
+        return func(**func_args)
+
+    return handler
+
+
 # Tool Factory
 
-def build_tool_from_yaml(tool_spec: dict) -> Tool:
+def build_tool_from_yaml(yaml_path: str, tool_spec: dict) -> Tool:
+    """
+    Build a Tool object from YAML spec.
+
+    Handles both internal (Python) and external (API) tools.
+    """
     name = tool_spec["name"]
     description = tool_spec.get("description", "")
-    endpoint = tool_spec.get("endpoint")
-    actions = tool_spec.get("actions", {})
+    tool_type = tool_spec.get("type", "external")
+    
+    if tool_type == "internal":
+        # Load Python function
+        func_name = tool_spec["function"]
+        func = load_python_function_from_file(yaml_path, func_name)
 
-    input_schema = {
-        "type": "object",
-        "properties": {
-            "action": {"type": "string"},
-            "params": {"type": "object"}
-        },
-        "required": ["action"]
-    }
+        # Build input_schema from 'params'
+        params_yaml = tool_spec.get("params", {})
+        input_schema = {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }
 
-    def handler(args: dict):
-        import requests
+        for param_name, param_def in params_yaml.items():
+            param_type = param_def.get("type", "string")
+            input_schema["properties"][param_name] = {"type": param_type}
+            if param_def.get("required", False):
+                input_schema["required"].append(param_name)
 
-        action = args.get("action")
-        params = args.get("params", {})
+        handler = build_handler_for_internal(func, params_yaml)
 
-        if action not in actions:
-            raise ValueError(f"Unknown action: {action}")
+        return Tool(
+            name=f"mcp.{name}",
+            description=description,
+            input_schema=input_schema,
+            handler=handler
+        )
 
-        action_def = actions[action]
-        method = action_def.get("method", "GET").upper()
-        path = action_def.get("path", "/")
+    else:  # API / external tool
+        endpoint = tool_spec.get("endpoint")
+        actions = tool_spec.get("actions", {})
 
-        url = endpoint.rstrip("/") + path
+        input_schema = {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string"},
+                "params": {"type": "object"}
+            },
+            "required": ["action"]
+        }
 
-        try:
-            if method == "GET":
-                resp = requests.get(url, params=params)
-            elif method == "POST":
-                resp = requests.post(url, json=params)
-            else:
-                raise ValueError(f"Unsupported HTTP method: {method}")
+        def handler(args: dict):
+            import requests
 
-            resp.raise_for_status()
-            return resp.json()
+            action = args.get("action")
+            params = args.get("params", {})
 
-        except Exception as e:
-            raise RuntimeError(f"API call failed: {e}")
+            if action not in actions:
+                raise ValueError(f"Unknown action: {action}")
 
-    return Tool(
-        name=f"mcp.{name}",
-        description=description,
-        input_schema=input_schema,
-        handler=handler
-    )
+            action_def = actions[action]
+            method = action_def.get("method", "GET").upper()
+            path = action_def.get("path", "/")
+
+            url = endpoint.rstrip("/") + path
+
+            try:
+                if method == "GET":
+                    resp = requests.get(url, params=params)
+                elif method == "POST":
+                    resp = requests.post(url, json=params)
+                else:
+                    raise ValueError(f"Unsupported HTTP method: {method}")
+
+                resp.raise_for_status()
+                return resp.json()
+
+            except Exception as e:
+                raise RuntimeError(f"API call failed: {e}")
+
+        return Tool(
+            name=f"mcp.{name}",
+            description=description,
+            input_schema=input_schema,
+            handler=handler
+        )
+
 
 
 def start_mcp2_server(host: str = "127.0.0.1", port: int = 3333):
