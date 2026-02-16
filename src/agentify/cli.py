@@ -9,8 +9,28 @@ from .commands import (
     tool_group,
     agent_group,
     provider_group,
-    mcp_group
+    mcp_group, 
+    mcp2_group
 )
+
+from rich.console import Console
+from rich.panel import Panel
+
+console = Console()
+
+agentify_icon = """
+[green] █████████████████[/green]    [yellow]agentify provider add <provider_name>[/yellow] [green]# e.g. openai, xai, anthropic[/green]
+[green]░███▒▒▒▒███▒▒▒▒███[/green]    [yellow]agentify agent new[/yellow] [green]# <-- Creates a new Agent[/green]
+[green]░███░░  ███░░  ███[/green]    [green]# Run Agent[/green]
+[green]░█████████████████[/green]    [yellow]agentify run agent.yaml[/yellow]
+[green]░█████░░░░░░░█████[/green]    [green]# Start MCP Server[/green]                
+[green]░█████████████████[/green]    [yellow]agentify mcp2 start[/yellow]    
+[green]░░░██░░██░░██░░██ [/green]    [green]# Start Agent Runtime → Deploy Agent[/green]
+[green]  ░██ ░██ ░██ ░██ [/green]    [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
+"""
+
+console.print(Panel(agentify_icon, title="AGENTIFY TOOLKIT CLI", subtitle="Build, Run and deploy AI Agents declaratively", border_style="white"))
+
 
 @click.group()
 @click.version_option(version=__version__, prog_name="Agentify")
@@ -28,6 +48,7 @@ main.add_command(tool_group)
 main.add_command(agent_group)
 main.add_command(provider_group)
 main.add_command(mcp_group)
+main.add_command(mcp2_group)
 
 
 if __name__ == "__main__":
