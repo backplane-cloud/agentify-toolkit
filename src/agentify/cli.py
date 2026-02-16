@@ -29,7 +29,7 @@ agentify_icon = """
 [green]  ░██ ░██ ░██ ░██ [/green]    [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
 """
 
-console.print(Panel(agentify_icon, title="AGENTIFY TOOLKIT CLI", subtitle="Build, Run and deploy AI Agents declaratively", border_style="white"))
+console.print(Panel(agentify_icon, title=f"AGENTIFY TOOLKIT CLI v{__version__}", subtitle="Build, Run and deploy AI Agents declaratively", border_style="white"))
 
 
 @click.group()
