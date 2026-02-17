@@ -42,6 +42,7 @@ def python_type_to_json_type(py_type):
     }
     return mapping.get(py_type, "string")
 
+# Build Tool Schema from function
 def build_schema_from_function(func, name, description):
     sig = inspect.signature(func)
 

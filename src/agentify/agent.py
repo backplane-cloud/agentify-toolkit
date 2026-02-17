@@ -11,7 +11,8 @@ from .tool import create_tool
 from pathlib import Path
 
 # Import MCP Client
-from agentify.mcp_client import MCPClient
+# from agentify.mcp_client import MCPClient
+from agentify.mcp.client import MCPClientHTTP
 
 
 @dataclass
@@ -26,7 +27,7 @@ class Agent:
     tool_names: list = field(default_factory=list)
     tools: dict = field(default_factory=dict)
 
-    mcp_client: Optional["MCPClient"] = None
+    mcp_client: Optional["MCPClientHTTP"] = None
 
     agent_file: Path | None = None
     _tools_loaded: bool = field(default=False, init=False)
@@ -198,7 +199,7 @@ When a user requests a tool action, produce only the JSON object following the a
                 console.print(full_prompt)
 
             # Send prompt to model
-            with console.status(f"[blue]{self.name} is thinking...[/blue]", spinner="dots"):
+            with console.status(f"[green]{self.name.title()} is thinking...[/green]", spinner="dots"):
                 response = self.run(full_prompt)
 
             # Try parsing JSON (tool invocation)
@@ -221,8 +222,8 @@ When a user requests a tool action, produce only the JSON object following the a
                     # Check MCP
                     if tool_name in mcp_tool_names:
                         # MCP SERVER TOOL
-                        console.print(f"INVOKING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
-                        tool_result = self.mcp_client.invoke(tool_name, args)
+                        console.print(f"Talking to MCP Server, calling {tool_name} with args: {args}", style="black on white")
+                        tool_result = self.mcp_client.call_tool(tool_name, args)
 
                 # if not tool:
                 #     raise ValueError(f"Tool '{tool_name}' not found on agent")
@@ -295,8 +296,9 @@ def create_agent(spec: dict, provider: str = None, model: str = None, agent_file
     if mcp_spec:
         endpoint = mcp_spec.get("endpoint")
         if endpoint:
-            mcp_client = MCPClient(endpoint)
+            mcp_client = MCPClientHTTP(endpoint)
 
+    
 
     agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names, agent_file=agent_file, mcp_client=mcp_client)
 
