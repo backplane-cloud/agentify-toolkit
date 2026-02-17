@@ -142,7 +142,7 @@ async def mcp_endpoint(request: Request):
 
     response_id = body.get("id", 1)
 
-    # initialize
+    # initialize (MCP-compliant)
     if method == "initialize":
         result = {
             "protocolVersion": "2.0",
@@ -161,7 +161,7 @@ async def mcp_endpoint(request: Request):
         return {"jsonrpc": "2.0", "id": response_id, "result": result}
 
 
-    # tools/list
+    # tools/list (MCP-compliant)
     if method == "tools/list":
         tools_list = []
         for tool in _TOOL_REGISTRY.values():
@@ -177,7 +177,7 @@ async def mcp_endpoint(request: Request):
             "result": {"tools": tools_list}
         }
 
-    # tools/call
+    # tools/call (MCP-compliant)
     if method == "tools/call":
         tool_name = params.get("name")
         arguments = params.get("arguments", {})
@@ -205,6 +205,11 @@ async def mcp_endpoint(request: Request):
                 "error": {"code": -32000, "message": str(e)}
             }
     
+    # Custom methods for dynamic tool loading
+    # e.g. agentify mcp2 register tool.yaml or path/to/tool/folder
+    # It loads tool.yaml or tool.yaml/python.py for function-based tools
+
+    # tools/register
     if method == "tools/register":
         path = params.get("path")
 
@@ -237,7 +242,7 @@ async def mcp_endpoint(request: Request):
                 "error": {"code": -32000, "message": str(e)}
             }
         
-    # Remove Tool from internal registry
+    # tools/deregister
     if method == "tools/deregister":
         tool_name = params.get("name")
 
