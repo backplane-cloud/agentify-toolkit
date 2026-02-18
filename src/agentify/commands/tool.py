@@ -5,7 +5,7 @@ import requests
 
 @click.group("tool")
 def tool_group():
-    """List and Show tool YAML files"""
+    """Manage tool YAML definitions (list, show)"""
     pass
 
 

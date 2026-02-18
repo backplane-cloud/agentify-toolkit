@@ -1,22 +1,27 @@
-# agentify/commands/mcp.py
-
 import click
-import requests
-from agentify.mcpserver.server import start_mcp_server
+import json
+
+# Agentify
+from agentify.mcp.server import start_mcp2_server
+from agentify.mcp.client import MCPClientHTTP
+
+# Text UI
 from rich.console import Console
 from rich.table import Table
-import json
 from rich.panel import Panel
 from rich.syntax import Syntax
+from rich import box
+
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 3333
+DEFAULT_ENDPOINT = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}/mcp"
 
 console = Console()
 
-
-@click.group(hidden=True)
+@click.group()
 def mcp_group():
-    """Manage Agentify Tool server"""
+    """Start the Agentify MCP server"""
     pass
-
 
 @mcp_group.command("start")
 @click.option("--host", default="127.0.0.1", help="Host to bind MCP server")
@@ -24,160 +29,139 @@ def mcp_group():
 def start(host: str, port: int):
     """Start MCP Server"""
     click.echo(f"Starting MCP server on {host}:{port}")
-    start_mcp_server(host=host, port=port)
+    start_mcp2_server(host=host, port=port)
+
 
 @mcp_group.command("list")
-@click.option("--endpoint", default="http://127.0.0.1:3333", help="MCP server endpoint")
-def list_tools(endpoint: str):
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+@click.option("--debug", is_flag=True, help="Enable debug mode")
+def list_tools(endpoint: str, debug: bool):
     """List tools exposed by the MCP server"""
-
-    url = f"{endpoint}/tools"
-
     try:
-        response = requests.get(url, timeout=5)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        console.print(f"[red]Error connecting to MCP server:[/red] {e}")
-        raise SystemExit(1)
+        client = MCPClientHTTP(endpoint)
+        init_result = client.initialize()
+        if debug:
+            # print("Server initialized:", init_result)
+            console.print(
+                Panel(
+                    f"{init_result}",
+                    title="Server initialized",
+                    border_style="green",
+                    expand=False,
+                    box=box.ROUNDED  # use a rounded border
+                )
+            )
 
-    data = response.json()
-    tools = data.get("tools", [])
+        tools = client.list_tools()
+      
+        # Display Tools in Table
+        table = Table(show_header=True, header_style="bold magenta", box=box.SIMPLE)
+        table.add_column("Name", style="cyan", no_wrap=True)
+        table.add_column("Description", style="green")
+        table.add_column("Input Schema", style="yellow")
 
-    if not tools:
-        console.print("[yellow]No tools found.[/yellow]")
-        return
+        if debug:
+            print(tools)
+            return
+        for tool in tools:
+            # Optional: pretty-print schema as compact JSON string
+            
+            schema_str = json.dumps(tool["inputSchema"], indent=None)
+            table.add_row(tool["name"], tool["description"], schema_str)
 
-    table = Table(
-        title="MCP Tools",
-        show_header=True,
-        header_style="bold",
-        box=None,              # 👈 no borders
-        pad_edge=False
-    )
+        console.print(table)
 
-    table.add_column("Tool Name", style="cyan", no_wrap=True)
-    table.add_column("Description", style="white")
+    except ConnectionError:
+        print("⚠️  Could not connect to MCP server.")
+        print("Please start the server by running: agentify mcp start")
 
-    for tool in tools:
-        table.add_row(
-            tool.get("name", ""),
-            tool.get("description", "") or ""
-        )
+    except Exception as e:
+        # print(f"An error occurred while communicating with the MCP server: {e}")
+        print("⚠️  Could not connect to MCP server.")
+        print(f"Please start the server by running: agentify mcp start{e}")
 
-    console.print(table)
 
 @mcp_group.command("invoke")
 @click.argument("tool_name")
-@click.option(
-    "--args",
-    default="{}",
-    help="JSON string of arguments to pass to the tool",
-)
-@click.option(
-    "--endpoint",
-    default="http://127.0.0.1:3333",
-    help="MCP server endpoint",
-)
-def invoke_tool(tool_name: str, args: str, endpoint: str):
+@click.option("--args",default="{}",help="JSON string of arguments to pass to the tool")
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+@click.option("--debug", is_flag=True, help="Enable debug mode")
+def invoke_tool(tool_name: str, args: str, endpoint: str, debug: bool = False):
     """Invoke a published tool"""
     try:
+        client = MCPClientHTTP(endpoint)
+        client.initialize()
         arguments = json.loads(args)
+        response = client.call_tool(tool_name, arguments)
+        
+        if debug: 
+            console.print(f"Call {tool_name} tool: {response}")
+            return
+        
+        result_json = json.dumps(response, indent=2)
+        console.print(result_json)
+
+            
+        
     except json.JSONDecodeError as e:
         console.print(f"[red]Invalid JSON for --args:[/red] {e}")
         raise SystemExit(1)
+    
 
-    url = f"{endpoint}/tools/{tool_name}/invoke"
-
-    try:
-        response = requests.post(
-            url,
-            json={"arguments": arguments},
-            timeout=10,
-        )
-        response.raise_for_status()
-    except requests.HTTPError:
-        console.print(
-            f"[red]Tool invocation failed:[/red] {response.text}"
-        )
-        raise SystemExit(1)
-    except requests.RequestException as e:
-        console.print(f"[red]Error connecting to MCP server:[/red] {e}")
-        raise SystemExit(1)
-
-    data = response.json()
-    result = data.get("result")
-
-    # Pretty output
-    if isinstance(result, (dict, list)):
-        pretty = json.dumps(result, indent=2)
-        syntax = Syntax(pretty, "json", theme="ansi_dark", line_numbers=False)
-        console.print(Panel(syntax, title="Result"))
-    else:
-        console.print(Panel(str(result), title="Result"))
-
-@mcp_group.command()
+@mcp_group.command("schema")
 @click.argument("tool_name")
-@click.option(
-    "--server", default="http://localhost:3333",
-    required=False,
-    help="MCP server URL (e.g. http://localhost:3333)",
-)
-def remove(tool_name: str, server: str):
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+def show_schema(tool_name: str, endpoint: str):
     """
-    Remove a tool from the MCP server.
+    Show the schema of a registered tool.
     """
-    url = f"{server.rstrip('/')}/tools/{tool_name}"
-
     try:
-        response = requests.delete(url, timeout=10)
-    except requests.RequestException as e:
-        raise click.ClickException(f"Failed to connect to MCP server: {e}")
+        client = MCPClientHTTP(endpoint)
+        client.initialize()
+        tools = client.list_tools()
+        tool_schema = next(t for t in tools if t["name"] == tool_name)["inputSchema"]
+        console.print(json.dumps(tool_schema, indent=2))
 
-    if response.status_code != 200:
-        try:
-            detail = response.json().get("detail")
-        except Exception:
-            detail = response.text
-        raise click.ClickException(
-            f"Failed to remove tool ({response.status_code}): {detail}"
-        )
-
-    click.echo(f"✓ Tool removed: {tool_name}")
-
-@mcp_group.command("show")
-@click.argument("tool_name")
-@click.option("--server", default="http://localhost:3333", help="MCP server URL")
-def show_tool(tool_name, server):
-    """Show details for a single MCP tool."""
-    import requests
-    import sys
-    from rich.console import Console
-    from rich.table import Table
-    from rich.json import JSON
-
-    console = Console()
-
-    try:
-        resp = requests.get(f"{server}/tools/{tool_name}")
-        resp.raise_for_status()
-    except requests.HTTPError as e:
-        console.print(f"[red]Error:[/red] {e.response.text}")
-        sys.exit(1)
     except Exception as e:
-        console.print(f"[red]Error:[/red] {e}")
-        sys.exit(1)
+        print(f"Error fetching schema for {tool_name}: {e}")
 
-    tool = resp.json()
 
-    table = Table(title=f"MCP Tool: {tool['name']}", show_header=False)
-    table.add_column("Field", style="bold")
-    table.add_column("Value")
+@mcp_group.command("register")
+@click.argument("path")
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+def register_tools(path: str, endpoint: str):
+    """
+    Register a Tool or directory of tools to the MCP Server from YAML
+    """
+    try:
+        client = MCPClientHTTP(endpoint)
+        client.initialize()
+        response = client.register_tools(path)
+        console.print(json.dumps(response, indent=2))
 
-    table.add_row("Name", tool["name"])
-    table.add_row("Description", tool.get("description", ""))
+    except Exception as e:
+        print(f"Error registering tools at {path}: {e}")
 
-    console.print(table)
 
-    if "input_schema" in tool:
-        console.print("\n[bold]Input Schema[/bold]")
-        console.print(JSON.from_data(tool["input_schema"]))
+@mcp_group.command("deregister")
+@click.argument("tool_name")
+@click.option("--endpoint", default=DEFAULT_ENDPOINT, help="MCP server endpoint")
+@click.option("--debug", is_flag=True, help="Enable debug output")
+def remove_tool_cli(tool_name: str, endpoint: str, debug: bool):
+    """
+    Remove a registered tool from the MCP Server by name.
+    """
+    try:
+        client = MCPClientHTTP(endpoint)
+        client.initialize()
+
+        if debug:
+            console.print(f"Deregistering tool: {tool_name} from {endpoint}")
+
+        response = client.deregister_tool(tool_name)
+        if response.get("status") == "ok":
+            console.print(f"{tool_name} successfully deregistered")
+            # console.print(json.dumps(response, indent=2))
+
+    except Exception as e:
+        console.print(f"[red]Error deregistering tool {tool_name}: {e}[/red]")

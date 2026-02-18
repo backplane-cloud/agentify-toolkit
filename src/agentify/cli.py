@@ -10,7 +10,7 @@ from .commands import (
     agent_group,
     provider_group,
     mcp_group, 
-    mcp2_group
+    xmcp_group
 )
 
 from rich.console import Console
@@ -48,7 +48,7 @@ main.add_command(tool_group)
 main.add_command(agent_group)
 main.add_command(provider_group)
 main.add_command(mcp_group)
-main.add_command(mcp2_group)
+main.add_command(xmcp_group)
 
 
 if __name__ == "__main__":
