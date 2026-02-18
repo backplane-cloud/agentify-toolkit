@@ -19,15 +19,18 @@ from rich.panel import Panel
 console = Console()
 
 agentify_icon = """
-[magenta] █████████████████[/magenta]    [yellow]agentify provider add <provider_name>[/yellow] [green]# e.g. openai, xai, anthropic[/green]
-[magenta]░███▒▒▒▒███▒▒▒▒███[/magenta]    [yellow]agentify agent new[/yellow] [green]# <-- Creates a new Agent[/green]
-[magenta]░███░░  ███░░  ███[/magenta]    [green]# Run Agent[/green]
-[magenta]░█████████████████[/magenta]    [yellow]agentify run agent.yaml[/yellow]
-[magenta]░█████░░░░░░░█████[/magenta]    [green]# Start MCP Server[/green]                
-[magenta]░█████████████████[/magenta]    [yellow]agentify mcp2 start[/yellow]    
-[magenta]░░░██░░██░░██░░██ [/magenta]    [green]# Start Agent Runtime → Deploy Agent[/green]
-[magenta]  ░██ ░██ ░██ ░██ [/magenta]    [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
+[white]             ██   [/white]
+[white] █████████████████[/white]    Command: [yellow]agentify provider add <provider_name>[/yellow] [green]# e.g. openai, xai, anthropic[/green]
+[white]░██   ░░███   ░░██[/white]    Command: [yellow]agentify agent new[/yellow] [green]# <-- Creates a new Agent[/green]
+[white]░██     ███     ██[/white]    [green]# Run Agent[/green]
+[white]░█████████████████[/white]    Command: [yellow]agentify run agent.yaml[/yellow]
+[white]░███████   ███████[/white]    [green]# Start MCP Server[/green]                
+[white]░█████████████████[/white]    Command: [yellow]agentify mcp start[/yellow]    
+[white]░░░██░░██░░██░░██ [/white]    [green]# Start Agent Runtime → Deploy Agent[/green]
+[white]  ░██ ░██ ░██ ░██ [/white]    Command: [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
+[white]  ░░  ░░  ░░  ░░  [/white]
 """
+
 
 console.print(Panel(agentify_icon, title=f"AGENTIFY TOOLKIT CLI v{__version__}", subtitle="Build, Run and deploy AI Agents declaratively", border_style="white"))
 
@@ -50,6 +53,5 @@ main.add_command(provider_group)
 main.add_command(mcp_group)
 main.add_command(xmcp_group)
 
-
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
