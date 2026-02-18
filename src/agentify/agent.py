@@ -222,7 +222,7 @@ When a user requests a tool action, produce only the JSON object following the a
                     # Check MCP
                     if tool_name in mcp_tool_names:
                         # MCP SERVER TOOL
-                        console.print(f"Talking to MCP Server, calling {tool_name} with args: {args}", style="black on white")
+                        console.print(f"INVOKING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
                         tool_result = self.mcp_client.call_tool(tool_name, args)
 
                 # if not tool:
@@ -232,11 +232,11 @@ When a user requests a tool action, produce only the JSON object following the a
                     # TOOL HANDLING
                     if tool.type == "internal":
                         # INTERNAL TOOL
-                        console.print(f"INVOKING INTERNAL TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
+                        console.print(f"INVOKING INTERNAL TOOL: '{tool_name}' with args: {args}", style="white on green")
                         tool_result = tool.invoke(args=args)
                     else: 
                         # REMOTE TOOL
-                        console.print(f"INVOKING REMOTE TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
+                        console.print(f"INVOKING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="white on green")
                         tool_result = tool.invoke(action_name, args)
 
 
