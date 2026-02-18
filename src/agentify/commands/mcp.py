@@ -12,9 +12,9 @@ from rich.syntax import Syntax
 console = Console()
 
 
-@click.group()
+@click.group(hidden=True)
 def mcp_group():
-    """Manage MCP servers"""
+    """Manage Agentify Tool server"""
     pass
 
 
