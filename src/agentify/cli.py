@@ -19,14 +19,14 @@ from rich.panel import Panel
 console = Console()
 
 agentify_icon = """
-[green] █████████████████[/green]    [yellow]agentify provider add <provider_name>[/yellow] [green]# e.g. openai, xai, anthropic[/green]
-[green]░███▒▒▒▒███▒▒▒▒███[/green]    [yellow]agentify agent new[/yellow] [green]# <-- Creates a new Agent[/green]
-[green]░███░░  ███░░  ███[/green]    [green]# Run Agent[/green]
-[green]░█████████████████[/green]    [yellow]agentify run agent.yaml[/yellow]
-[green]░█████░░░░░░░█████[/green]    [green]# Start MCP Server[/green]                
-[green]░█████████████████[/green]    [yellow]agentify mcp2 start[/yellow]    
-[green]░░░██░░██░░██░░██ [/green]    [green]# Start Agent Runtime → Deploy Agent[/green]
-[green]  ░██ ░██ ░██ ░██ [/green]    [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
+[magenta] █████████████████[/magenta]    [yellow]agentify provider add <provider_name>[/yellow] [green]# e.g. openai, xai, anthropic[/green]
+[magenta]░███▒▒▒▒███▒▒▒▒███[/magenta]    [yellow]agentify agent new[/yellow] [green]# <-- Creates a new Agent[/green]
+[magenta]░███░░  ███░░  ███[/magenta]    [green]# Run Agent[/green]
+[magenta]░█████████████████[/magenta]    [yellow]agentify run agent.yaml[/yellow]
+[magenta]░█████░░░░░░░█████[/magenta]    [green]# Start MCP Server[/green]                
+[magenta]░█████████████████[/magenta]    [yellow]agentify mcp2 start[/yellow]    
+[magenta]░░░██░░██░░██░░██ [/magenta]    [green]# Start Agent Runtime → Deploy Agent[/green]
+[magenta]  ░██ ░██ ░██ ░██ [/magenta]    [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
 """
 
 console.print(Panel(agentify_icon, title=f"AGENTIFY TOOLKIT CLI v{__version__}", subtitle="Build, Run and deploy AI Agents declaratively", border_style="white"))
