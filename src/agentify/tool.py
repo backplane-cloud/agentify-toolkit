@@ -62,13 +62,37 @@ class Tool:
         ]
         return base
 
+    def to_mcp_input_schema(self) -> dict:
+        if self.type == "internal":
+            return {
+                "type": "object",
+                "properties": self.params or {},
+                "required": list(self.params.keys())
+            }
+
+        if self.type == "remote":
+            # For now, simplest model:
+            # Flatten all action params into a single object
+            return {
+                "type": "object",
+                "properties": {
+                    "action": {"type": "string"},
+                    "args": {
+                        "type": "object",
+                        "properties": {},
+                    }
+                },
+                "required": ["action"]
+            }
+
+        raise RuntimeError(f"Unsupported tool type '{self.type}'")
+
+    
     def invoke(self, action_name: Optional[str] = None, args: dict = None):
         args = args or {}
 
         # Function Tool
         if self._callable:
-            if not self._callable:
-                raise RuntimeError(f"Internal tool '{self.name}' has no callable loaded.")
             return self._callable(**args)
             
         # API Tool
@@ -107,6 +131,14 @@ class Tool:
         
         raise RuntimeError("Tool not executable")
 
+    # New helper: create an MCP-registered tool dict
+    def to_mcp_tool_dict(self) -> dict:
+        return {
+            "name": self.name.replace("local.", "mcp."),  # optional namespace adjustment
+            "description": self.description,
+            "inputSchema": self.to_mcp_input_schema(),
+            "handler": self._callable
+        }
 
 def create_tool(spec: dict, source_path: Optional[Path] = None) -> Tool:
     """
@@ -170,7 +202,7 @@ def create_tool(spec: dict, source_path: Optional[Path] = None) -> Tool:
     # Create Tool object
     # ----------------------------
     tool = Tool(
-        name=f"local.{spec['name']}",
+        name=spec["name"],
         type=spec.get("type", "remote"),
         description=spec.get("description", ""),
         vendor=spec.get("vendor", ""),

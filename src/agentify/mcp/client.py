@@ -1,5 +1,3 @@
-# robust_mcp_client.py
-
 import requests
 import itertools
 import uuid

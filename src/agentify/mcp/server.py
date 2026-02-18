@@ -1,10 +1,9 @@
 from fastapi import FastAPI, Request
 import uvicorn
 
-from .tools.registry import list_tools, get_tool, register_tool, deregister_tool
-from .tools.factory import create_tool
-from .tools.yaml_loader import load_yaml_tools
-from .tools.builtin_tools import register_builtin_tools
+from .registry import list_tools, get_tool, register_tool, deregister_tool
+from .builtin_tools import register_builtin_tools 
+from agentify.tool import Tool
 
 app = FastAPI()
 
@@ -30,21 +29,40 @@ async def mcp_endpoint(request: Request):
             tools_list.append({
                 "name": tool.name,
                 "description": tool.description,
-                "inputSchema": tool.input_schema
+                "inputSchema": tool.to_mcp_input_schema()
             })
         return {"jsonrpc":"2.0","id":response_id,"result":{"tools":tools_list}}
+
 
     if method == "tools/call":
         tool_name = params.get("name")
         arguments = params.get("arguments", {})
         tool = get_tool(tool_name)
+
         if not tool:
-            return {"jsonrpc":"2.0","id":response_id,"error":{"code":-32601,"message":"Tool not found"}}
+            return {
+                "jsonrpc":"2.0",
+                "id":response_id,
+                "error":{"code":-32601,"message":"Tool not found"}
+            }
+
         try:
-            result = tool.handler(arguments)
+            if tool.type == "internal":
+                result = tool.invoke(args=arguments)
+            else:
+                action = arguments.get("action")
+                args = arguments.get("args", {})
+                result = tool.invoke(action_name=action, args=args)
+
             return {"jsonrpc":"2.0","id":response_id,"result":result}
+
         except Exception as e:
-            return {"jsonrpc":"2.0","id":response_id,"error":{"code":-32000,"message":str(e)}}
+            return {
+                "jsonrpc":"2.0",
+                "id":response_id,
+                "error":{"code":-32000,"message":str(e)}
+            }
+
 
     if method == "tools/register":
         path = params.get("path")
@@ -52,24 +70,49 @@ async def mcp_endpoint(request: Request):
             return {"jsonrpc":"2.0","id":response_id,"error":{"code":-32602,"message":"Missing 'path' parameter"}}
 
         registered = []
-        yaml_specs = load_yaml_tools(path)
-        for yaml_path, tool_spec in yaml_specs:
-            tool_type = tool_spec.get("type","external")
-            if tool_type=="internal":
-                tool = create_tool(yaml_path, tool_spec)
-                register_tool(tool)
-                registered.append(tool.name)
-            else:
-                actions = tool_spec.get("actions", {})
-                if not actions:
-                    tool = create_tool(yaml_path, tool_spec)
-                    register_tool(tool)
-                    registered.append(tool.name)
-                else:
-                    for action_name in actions:
-                        tool = create_tool(yaml_path, tool_spec, action_name=action_name)
-                        register_tool(tool)
-                        registered.append(tool.name)
+        # yaml_specs = load_yaml_tools(path)
+        from ..tool import create_tool # Adding new
+        from ..specs import load_tool_specs
+        yaml_specs = load_tool_specs(path)
+
+
+        from pathlib import Path
+
+        for tool_spec in yaml_specs:
+            yaml_file = tool_spec.get("_file")
+            source_path = Path(path) / yaml_file if yaml_file else None
+
+            base_tool = create_tool(tool_spec, source_path)
+
+            # INTERNAL TOOL → register directly
+            if base_tool.type == "internal":
+                base_tool.name = f"mcp.{base_tool.name}"
+                register_tool(base_tool)
+                registered.append(base_tool.name)
+                continue
+
+            # REMOTE TOOL → split actions
+            for action_name, action in base_tool.actions.items():
+
+                def make_action_callable(parent_tool, action_name):
+                    def _callable(**kwargs):
+                        return parent_tool.invoke(action_name=action_name, args=kwargs)
+                    return _callable
+
+                action_tool = Tool(
+                    name=f"mcp.{base_tool.name}.{action_name}",
+                    description=f"{base_tool.description} ({action_name})",
+                    vendor=base_tool.vendor,
+                    type="internal",
+                    version=base_tool.version,
+                    params=action.params.get("query", {}) 
+                            or action.params.get("body", {})
+                            or {},
+                    _callable=make_action_callable(base_tool, action_name)
+                )
+
+                register_tool(action_tool)
+                registered.append(action_tool.name)
 
         return {"jsonrpc":"2.0","id":response_id,"result":{"registered":registered}}
     
