@@ -229,9 +229,9 @@ register_tool(
 # ---- Entrypoint -----------------------------------------------------------
 #
 
-def start_mcp_server(host: str = "127.0.0.1", port: int = 3333):
+def start_xmcp_server(host: str = "127.0.0.1", port: int = 3333):
     uvicorn.run(app, host=host, port=port)
 
 
 if __name__ == "__main__":
-    start_mcp_server()
+    start_xmcp_server()

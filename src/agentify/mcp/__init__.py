@@ -1,2 +1,2 @@
-from .server import start_mcp2_server
+from .server import start_mcp_server
 from .client import MCPClientHTTP

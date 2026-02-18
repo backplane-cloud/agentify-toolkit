@@ -2,7 +2,7 @@
 
 import click
 import requests
-from agentify.mcpserver.server import start_mcp_server
+from agentify.mcpserver.server import start_xmcp_server
 from rich.console import Console
 from rich.table import Table
 import json

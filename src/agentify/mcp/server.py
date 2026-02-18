@@ -93,8 +93,8 @@ async def mcp_endpoint(request: Request):
                     "error": {"code": -32000, "message": str(e)}}
 
 
-def start_mcp2_server(host: str="127.0.0.1", port: int=3333):
+def start_mcp_server(host: str="127.0.0.1", port: int=3333):
     uvicorn.run(app, host=host, port=port)
 
 if __name__=="__main__":
-    start_mcp2_server()
+    start_mcp_server()
