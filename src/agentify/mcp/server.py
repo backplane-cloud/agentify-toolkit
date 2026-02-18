@@ -331,63 +331,7 @@ def load_yaml_tools(path: str):
 
 
 
-from pathlib import Path
-import importlib.util
-import sys
-from typing import Callable
 
-def load_python_function_from_file(yaml_path: str, func_name: str) -> Callable:
-    """
-    Load a Python function from a .py file located next to the YAML.
-    """
-    yaml_path = Path(yaml_path).resolve()
-    py_file = yaml_path.with_suffix(".py")  # same base name, .py extension
-
-    if not py_file.exists():
-        raise FileNotFoundError(f"Python file not found next to YAML: {py_file}")
-
-    module_name = py_file.stem  # e.g., add_numbers
-    spec = importlib.util.spec_from_file_location(module_name, py_file)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)  # type: ignore
-
-    if not hasattr(module, func_name):
-        raise AttributeError(f"Function '{func_name}' not found in {py_file}")
-
-    return getattr(module, func_name)
-
-
-# Build hanlder for internal
-import inspect
-from typing import Dict, Any
-
-def build_handler_for_internal(func: Callable, params_yaml: Dict[str, Any]) -> Callable[[Dict[str, Any]], Any]:
-    """
-    Wrap a Python function as an MCP tool handler.
-
-    Args:
-        func: Python function to wrap
-        params_yaml: dict describing expected params from YAML
-
-    Returns:
-        handler: callable taking args dict
-    """
-    sig = inspect.signature(func)
-    
-    def handler(args: Dict[str, Any]) -> Any:
-        func_args = {}
-        for param in sig.parameters.values():
-            name = param.name
-            if name in args:
-                func_args[name] = args[name]
-            elif param.default != inspect.Parameter.empty:
-                func_args[name] = param.default
-            else:
-                raise ValueError(f"Missing required argument: {name}")
-        return func(**func_args)
-
-    return handler
 
 
 # Tool Factory
@@ -470,6 +414,63 @@ def create_tool(yaml_path: str, tool_spec: dict, action_name: str = None) -> Too
             handler=handler
         )
 
+# Build Function Handler
+import inspect
+from typing import Dict, Any
+
+def build_handler_for_internal(func: Callable, params_yaml: Dict[str, Any]) -> Callable[[Dict[str, Any]], Any]:
+    """
+    Wrap a Python function as an MCP tool handler.
+
+    Args:
+        func: Python function to wrap
+        params_yaml: dict describing expected params from YAML
+
+    Returns:
+        handler: callable taking args dict
+    """
+    sig = inspect.signature(func)
+    
+    def handler(args: Dict[str, Any]) -> Any:
+        func_args = {}
+        for param in sig.parameters.values():
+            name = param.name
+            if name in args:
+                func_args[name] = args[name]
+            elif param.default != inspect.Parameter.empty:
+                func_args[name] = param.default
+            else:
+                raise ValueError(f"Missing required argument: {name}")
+        return func(**func_args)
+
+    return handler
+
+# Load Python function from file
+from pathlib import Path
+import importlib.util
+import sys
+from typing import Callable
+
+def load_python_function_from_file(yaml_path: str, func_name: str) -> Callable:
+    """
+    Load a Python function from a .py file located next to the YAML.
+    """
+    yaml_path = Path(yaml_path).resolve()
+    py_file = yaml_path.with_suffix(".py")  # same base name, .py extension
+
+    if not py_file.exists():
+        raise FileNotFoundError(f"Python file not found next to YAML: {py_file}")
+
+    module_name = py_file.stem  # e.g., add_numbers
+    spec = importlib.util.spec_from_file_location(module_name, py_file)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)  # type: ignore
+
+    if not hasattr(module, func_name):
+        raise AttributeError(f"Function '{func_name}' not found in {py_file}")
+
+    return getattr(module, func_name)
 
 
 
