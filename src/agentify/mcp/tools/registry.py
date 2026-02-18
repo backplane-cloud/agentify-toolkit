@@ -22,6 +22,14 @@ def register_tool(tool: Tool) -> None:
         raise ValueError(f"Tool already registered: {tool.name}")
     _TOOL_REGISTRY[tool.name] = tool
 
+def deregister_tool(name: str) -> None:
+    """
+    Remove a tool from the registry.
+    Raises KeyError if tool not found.
+    """
+    if name not in _TOOL_REGISTRY:
+        raise KeyError(f"Tool '{name}' not found")
+    del _TOOL_REGISTRY[name]
 
 def get_tool(name: str) -> Tool:
     return _TOOL_REGISTRY.get(name)

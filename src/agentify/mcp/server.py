@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 import uvicorn
 
-from .tools.registry import list_tools, get_tool, register_tool
+from .tools.registry import list_tools, get_tool, register_tool, deregister_tool
 from .tools.factory import create_tool
 from .tools.yaml_loader import load_yaml_tools
 from .tools.builtin_tools import register_builtin_tools
@@ -72,6 +72,26 @@ async def mcp_endpoint(request: Request):
                         registered.append(tool.name)
 
         return {"jsonrpc":"2.0","id":response_id,"result":{"registered":registered}}
+    
+
+    if method == "tools/deregister":
+        tool_name = params.get("name")
+        
+        if not tool_name:
+            return {"jsonrpc": "2.0","id": response_id,
+                    "error": {"code": -32602, "message": "Missing 'name' parameter"}}
+        
+        try:
+            deregister_tool(tool_name)
+            return {"jsonrpc":"2.0","id": response_id,
+                    "result": {"status": "ok", "deregistered": tool_name}}
+        except KeyError:
+            return {"jsonrpc":"2.0","id": response_id,
+                    "error": {"code": -32601, "message": f"Tool '{tool_name}' not found"}}
+        except Exception as e:
+            return {"jsonrpc":"2.0","id": response_id,
+                    "error": {"code": -32000, "message": str(e)}}
+
 
 def start_mcp2_server(host: str="127.0.0.1", port: int=3333):
     uvicorn.run(app, host=host, port=port)
