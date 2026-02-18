@@ -11,8 +11,48 @@ def tool_group():
 
 @tool_group.command("list")
 @click.argument("path", required=False, default=".")
-def list_tools(path):
-    """List all tool YAML files in a directory."""
+@click.option("--mcp", is_flag=True, help="List tools from a running MCP server")
+@click.option("--url", default="http://localhost:3333/mcp", help="MCP server URL")
+def list_tools(path, mcp, url):
+    """List tool definitions locally or from an MCP server."""
+    from pathlib import Path
+
+
+    # List MCP Tools
+    if mcp:
+        from agentify.mcp.client import MCPClientHTTP  # adjust import if needed
+
+        try:
+            client = MCPClientHTTP(url)
+            client.initialize()
+            tools = client.list_tools()
+            
+        except Exception as e:
+            click.secho(f"Failed to connect to MCP server: {e}", fg="red")
+            return
+
+        if not tools:
+            click.echo("No tools registered on MCP server.")
+            return
+
+        click.echo(f"Found {len(tools)} tool(s) on MCP server:")
+        click.secho(f"{'NAME':15} {'DESCRIPTION':30} {'VENDOR':20} {'ENDPOINT'}", fg="cyan")
+        click.echo("-" * 80)
+
+        for t in tools:
+            name = t.get("name", "Unnamed")
+            desc = t.get("description", "")
+            vendor = t.get("vendor", "")
+            endpoint = t.get("endpoint", "")
+
+            click.echo(f"{name:<15} {desc:<30} {vendor:<20} {endpoint}")
+
+        click.secho("\nUse: agentify tool show <tool_name> --mcp", fg="yellow")
+        return
+
+    # -----------------------------
+    # LOCAL YAML MODE (existing behaviour)
+    # -----------------------------
     from ..specs import load_tool_specs
 
     p = Path(path)
@@ -27,14 +67,17 @@ def list_tools(path):
     click.echo(f"Found {len(specs)} tool(s) in {path}:")
     click.secho(f"{'NAME':15} {'DESCRIPTION':30} {'VENDOR':20} {'ENDPOINT'}", fg="cyan")
     click.echo("-" * 80)
+
     for s in specs:
         name = s.get("name", "Unnamed")
         desc = s.get("description", "")
         vendor = s.get("vendor", "")
         endpoint = s.get("endpoint", "")
+
         click.echo(f"{name:<15} {desc:<30} {vendor:<20} {endpoint}")
 
-    click.secho("\nUse: agentify tool show <tool_name> for metadata", fg="yellow")
+    click.secho("\nUse: agentify tool show <tool_name>", fg="yellow")
+
 
 
 
