@@ -4,7 +4,7 @@ import uvicorn
 import inspect
 import os
 import yaml
-import requests
+# import requests
 
 app = FastAPI()
 
@@ -211,6 +211,7 @@ async def mcp_endpoint(request: Request):
     # It loads tool.yaml or tool.yaml/python.py for function-based tools
 
     # tools/register
+    # tools/register
     if method == "tools/register":
         path = params.get("path")
 
@@ -226,9 +227,39 @@ async def mcp_endpoint(request: Request):
             registered = []
 
             for yaml_path, tool_spec in yaml_specs:
-                tool = build_tool_from_yaml(yaml_path, tool_spec)
-                register_tool(tool)
-                registered.append(tool.name)
+                tool_type = tool_spec.get("type", "external")  # default to external/API
+                base_name = tool_spec.get("name")
+                version = tool_spec.get("version")
+                description = tool_spec.get("description", "")
+                vendor = tool_spec.get("vendor")
+                endpoint = tool_spec.get("endpoint")  # only for API tools
+
+                # --- INTERNAL FUNCTION TOOL ---
+                if tool_type == "internal":
+                    tool = build_tool_from_yaml(yaml_path, tool_spec)
+                    register_tool(tool)
+                    registered.append(tool.name)
+
+                # --- API / EXTERNAL TOOL ---
+                else:
+                    actions = tool_spec.get("actions", {})
+
+                    if not actions:
+                        # No actions defined, register as a single tool
+                        tool = build_tool_from_yaml(yaml_path, tool_spec)
+                        register_tool(tool)
+                        registered.append(tool.name)
+
+                    else:
+                        # Register each action as a separate tool
+                        for action_name in actions:
+                            tool = build_tool_from_yaml(
+                                yaml_path,
+                                tool_spec,
+                                action_name=action_name
+                            )
+                            register_tool(tool)
+                            registered.append(tool.name)
 
             return {
                 "jsonrpc": "2.0",
@@ -242,6 +273,8 @@ async def mcp_endpoint(request: Request):
                 "id": response_id,
                 "error": {"code": -32000, "message": str(e)}
             }
+
+
         
     # tools/deregister
     if method == "tools/deregister":
@@ -360,29 +393,27 @@ def build_handler_for_internal(func: Callable, params_yaml: Dict[str, Any]) -> C
 
 # Tool Factory
 
-def build_tool_from_yaml(yaml_path: str, tool_spec: dict) -> Tool:
+def build_tool_from_yaml(yaml_path: str, tool_spec: dict, action_name: str = None) -> Tool:
     """
     Build a Tool object from YAML spec.
 
     Handles both internal (Python) and external (API) tools.
+    For API tools, if action_name is provided, builds a tool for that action.
     """
+    import requests
+    import inspect
+
     name = tool_spec["name"]
     description = tool_spec.get("description", "")
     tool_type = tool_spec.get("type", "external")
-    
+
     if tool_type == "internal":
-        # Load Python function
         func_name = tool_spec["function"]
         func = load_python_function_from_file(yaml_path, func_name)
-
-        # Build input_schema from 'params'
         params_yaml = tool_spec.get("params", {})
-        input_schema = {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
 
+        # input_schema
+        input_schema = {"type": "object", "properties": {}, "required": []}
         for param_name, param_def in params_yaml.items():
             param_type = param_def.get("type", "string")
             input_schema["properties"][param_name] = {"type": param_type}
@@ -402,50 +433,44 @@ def build_tool_from_yaml(yaml_path: str, tool_spec: dict) -> Tool:
         endpoint = tool_spec.get("endpoint")
         actions = tool_spec.get("actions", {})
 
-        input_schema = {
-            "type": "object",
-            "properties": {
-                "action": {"type": "string"},
-                "params": {"type": "object"}
-            },
-            "required": ["action"]
-        }
+        if action_name is None:
+            raise ValueError(f"No action_name provided for API tool: {name}")
 
+        if action_name not in actions:
+            raise ValueError(f"Action '{action_name}' not found in tool '{name}'")
+
+        action_def = actions[action_name]
+        method = action_def.get("method", "GET").upper()
+        path = action_def.get("path", "/")
+        action_params = action_def.get("params", {})
+
+        # input_schema from action params
+        input_schema = {"type": "object", "properties": {}, "required": []}
+        for loc, param_group in action_params.items():  # 'query' or 'body'
+            for param_name, param_type in param_group.items():
+                input_schema["properties"][param_name] = {"type": param_type}
+                input_schema["required"].append(param_name)
+
+        # handler calls this specific action
         def handler(args: dict):
-            import requests
+            if method == "GET":
+                resp = requests.get(endpoint.rstrip("/") + path, params=args)
+            elif method == "POST":
+                resp = requests.post(endpoint.rstrip("/") + path, json=args)
+            else:
+                raise ValueError(f"Unsupported HTTP method: {method}")
+            resp.raise_for_status()
+            return resp.json()
 
-            action = args.get("action")
-            params = args.get("params", {})
-
-            if action not in actions:
-                raise ValueError(f"Unknown action: {action}")
-
-            action_def = actions[action]
-            method = action_def.get("method", "GET").upper()
-            path = action_def.get("path", "/")
-
-            url = endpoint.rstrip("/") + path
-
-            try:
-                if method == "GET":
-                    resp = requests.get(url, params=params)
-                elif method == "POST":
-                    resp = requests.post(url, json=params)
-                else:
-                    raise ValueError(f"Unsupported HTTP method: {method}")
-
-                resp.raise_for_status()
-                return resp.json()
-
-            except Exception as e:
-                raise RuntimeError(f"API call failed: {e}")
+        tool_full_name = f"mcp.{name}.{action_name}"
 
         return Tool(
-            name=f"mcp.{name}",
-            description=description,
+            name=tool_full_name,
+            description=f"{description} - action: {action_name}",
             input_schema=input_schema,
             handler=handler
         )
+
 
 
 
