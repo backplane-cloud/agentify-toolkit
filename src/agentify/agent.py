@@ -65,7 +65,7 @@ class Agent:
                 raise FileNotFoundError(f"Tool '{tool_name}' not found at {tool_file}")
 
             spec = load_tool_spec(tool_file)  # your YAML loader
-            tool = create_tool(spec)          # your tool factory
+            tool = create_tool(spec, tool_file)          # your tool factory
             self.tools[tool.name] = tool
 
         self._tools_loaded = True
@@ -213,7 +213,7 @@ When a user requests a tool action, produce only the JSON object following the a
                     cleaned = cleaned[4:]                                                      
                     cleaned = cleaned.strip()     
     
-                data = json.loads(cleaned)              
+                data = json.loads(cleaned)
                 tool_name = data.get("tool")
                 action_name = data.get("action")
                 args = data.get("args", {})
@@ -223,7 +223,7 @@ When a user requests a tool action, produce only the JSON object following the a
                     # Check MCP
                     if tool_name in mcp_tool_names:
                         # MCP SERVER TOOL
-                        console.print(f"INVOKING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
+                        console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
                         tool_result = self.mcp_client.call_tool(tool_name, args)
 
                 # if not tool:
@@ -232,12 +232,12 @@ When a user requests a tool action, produce only the JSON object following the a
                 if tool:
                     # TOOL HANDLING
                     if tool.type == "internal":
-                        # INTERNAL TOOL
-                        console.print(f"INVOKING INTERNAL TOOL: '{tool_name}' with args: {args}", style="white on green")
+                        # Local Function Tool
+                        console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
                         tool_result = tool.invoke(args=args)
                     else: 
-                        # REMOTE TOOL
-                        console.print(f"INVOKING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="white on green")
+                        # Local API Tool
+                        console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
                         tool_result = tool.invoke(action_name, args)
 
 

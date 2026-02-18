@@ -6,8 +6,10 @@ Description: Agentify class to build multi-model AI Agents
 """
 
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, Callable, Any
 import requests
+from pathlib import Path
+from importlib.util import spec_from_file_location, module_from_spec
 
 @dataclass
 class Action:
@@ -31,12 +33,15 @@ class Tool:
     description: str
     vendor: str
     type: str   # "internal" or "remote"
-    module: Optional[str] = None # for internal
-    function: Optional[str] = None # for internal
-    endpoint: Optional[str] = None # for remote
     version: Optional[str] = field(default="0.0.0")
+    
+    # API Tool
+    endpoint: Optional[str] = None # for remote    
     actions: dict = field(default_factory=dict)
     params: dict = field(default_factory=dict)
+
+    # Function Tooll Note: When type == internal, then it's a function e.g. (tool.yaml + tool.py)
+    _callable: Optional[Callable[..., Any]] = field(default=None, repr=False)
 
 
     def to_schema(self) -> dict:
@@ -60,88 +65,119 @@ class Tool:
     def invoke(self, action_name: Optional[str] = None, args: dict = None):
         args = args or {}
 
-        # Internal Tool
-        if self.type == "internal":
-            if not self.module or not self.function:
-                raise RuntimeError(f"Internal tool '{self.name}' missing module/function info")
+        # Function Tool
+        if self._callable:
+            if not self._callable:
+                raise RuntimeError(f"Internal tool '{self.name}' has no callable loaded.")
+            return self._callable(**args)
+            
+        # API Tool
+        if self.actions:
+            if not action_name:
+                raise ValueError(f"Action name required for remote tool '{self.name}'")
 
-            import importlib
-            import sys
-            from pathlib import Path
+            # find action
+            action = self.actions.get(action_name)
+            if not action:
+                raise ValueError(f"Unknown action '{action_name}' for tool '{self.name}'")
 
-            # TEMPORARY ASSUMPTION:
-            # agentify is run as: agentify run examples/solution/internal_demo.yaml
-            # so tools live in examples/solution/tools/
-            agent_root = Path("examples/solution").resolve()
+            # build URL and route based on action.method
+            url = f"{self.endpoint}{action.path}"
+            method = action.method.upper()
 
-            if str(agent_root) not in sys.path:
-                sys.path.insert(0, str(agent_root))
+            if method == "GET":
+                r = requests.get(url, params=args)
+            elif method == "POST":
+                r = requests.post(url, json=args)
+            elif method == "PUT":
+                r = requests.put(url, json=args)
+            elif method == "DELETE":
+                r = requests.delete(url, json=args)
+            else:
+                raise ValueError(f"Unsupported HTTP method '{method}'")
 
-            module = importlib.import_module(self.module)  # tools.add_numbers
-            func = getattr(module, self.function)
-            return func(**args)
+            if r.status_code >= 400:
+                return {
+                    "error": True,
+                    "status": r.status_code,
+                    "response": r.text
+                }
 
-        # Remote Tool
-        if not action_name:
-            raise ValueError(f"Action name required for remote tool '{self.name}'")
+            return r.json()
+        
+        raise RuntimeError("Tool not executable")
 
-        # find action
-        action = self.actions.get(action_name)
-        if not action:
-            raise ValueError(f"Unknown action '{action_name}' for tool '{self.name}'")
 
-        # build URL and route based on action.method
-        url = f"{self.endpoint}{action.path}"
-        method = action.method.upper()
+def create_tool(spec: dict, source_path: Optional[Path] = None) -> Tool:
+    """
+    Create a Tool object from a YAML spec dict.
 
-        if method == "GET":
-            r = requests.get(url, params=args)
-        elif method == "POST":
-            r = requests.post(url, json=args)
-        elif method == "PUT":
-            r = requests.put(url, json=args)
-        elif method == "DELETE":
-            r = requests.delete(url, json=args)
-        else:
-            raise ValueError(f"Unsupported HTTP method '{method}'")
-
-        # basic error handling
-        if r.status_code >= 400:
-            return {
-                "error": True,
-                "status": r.status_code,
-                "response": r.text
-            }
-
-        # assume JSON response (standard for agents)
-        return r.json()
+    - For internal tools: dynamically load the Python function from <tool_name>.py
+      in the same folder as the YAML file.
+    - For API tools: create Action objects.
     
-def create_tool(spec: dict) -> Tool:
+    Args:
+        spec: Loaded YAML dict for the tool
+        source_path: Path to the YAML file (used to locate the corresponding .py)
     """
-    Create a Tool object (with Action objects) from a tool spec dict.
-    """
-    # Build actions dict
+  
     actions = {}
-    for action_name, action_data in spec.get("actions", {}).items():
-        actions[action_name] = Action(
-            name=action_name,
-            method=action_data.get("method", "GET"),
-            path=action_data.get("path", ""),
-            params=action_data.get("params", {})
-        )
+    callable_fn = None
+
+    # ----------------------------
+    # Internal (function-based) tool
+    # ----------------------------
+    if spec.get("type") == "internal":
+        if not source_path:
+            raise RuntimeError(f"source_path required to load internal tool '{spec.get('name')}'")
+
+        function_name = spec.get("function")
+        if not function_name:
+            raise RuntimeError(f"Internal tool '{spec.get('name')}' missing 'function' field")
+
+        # Python file is <tool_name>.py in the same folder as the YAML
+        py_file = source_path.parent / f"{source_path.stem}.py"
+        if not py_file.exists():
+            raise FileNotFoundError(f"Python file not found for internal tool '{spec.get('name')}' at {py_file}")
+
+        
+        # Dynamically load module
+        module_spec = spec_from_file_location(f"{source_path.stem}_module", py_file)
+        module = module_from_spec(module_spec)
+        module_spec.loader.exec_module(module)
+
     
-    # Create the Tool object
+
+        # Get the callable function
+        try:
+            callable_fn = getattr(module, function_name)
+        except AttributeError:
+            raise RuntimeError(f"Function '{function_name}' not found in {py_file}")
+
+    # ----------------------------
+    # API-based tool
+    # ----------------------------
+    else:
+        for action_name, action_data in spec.get("actions", {}).items():
+            actions[action_name] = Action(
+                name=action_name,
+                method=action_data.get("method", "GET"),
+                path=action_data.get("path", ""),
+                params=action_data.get("params", {})
+            )
+
+    # ----------------------------
+    # Create Tool object
+    # ----------------------------
     tool = Tool(
         name=f"local.{spec['name']}",
-        type=spec.get("type" or "remote"),
+        type=spec.get("type", "remote"),
         description=spec.get("description", ""),
         vendor=spec.get("vendor", ""),
         endpoint=spec.get("endpoint", ""),
         actions=actions,
         version=spec.get("version", "0.0.0"),
-        module=spec.get("module", ""),
-        function=spec.get("function", ""),
-        params=spec.get("params", "")
+        _callable=callable_fn,
+        params=spec.get("params", {})
     )
-    
     return tool
