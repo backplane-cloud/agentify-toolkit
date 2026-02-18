@@ -118,6 +118,7 @@ class Agent:
 
         # MCP Tool load
         if self.mcp_client:
+            self.mcp_client.initialize()
             mcp_tools = self.mcp_client.list_tools()
             mcp_tool_names = [t["name"] for t in mcp_tools]
         else:
@@ -130,8 +131,8 @@ class Agent:
             f"[bold cyan]{self.name.upper()}[/bold cyan] [dim]{self.version}[/dim]\n"
             f"Role: {self.description}\n"
             f"Using [yellow]{self.model_id}[/yellow] by {self.provider}\n"
-            f"Tools: {self.tool_names}\n"
-            f"MCP Tools: {mcp_tool_names}",
+            f"Agent Tools:      {self.tool_names}\n"
+            f"MCP Server Tools: {mcp_tool_names}",
             border_style="cyan"
         ))
 

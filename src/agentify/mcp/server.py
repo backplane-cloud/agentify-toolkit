@@ -211,7 +211,6 @@ async def mcp_endpoint(request: Request):
     # It loads tool.yaml or tool.yaml/python.py for function-based tools
 
     # tools/register
-    # tools/register
     if method == "tools/register":
         path = params.get("path")
 
@@ -228,15 +227,15 @@ async def mcp_endpoint(request: Request):
 
             for yaml_path, tool_spec in yaml_specs:
                 tool_type = tool_spec.get("type", "external")  # default to external/API
-                base_name = tool_spec.get("name")
-                version = tool_spec.get("version")
-                description = tool_spec.get("description", "")
-                vendor = tool_spec.get("vendor")
-                endpoint = tool_spec.get("endpoint")  # only for API tools
+                # base_name = tool_spec.get("name")
+                # description = tool_spec.get("description", "")
+                # version = tool_spec.get("version")
+                # vendor = tool_spec.get("vendor")
+                # endpoint = tool_spec.get("endpoint")  # only for API tools
 
                 # --- INTERNAL FUNCTION TOOL ---
                 if tool_type == "internal":
-                    tool = build_tool_from_yaml(yaml_path, tool_spec)
+                    tool = create_tool(yaml_path, tool_spec)
                     register_tool(tool)
                     registered.append(tool.name)
 
@@ -246,14 +245,14 @@ async def mcp_endpoint(request: Request):
 
                     if not actions:
                         # No actions defined, register as a single tool
-                        tool = build_tool_from_yaml(yaml_path, tool_spec)
+                        tool = create_tool(yaml_path, tool_spec)
                         register_tool(tool)
                         registered.append(tool.name)
 
                     else:
                         # Register each action as a separate tool
                         for action_name in actions:
-                            tool = build_tool_from_yaml(
+                            tool = create_tool(
                                 yaml_path,
                                 tool_spec,
                                 action_name=action_name
@@ -393,7 +392,7 @@ def build_handler_for_internal(func: Callable, params_yaml: Dict[str, Any]) -> C
 
 # Tool Factory
 
-def build_tool_from_yaml(yaml_path: str, tool_spec: dict, action_name: str = None) -> Tool:
+def create_tool(yaml_path: str, tool_spec: dict, action_name: str = None) -> Tool:
     """
     Build a Tool object from YAML spec.
 
