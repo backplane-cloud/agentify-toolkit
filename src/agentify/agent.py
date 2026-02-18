@@ -213,21 +213,12 @@ When a user requests a tool action, produce only the JSON object following the a
                     cleaned = cleaned[4:]                                                      
                     cleaned = cleaned.strip()     
     
+                # LLM JSON RESPONSE
                 data = json.loads(cleaned)
                 tool_name = data.get("tool")
                 action_name = data.get("action")
                 args = data.get("args", {})
                 tool = self.tools.get(tool_name)
-
-                if not tool:
-                    # Check MCP
-                    if tool_name in mcp_tool_names:
-                        # MCP SERVER TOOL
-                        console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
-                        tool_result = self.mcp_client.call_tool(tool_name, args)
-
-                # if not tool:
-                #     raise ValueError(f"Tool '{tool_name}' not found on agent")
 
                 if tool:
                     # TOOL HANDLING
@@ -239,8 +230,15 @@ When a user requests a tool action, produce only the JSON object following the a
                         # Local API Tool
                         console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
                         tool_result = tool.invoke(action_name, args)
+                else: 
+                    # Check MCP
+                    if tool_name in mcp_tool_names:
+                        # MCP SERVER TOOL
+                        console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
+                        tool_result = self.mcp_client.call_tool(tool_name, args)
 
-
+                # if not tool:
+                #     raise ValueError(f"Tool '{tool_name}' not found on agent")
 
                 # Minify JSON to avoid confusing model in next prompt
                 tool_result_str = json.dumps(tool_result, separators=(',', ':'))
@@ -250,7 +248,7 @@ When a user requests a tool action, produce only the JSON object following the a
 
                 # Ask model to display tool output naturally
                 analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
-                with console.status(f"[blue]{self.name} is analysing tool data...[/blue]", spinner="dots"):
+                with console.status(f"{self.name.title()} is analysing tool response...", spinner="dots"):
                     response = self.run(analysis_prompt)
 
                 # Store agent response in history
