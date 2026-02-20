@@ -1,7 +1,7 @@
 import requests
 import itertools
 import uuid
-
+import json
 
 class MCPError(Exception):
     """Generic MCP error from server response."""
@@ -21,9 +21,12 @@ class MCPClientHTTP:
     Minimal MCP HTTP client (JSON-RPC 2.0) compatible with most MCP servers.
     """
 
-    def __init__(self, endpoint: str, use_uuid: bool = False):
+    def __init__(self, endpoint: str, name: str, use_uuid: bool = False):
+        self.name = name
         self.endpoint = endpoint.rstrip("/")
         self._next_id = 1
+        self._initialized = False
+
 
     def _get_request_id(self):
         if self.use_uuid:
@@ -31,8 +34,11 @@ class MCPClientHTTP:
         return next(_request_id_counter)
 
     def _rpc(self, method: str, params=None):
-        if params is None:
-            params = {}
+
+        headers = {
+            "Accept": "application/json, text/event-stream",
+            "Content-Type": "application/json"
+}
 
         payload = {
             "jsonrpc": "2.0",
@@ -40,19 +46,70 @@ class MCPClientHTTP:
             "method": method,
             "params": params
         }
+
         self._next_id += 1  # increment for next request
 
-        response = requests.post(self.endpoint, json=payload)
-        response.raise_for_status()
-        data = response.json()
+        # response = requests.post(self.endpoint, json=payload, headers=headers, stream=False)
+        # print(response.headers)
+        # print(response.text)
+        # response.raise_for_status()
+        # data = response.json()
 
-        if "error" in data:
-            raise Exception(f"MCP Error: {data['error']}")
-        return data.get("result")
+        # if "error" in data:
+        #     raise Exception(f"MCP Error: {data['error']}")
+        # return data.get("result")
+        response = requests.post(
+            self.endpoint,
+            json=payload,
+            headers=headers,
+            stream=True  # must be True for SSE
+        )
+
+        response.raise_for_status()
+
+        content_type = response.headers.get("Content-Type", "")
+
+        if content_type.startswith("text/event-stream"):
+            for line in response.iter_lines(decode_unicode=True):
+                if not line:
+                    continue
+                if line.startswith("data: "):
+                    raw = line[len("data: "):]
+                    message = json.loads(raw)
+
+                    if "error" in message:
+                        raise Exception(f"MCP Error: {message['error']}")
+
+                    return message.get("result")
+        else:
+            data = response.json()
+            if "error" in data:
+                raise Exception(f"MCP Error: {data['error']}")
+            return data.get("result")
 
     def initialize(self):
         """Call MCP server initialize method."""
-        return self._rpc("initialize", {})
+        if self._initialized:
+            return
+        
+        try: 
+            response = self._rpc("initialize", {
+                "protocolVersion": "2024-11-05",
+                "clientInfo": {
+                    "name": "agentify",
+                    "version": "0.1.0"
+                },
+                "capabilities": {}
+            })
+
+            self._initialized = True
+
+            return response
+        except Exception:
+            self._initialized = False
+            raise
+        
+
 
     def list_tools(self):
         response = self._rpc("tools/list")

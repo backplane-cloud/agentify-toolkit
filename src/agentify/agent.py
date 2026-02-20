@@ -27,7 +27,8 @@ class Agent:
     tool_names: list = field(default_factory=list)
     tools: dict = field(default_factory=dict)
 
-    mcp_client: Optional["MCPClientHTTP"] = None
+    # mcp_client: Optional["MCPClientHTTP"] = None
+    mcp_clients: list[MCPClientHTTP] = field(default_factory=list)
 
     agent_file: Path | None = None
     _tools_loaded: bool = field(default=False, init=False)
@@ -116,13 +117,35 @@ class Agent:
         if self.tool_names and not self._tools_loaded:
             self.load_tools()
 
-        # MCP Tool load
-        if self.mcp_client:
-            self.mcp_client.initialize()
-            mcp_tools = self.mcp_client.list_tools()
-            mcp_tool_names = [t["name"] for t in mcp_tools]
-        else:
-            mcp_tool_names = []
+        # MCP Tool loader
+        # if self.mcp_client:
+        #     self.mcp_client.initialize()
+        #     mcp_tools = self.mcp_client.list_tools()
+        #     mcp_tool_names = [t["name"] for t in mcp_tools]
+        # else:
+        #     mcp_tool_names = []
+
+        # MCP Tool loader v2
+
+        mcp_tools = []
+        mcp_tool_names = []
+
+        for client in self.mcp_clients:
+            client.initialize()
+            tools = client.list_tools()
+            # mcp_tools += tools
+            # mcp_tool_names += [t["name"] for t in tools]
+
+            for tool in tools:
+                namespaced_tool = tool.copy()
+
+                original_name = tool["name"]
+                namespaced_name = f"{client.name}.{original_name}"
+
+                namespaced_tool["name"] = namespaced_name
+
+                mcp_tools.append(namespaced_tool)
+                mcp_tool_names.append(namespaced_name)
 
         console = Console()
         
@@ -144,11 +167,8 @@ class Agent:
             tools_block = "\n\nLOCAL TOOLS:\n" + json.dumps(tool_schemas, indent=2)
 
         # Load MCP Server Tools
-        if self.mcp_client:
-            tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools, indent=2)
-            
-
-        
+        if self.mcp_clients:
+            tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools, indent=2)        
 
 
         if debug:
@@ -235,8 +255,20 @@ When a user requests a tool action, produce only the JSON object following the a
                     if tool_name in mcp_tool_names:
                         # MCP SERVER TOOL
                         console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
-                        tool_result = self.mcp_client.call_tool(tool_name, args)
+                        # tool_result = self.mcp_client.call_tool(tool_name, args)
+                        server_name, actual_tool = tool_name.split(".", 1)
 
+                        client = next(
+                            (c for c in self.mcp_clients if c.name == server_name),
+                            None
+                        )
+
+                        if not client:
+                            raise Exception(f"No MCP client found for server '{server_name}'")
+
+                        tool_result = client.call_tool(actual_tool, args)
+
+                        
                 # if not tool:
                 #     raise ValueError(f"Tool '{tool_name}' not found on agent")
 
@@ -289,16 +321,32 @@ def create_agent(spec: dict, provider: str = None, model: str = None, agent_file
     # Local Tools via tool.yaml or tool.yaml/tool.py within tools/
     tool_names = spec.get("tools")
 
-    # MCP Tools via MCP Server http://localhost:3333
-    mcp_client = None
-    mcp_spec = spec.get("mcp")
-    if mcp_spec:
-        endpoint = mcp_spec.get("endpoint")
-        if endpoint:
-            mcp_client = MCPClientHTTP(endpoint)
+    # Load MCP Server clients
+    mcp_clients = []
 
+    mcp_spec = spec.get("mcp", {})
+    servers = mcp_spec.get("servers",[])
+
+    for server in servers:
+        server_name = server.get("name")
+        endpoint = server.get("endpoint")
+
+        if endpoint:
+            client = MCPClientHTTP(
+                name=server_name,
+                endpoint=endpoint
+            )
+            mcp_clients.append(client)
     
 
-    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names, agent_file=agent_file, mcp_client=mcp_client)
+    # MCP Tools via MCP Server http://localhost:3333
+    # mcp_client = None
+    # mcp_spec = spec.get("mcp")
+    # if mcp_spec:
+    #     endpoint = mcp_spec.get("endpoint")
+    #     if endpoint:
+    #         mcp_client = MCPClientHTTP(endpoint)
+
+    agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names, agent_file=agent_file, mcp_clients=mcp_clients)
 
     return agent
