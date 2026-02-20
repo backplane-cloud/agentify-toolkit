@@ -21,8 +21,8 @@ class MCPClientHTTP:
     Minimal MCP HTTP client (JSON-RPC 2.0) compatible with most MCP servers.
     """
 
-    def __init__(self, endpoint: str, name: str, use_uuid: bool = False):
-        self.name = name
+    def __init__(self, endpoint: str, name: str = None, use_uuid: bool = False):
+        self.name = name or "ephemeral"
         self.endpoint = endpoint.rstrip("/")
         self._next_id = 1
         self._initialized = False
