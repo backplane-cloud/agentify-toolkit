@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Request
 import uvicorn
+import os
 
 from .registry import list_tools, get_tool, register_tool, deregister_tool
 from .builtin_tools import register_builtin_tools 
@@ -70,10 +71,16 @@ async def mcp_endpoint(request: Request):
             return {"jsonrpc":"2.0","id":response_id,"error":{"code":-32602,"message":"Missing 'path' parameter"}}
 
         registered = []
-        # yaml_specs = load_yaml_tools(path)
-        from ..tool import create_tool # Adding new
-        from ..specs import load_tool_specs
-        yaml_specs = load_tool_specs(path)
+        from ..tool import create_tool
+        from ..specs import load_tool_specs, load_tool_spec 
+        if os.path.isfile(path):
+            # It's a single YAML file
+            yaml_specs = [load_tool_spec(path)]
+        elif os.path.isdir(path):
+            # It's a directory containing multiple YAML files
+            yaml_specs = load_tool_specs(path)
+        else:
+            raise ValueError(f"Path {path} does not exist or is not a file/directory.")
 
 
         from pathlib import Path
