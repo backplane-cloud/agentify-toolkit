@@ -1,0 +1,14 @@
+name: agentify
+description: This is an example Backplane Agent
+version: 0.1.0
+
+# Model configuration
+model:
+  provider: agentify
+  id: xai/grok-4
+  # Environment variable for API key.
+  # Optional: defaults to XAI_API_KEY if omitted
+  api_key_env: XAI_API_KEY
+
+# Agent role / personality
+role: You are a Backplane AI Agent
