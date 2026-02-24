@@ -1,154 +1,77 @@
-# MCP Integration
+# MCP - Getting Started
 
-Agentify now supports Model Context Protocol (MCP).
-
-With Agentify you can:
-
-- Host your own MCP server
-- Register tools dynamically
-- Have agents connect to one or more MCP servers
-- Consume third-party MCP servers
-- Via the CLI you can inspect tool schema, invoke, register, and deregister tools
-
-In addition to the `run`, `serve` and `deploy` semantics, Agentify provides the ablity to:
-
-- Be an MCP Server
-- Allow Agents to communicate to MCP Servers through its MCP client
-
-## Architecture Overview
-
-At runtime, Agentify agents can:
-
-- Use local tools (declared in agent.yaml)
-- Connect to one or more MCP servers
-- Aggregate all tool schemas
-- Invoke tools deterministically
-
-Conceptually:
-
-```mermaid
-flowchart LR
-
-subgraph Agent
-    direction TB
-    LLM[LLM]
-    Client[MCP Client]
-end
-
-Client --> S1[MCP Server: utilities]
-Client --> S2[MCP Server: repo_search]
-
-S1 --> T1[Tool]
-S2 --> T2[Tool]
-```
-
-The agent:
-
-1. Sends prompt + tool schemas to the LLM
-2. Receives either natural language or a tool call
-3. Routes tool calls to the correct MCP server
-4. Returns tool output to the LLM for synthesis
-
-## Hosting an MCP Server
-
-Start an MCP Server:
+Agentify can be used to host an MCP server:
 
 ```bash
 agentify mcp start
 ```
 
-By default this runs at:
+This will host an MCP server at `http://localhost:3333/mcp`
 
-```code
-http://localhost:3333
-```
-
-Custom port:
+You can also specify your own port using:
 
 ```bash
 agentify mcp start --port 4444
 ```
 
-The MCP endpoint will be available at:
+By default, it will load tools from `builtin_tools.py`.
 
-```code
-http://localhost:3333/mcp
+View the default loaded tools:
+
+```bash
+agentify mcp list
 ```
 
-### Connecting an Agent to MCP
+> Note: The MCP Server leverages Agentify Toolkit declarative tool files e.g. tool.yaml. It supports both API-based and function-based tools. Please refer to [Tool Documentation](../tools/README.md)
 
-Declare MCP servers in yoru `agent.yaml`:
+Then for your agent to access the MCP server, you simply declare the MCP server to your `agent.yaml` file:
 
 ```yaml
 name: luc
 description: Multi Tool Agent
 version: 0.1.0
-
 model:
   provider: openai
   id: gpt-4
   api_key_env: OPENAI_API_KEY
-
 role: Run MCP tools
-
 tools:
   - random_user
   - add_numbers
   - user_api
 
+# MCP Server Declaration:
 mcp:
   servers:
     - name: utilities
       endpoint: http://localhost:3333/mcp
-
     - name: repo_search
       endpoint: https://mcp.deepwiki.com/mcp
 ```
 
-Agentify supports attaching multiple MCP servers.
+> Note: Agentify Agents support multiple MCP servers and uses the MCP Server name to namespace tools to avoid collisions e.g. utilities.echo, repo_search.echo are two separate tools.
 
-Each server is namespaced internally for deterministic routing.
+## How this works
 
-## Tool Federation
+At runtime, the 'agentic loop' will send the tool schema along with the prompt and the LLM will respond with either a natural language response or a tool call (JSON).
 
-When multiple MCP servers are attached:
+The Agent will then match the tool call and invoke the MCP tool server with the tool invocation. This will then handle the call and then return a response back to the Agent.
 
-- Tool names are namespaced internally
-- Invocation is routed to the correct server
-- Duplicate tool names across servers are supported
+The agent will return the response to the LLM for final synthesis and response back to the user/app.
 
-Example internal naming:
+### Declaring Tools
 
-```code
-utilities.add_numbers
-repo_search.search
-```
+The MCP server has a `builtin_tools.py` which contain local functions.
 
-This ensures clean multi-server orchestration.
+However, you can use Agentify's declarative tools by taking existing tools and deploying them to the MCP Server.
 
-### Registering Tools to the MCP Server
-
-Agentify allows dynamic tool registration.
-
-Tools can be:
-
-- API-based tools (tool.yaml)
-- Function-based tools (tool.yaml + tool.py)
-- Built-in tools
-
-#### Register a Single Tool
+#### Register a single tool to the MCP Server
 
 ```bash
 agentify mcp register tool.yaml
 ```
 
-#### Register a Folder of Tools
-
-```bash
-agentify mcp register path/to/tools
-```
-
-### API-Based Tool Example
+A tool can be:
 
 ```yaml
 name: random_user
@@ -167,9 +90,7 @@ actions:
         limit: integer
 ```
 
-### Function-based Tool Example
-
-tool.yaml
+or a local function tool:
 
 ```yaml
 name: add_numbers
@@ -178,7 +99,6 @@ version: "1.0.0"
 description: Add two numbers using Python function
 vendor: built-in
 function: add_numbers
-
 params:
   a:
     type: number
@@ -188,121 +108,91 @@ params:
     required: true
 ```
 
-and the corresponding tool.py
+With a corresponding tool.py:
 
 ```python
+"""
+Internal tool: add two numbers
+"""
+
 def add_numbers(a: float, b: float) -> float:
+    """
+    Adds two numbers and returns the result.
+
+    Example:
+        add_numbers(a=2, b=3) -> 5
+    """
     return a + b
+
 ```
 
-## MCP Client Support
-
-Agentify includes a built-in MCP client that:
-
-- Implements MCP `initialize`
-- Supports `tools/list`
-- Supports `tools/call`
-- Aggregates tools across multiple servers
-- Routes calls deterministically
-
-This means your agent can connect to:
-
-- Your own MCP servers
-- Public MCP servers
-- Third-party MCP providers
-
-## CLI Reference
-
-### Start MCP Server
-
-```bash
-agentify mcp start
-```
-
-### List Tools
-
-```bash
-agentify mcp list
-agentify mcp list --debug # <-- for raw JSON
-```
-
-### Inspect Tool Schema
-
-```bash
-agentify mcp schema random_user
-```
-
-### Invoke Tool
-
-```bash
-agentify mcp invoke random_user
-agentify mcp invoke add_numbers --args '{"a": 1, "b": 2}'
-agentify mcp invoke random_user --debug # Returns raw JSON
-```
-
-### Register Tool
-
-```bash
-agentify mcp register tool.yaml
-agentify mcp register tools/
-```
-
-### Deregister Tool
-
-```bash
-agentify mcp deregister mcp.random_user.get_user
-```
-
-## Local tools vs MCP Tools
-
-Local tools declared directly in `agent.yaml`:
+### How does this look conceptually ?
 
 ```mermaid
-flowchart LR
-A[Agent] --> T1[Tool]
-A --> T2[Tool]
+    flowchart LR
+
+    subgraph b[agent]
+        direction TB
+
+        d[MCP Client]
+    end
+    d --> e
+
+    e[MCP Server]
+
+
+
+
+    e --> h[tool]
+    e --> i[resource]
+    e --> j[prompt]
 ```
 
-Agent with MCP federation:
+#### MCP Server
+
+> MCP Protocol spec: Agentify implements the MCP using MCP spec which uses json-rpc `tools/list`, `tools/call` and `initiatialise` methods. Agentify augments with `tools/register` and `tools/deregister` to provide dynamic declarative tool loading.
+
+Agent with local tools attached by declaring the tool names in the `agent.yaml`.
 
 ```mermaid
-flowchart LR
-
-subgraph Agent
-    direction LR
-    T1[Local Tool]
-    Client[MCP Client]
-end
-
-Client --> Server[MCP Server]
-Server --> RT1[Remote Tool]
-Server --> RT2[Remote Tool]
+    flowchart LR
+    a[agent] --> t[tool]
+    a --> t2[tool 2]
 ```
 
-### What MCP Enables
+Agent with local tools attached and remote tools via MCP:
 
-With MCP integration, Agentify supports:
+```mermaid
+    flowchart LR
 
-- Tool modularity
-- Server-based tool isolation
-- Multi-agent shared tool registries
-- Third-party tool ecosystems
-- Federated tool orchestration
-- Runtime dynamic registration
+    subgraph agent
+        direction LR
+        t[Built-in Tool A]
+        t2[Built-in Tool B]
+        m[MCP Client]
+    end
 
-You can now:
+    m --> a[MCP Server]
+    a --> b[tool]
+    a --> c[tool]
 
-- Develop tools independently
-- Host them centrally
-- Attach multiple servers to agents
-- Swap tool backends without modifying agent logic
+```
 
-### Protocol Compliance
+#### MCP Client
 
-Agentify implements the MCP specification using JSON-RPC and supports:
+In addition to the implementation of an MCP server, Agentify has a built-in MCP client that can connect your agent to any MCP-compatible MCP server.
 
-- initialize
-- tools/list
-- tools/call
+## CLI Command Reference
 
-This ensures compatibility with other MCP-compliant servers and ecosystems.
+An MCP Server acts as a registration target for tools.
+
+| Command                   |  Arguments  | Options                                | Description                                                                           |
+| ------------------------- | :---------: | -------------------------------------- | ------------------------------------------------------------------------------------- |
+| `agentify mcp start`      |             | `--port 8001`, `--tools path/to/tools` | Starts the Agent Runtime API Server                                                   |
+| `agentify mcp list`       |             |                                        | List registered tools on server                                                       |
+| `agentify mcp invoke`     | <tool_name> | `--args '{"a": 1, "b": 2}`             | Invoke a tool for testing                                                             |
+| `agentify mcp register`   | <tool.yaml> | path/to/tools                          | Register Tools to the MCP Server                                                      |
+| `agentify mcp deregister` | <tool_name> |                                        | Remove a registered tool                                                              |
+| `agentify mcp schema`     | <tool_name> |                                        | Inspect the Tool Schema of a given tool, this is what is passed to the LLM at runtime |
+
+> Note: The MCP Server is stateless and tools are loaded at runtime or registered after the server has started
