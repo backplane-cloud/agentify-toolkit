@@ -12,6 +12,7 @@
 | [runtime](#runtime)   | Start Agent Runtime for Hosting Agents                   |
 | [gateway](#gateway)   | Unified API Endpoint (Model Gateway)                     |
 | [tool](#tool)         | List and Show tool YAML files                            |
+| [mcp](#mcp)           | Start the Agentify MCP server                            |
 
 > View the CLI workflow here: [cli-workflow](#cli-workflow)
 
@@ -91,6 +92,21 @@ An Agent Runtime acts as a deploy target for agents for CLI, Web and Programmati
 | Command                  | Arguments | Options           | Description                         |
 | ------------------------ | :-------: | ----------------- | ----------------------------------- |
 | `agentify gateway start` |           | `--port 8001` TBC | Starts the Model Gateway API Server |
+
+## MCP
+
+An MCP Server acts as a registration target for tools.
+
+| Command                   |  Arguments  | Options                                | Description                                                                           |
+| ------------------------- | :---------: | -------------------------------------- | ------------------------------------------------------------------------------------- |
+| `agentify mcp start`      |             | `--port 8001`, `--tools path/to/tools` | Starts the Agent Runtime API Server                                                   |
+| `agentify mcp list`       |             |                                        | List registered tools on server                                                       |
+| `agentify mcp invoke`     | <tool_name> | `--args '{"a": 1, "b": 2}`             | Invoke a tool for testing                                                             |
+| `agentify mcp register`   | <tool.yaml> | path/to/tools                          | Register Tools to the MCP Server                                                      |
+| `agentify mcp deregister` | <tool_name> |                                        | Remove a registered tool                                                              |
+| `agentify mcp schema`     | <tool_name> |                                        | Inspect the Tool Schema of a given tool, this is what is passed to the LLM at runtime |
+
+> Note: The MCP Server is stateless and tools are loaded at runtime or registered after the server has started
 
 <!-- ## Config
 
