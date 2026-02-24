@@ -1,0 +1,16 @@
+name: mcp_demo
+description: Demo Agent for MCP Serfver
+version: 0.1.0
+model:
+  provider: openai
+  id: gpt-4
+  api_key_env: OPENAI_API_KEY
+role: The agent can retrieve the weather in Denmark
+tools:
+  - random_user
+  - add_numbers
+  - user_api
+mcp:
+  servers:
+    - name: utilities
+      endpoint: http://localhost:3333/mcp

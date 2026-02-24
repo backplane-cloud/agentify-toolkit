@@ -1,16 +1,58 @@
 import click
 from pathlib import Path
+import yaml
+import requests
 
 @click.group("tool")
 def tool_group():
-    """List and Show tool YAML files"""
+    """Manage tool YAML definitions (list, show)"""
     pass
 
 
 @tool_group.command("list")
 @click.argument("path", required=False, default=".")
-def list_tools(path):
-    """List all tool YAML files in a directory."""
+@click.option("--mcp", is_flag=True, help="List tools from a running MCP server")
+@click.option("--url", default="http://localhost:3333/mcp", help="MCP server URL")
+def list_tools(path, mcp, url):
+    """List tool definitions locally or from an MCP server."""
+    from pathlib import Path
+
+
+    # List MCP Tools
+    if mcp:
+        from agentify.mcp.client import MCPClientHTTP  # adjust import if needed
+
+        try:
+            client = MCPClientHTTP(url)
+            client.initialize()
+            tools = client.list_tools()
+            
+        except Exception as e:
+            click.secho(f"Failed to connect to MCP server: {e}", fg="red")
+            return
+
+        if not tools:
+            click.echo("No tools registered on MCP server.")
+            return
+
+        click.echo(f"Found {len(tools)} tool(s) on MCP server:")
+        click.secho(f"{'NAME':15} {'DESCRIPTION':30} {'VENDOR':20} {'ENDPOINT'}", fg="cyan")
+        click.echo("-" * 80)
+
+        for t in tools:
+            name = t.get("name", "Unnamed")
+            desc = t.get("description", "")
+            vendor = t.get("vendor", "")
+            endpoint = t.get("endpoint", "")
+
+            click.echo(f"{name:<15} {desc:<30} {vendor:<20} {endpoint}")
+
+        click.secho("\nUse: agentify tool show <tool_name> --mcp", fg="yellow")
+        return
+
+    # -----------------------------
+    # LOCAL YAML MODE (existing behaviour)
+    # -----------------------------
     from ..specs import load_tool_specs
 
     p = Path(path)
@@ -25,14 +67,17 @@ def list_tools(path):
     click.echo(f"Found {len(specs)} tool(s) in {path}:")
     click.secho(f"{'NAME':15} {'DESCRIPTION':30} {'VENDOR':20} {'ENDPOINT'}", fg="cyan")
     click.echo("-" * 80)
+
     for s in specs:
         name = s.get("name", "Unnamed")
         desc = s.get("description", "")
         vendor = s.get("vendor", "")
         endpoint = s.get("endpoint", "")
+
         click.echo(f"{name:<15} {desc:<30} {vendor:<20} {endpoint}")
 
-    click.secho("\nUse: agentify tool show <tool_name> for metadata", fg="yellow")
+    click.secho("\nUse: agentify tool show <tool_name>", fg="yellow")
+
 
 
 
@@ -72,3 +117,50 @@ def show_tool(tool_name_or_file):
     yaml_text = yaml.dump(spec, sort_keys=False, default_flow_style=False)
     syntax = Syntax(yaml_text, "yaml", theme="monokai", line_numbers=False)
     console.print(syntax)
+
+@tool_group.command("deploy")
+@click.argument(
+    "tool_yaml",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+)
+@click.option(
+    "--server", default="http://localhost:3333",
+    required=True,
+    help="MCP server URL (e.g. http://localhost:3333)",
+)
+def deploy_tool(tool_yaml: Path, server: str):
+    """
+    Deploy a tool to an MCP server from a YAML definition.
+    """
+    # 1. Load YAML
+    try:
+        with tool_yaml.open("r") as f:
+            tool_spec = yaml.safe_load(f)
+    except Exception as e:
+        raise click.ClickException(f"Failed to load YAML: {e}")
+
+    if not isinstance(tool_spec, dict):
+        raise click.ClickException("Tool YAML must define a mapping/object")
+
+    # 2. POST to MCP server
+    url = f"{server.rstrip('/')}/tools"
+
+    try:
+        response = requests.post(url, json=tool_spec, timeout=10)
+    except requests.RequestException as e:
+        raise click.ClickException(f"Failed to connect to MCP server: {e}")
+
+    # 3. Handle response
+    if response.status_code != 200:
+        try:
+            detail = response.json().get("detail")
+        except Exception:
+            detail = response.text
+        raise click.ClickException(
+            f"Failed to deploy tool ({response.status_code}): {detail}"
+        )
+
+    result = response.json()
+    tool_name = result.get("tool", "<unknown>")
+
+    click.echo(f"✓ Tool deployed: {tool_name}")

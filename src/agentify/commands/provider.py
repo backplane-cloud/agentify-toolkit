@@ -2,7 +2,7 @@ import click
 
 @click.group("provider")
 def provider_group():
-    """Add, remove, or list model providers and keys."""
+    """Manage model providers and API keys"""
     pass
 
 

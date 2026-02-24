@@ -5,6 +5,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.19.0] - 2026-02-24
+
+### Feature / MCP Server
+
+- Agentify can run it's own MCP server e.g. `agentify mcp start`
+- Agent tools can be local or remote via MCP
+- Tools deployed to MCP server via `agentify mcp register tool.yaml or path/to/tools`
+- MCP Server Tool invocation: `agentify mcp invoke <tool_name>`
+- View Tool schema via `agentify mcp schema <tool_name>`
+- List Tools on MCP Server `agentify mcp list`
+- Agent can connect to multiple MCP Servers via MCP Client
+
+---
+
 ## [0.18.0] - 2026-02-05
 
 ### Feature / Provider Validation

@@ -3,7 +3,7 @@ import uvicorn
 
 @click.group(name="gateway")
 def gateway_command():
-    """Run the Agentify model gateway."""
+    """Start the Agentify model gateway service"""
     pass
 
 @gateway_command.command()

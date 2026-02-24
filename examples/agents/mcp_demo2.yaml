@@ -1,0 +1,18 @@
+name: mcp_demo2
+description: Multi Tool Agent
+version: 0.1.0
+model:
+  provider: openai
+  id: gpt-4
+  api_key_env: OPENAI_API_KEY
+role: Run MCP tools
+tools:
+  - random_user
+  - add_numbers
+  - user_api
+mcp:
+  servers:
+    - name: utilities
+      endpoint: http://localhost:3333/mcp
+    - name: repo_search
+      endpoint: https://mcp.deepwiki.com/mcp

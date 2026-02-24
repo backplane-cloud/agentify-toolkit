@@ -1,8 +1,8 @@
-name: agentify
+name: agentify_gw_x
 description: This is an example Backplane Agent
 version: 0.1.0
 model:
   provider: agentify
-  id: openai/gpt-4
-  api_key_env: OPENAI_API_KEY
+  id: xai/grok-4
+  api_key_env: XAI_API_KEY
 role: You are a Backplane AI Agent

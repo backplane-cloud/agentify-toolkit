@@ -2,22 +2,22 @@ import click
 
 @click.group()
 def runtime_group():
-    """Start Agent Runtime for Hosting Agents"""
+    """Host Agentify Agent Runtime"""
     pass
 
 @runtime_group.command("start")
 @click.option("--port", default=8001, help="Port to run the Agentify runtime on")
 def start_cmd(port):
-    """Start the Agentify runtime server."""
+    """Start the Agentify runtime server"""
     from agentify.runtime.server import start_runtime
     start_runtime(port=port)
 
 
-@runtime_group.command("terminate")
+@runtime_group.command("remove")
 @click.argument("agent_name", type=str)
 @click.option("--server", default="http://127.0.0.1:8001", help="Runtime server URL")
 def undeploy(agent_name, server):
-    """Terminate a deployed Agent"""
+    """Remove a deployed Agent"""
 
     import requests
     try:

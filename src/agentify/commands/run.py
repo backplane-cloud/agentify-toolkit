@@ -8,7 +8,7 @@ from pathlib import Path
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
 @click.option("--debug", is_flag=True, help="Turn on debugging to see raw prompt")
 def run_command(path, model, provider, server, debug):
-    """Run an agent from a YAML file or directory."""
+    """Execute an agent from a YAML file or directory"""
     import yaml
     import sys
     from ..agent import create_agent, create_agents

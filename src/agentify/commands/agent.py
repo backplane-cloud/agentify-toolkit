@@ -3,7 +3,7 @@ from pathlib import Path
 
 @click.group("agent")
 def agent_group():
-    """Create, List and Show agent YAML files"""
+    """Manage agent YAML definitions (create, list, show)"""
     pass
 
 

@@ -5,7 +5,7 @@ from pathlib import Path
 @click.argument("path")
 @click.option("--port", type=int, help="Set server port e.g. 8001")
 def serve_command(path, port):
-    """Serve an agent locally via HTTP API and Web UI"""
+    """Serve an agent locally with HTTP API and Web UI"""
     import yaml
     from ..agent import create_agent
     from agentify.server import serve_agent
