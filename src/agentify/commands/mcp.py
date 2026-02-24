@@ -24,12 +24,13 @@ def mcp_group():
     pass
 
 @mcp_group.command("start")
+@click.option("--tools", default=None, help="Path to YAML tool files to register at startup")
 @click.option("--host", default="127.0.0.1", help="Host to bind MCP server")
 @click.option("--port", default=3333, help="Port to bind MCP server")
-def start(host: str, port: int):
+def start(host: str, port: int, tools: str | None):
     """Start MCP Server"""
     click.echo(f"Starting MCP server on {host}:{port}")
-    start_mcp_server(host=host, port=port)
+    start_mcp_server(host=host, port=port, tool_path=tools)
 
 
 @mcp_group.command("list")
