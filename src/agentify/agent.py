@@ -21,7 +21,12 @@ class Agent:
     description: str
     provider: str
     model_id: str
+    
     role: str
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+
     version: Optional[str] = field(default="0.0.0")
     
     tool_names: list = field(default_factory=list)
@@ -34,6 +39,10 @@ class Agent:
     _tools_loaded: bool = field(default=False, init=False)
 
     conversation_history: list = field(default_factory=list)
+    
+    def _get_total_tokens(self):
+        """Returns input_tokens + output_tokens"""
+        return self.input_tokens + self.output_tokens
 
     def load_tools(self, tool_path_override: str | Path | None = None):
         """
@@ -184,7 +193,7 @@ class Agent:
         while True:
             prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)")
             if prompt.lower() in ["/exit", "quit"]:
-                console.print("[yellow]Exiting. Goodbye![/yellow]")
+                console.print(f"[yellow]Total tokens used in this session:[/yellow] {self._get_total_tokens()}")
                 break
 
             # Add user input to conversation history
@@ -223,17 +232,32 @@ When a user requests a tool action, produce only the JSON object following the a
                 """
                 full_prompt += tools_block
             
+
             if debug:
-                console.print(full_prompt)
+                console.print(
+                    Panel.fit(
+                        Group(full_prompt),
+                        title=f"[bold white]Debug - Sent to {self.provider}/{self.model_id}[/bold white]",
+                        border_style="white",
+                    )
+                )
 
             # Send prompt to model
             with console.status(f"[green]{self.name.title()} is thinking...[/green]", spinner="dots"):
                 response = self.run(full_prompt)
 
+        
             # Try parsing JSON (tool invocation)
             try:
-                # Clean JSON                           
-                cleaned = response.strip()                                                                                                                 
+                # Clean JSON      
+                text = response.get("text") if isinstance(response, dict) else response
+                cleaned = text.strip() if isinstance(text, str) else ""
+                
+                # if response["text"]:                     
+                #     cleaned = response["text"].strip()                                                                                                                 
+                # else:
+                #     cleaned = response.strip()
+
                 if cleaned.startswith('```'):                                                      
                     cleaned = cleaned.split('```')[1]                                              
                 if cleaned.startswith('json'):                                                 
@@ -351,12 +375,28 @@ When a user requests a tool action, produce only the JSON object following the a
                     # Store agent response in history
                     self.conversation_history.append({"role": "agent", "content": response})
                 
-                console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+                console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
 
             except (json.JSONDecodeError, ValueError):
                 # Treat as normal chat response
                 self.conversation_history.append({"role": "agent", "content": response})
-                console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+
+                
+                if isinstance(response, dict):
+                    # Turn Token Usage
+                    input_tokens = response["input_tokens"]
+                    output_tokens = response["output_tokens"]
+                    total = input_tokens + output_tokens
+
+                    # Update Agent for cumulative input and output tokens
+                    self.input_tokens += input_tokens
+                    self.output_tokens += output_tokens
+
+                    console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
+                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
+                else:
+                    console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+                
 
 def create_agents(specs: list) -> dict[str, Agent]:
     agents = {}
