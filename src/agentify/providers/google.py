@@ -19,4 +19,9 @@ def run_google(model_id: str, user_prompt: str) -> str:
         contents=user_prompt
     )
 
-    return response.text
+    result = {
+        "text": response.text,
+        "input_tokens": response.usage_metadata.candidates_token_count + response.usage_metadata.prompt_token_count,
+        "output_tokens": response.usage_metadata.thoughts_token_count
+    }
+    return result
