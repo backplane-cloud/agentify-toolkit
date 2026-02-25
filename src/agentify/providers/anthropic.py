@@ -24,4 +24,10 @@ def run_anthropic(model_id: str, user_prompt: str) -> str:
             }
         ]
     )
-    return message.content[0].text
+
+    result = {
+        "text": message.content[0].text,
+        "input_tokens": message.usage.input_tokens,
+        "output_tokens": message.usage.output_tokens
+    }
+    return result
