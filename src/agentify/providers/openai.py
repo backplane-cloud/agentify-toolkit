@@ -19,4 +19,10 @@ def run_openai(model_id: str, user_prompt: str) -> str:
         model=model_id,
         input=user_prompt
     )
-    return response.output_text
+
+    result = {
+        "text": response.output_text,
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens
+    }
+    return result
