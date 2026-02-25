@@ -375,7 +375,12 @@ When a user requests a tool action, produce only the JSON object following the a
                     # Store agent response in history
                     self.conversation_history.append({"role": "agent", "content": response})
                 
-                console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
+                if isinstance(response, dict):
+                    console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
+                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
+                else:
+                    console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+
 
             except (json.JSONDecodeError, ValueError):
                 # Treat as normal chat response
