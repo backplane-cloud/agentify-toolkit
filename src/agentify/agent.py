@@ -308,7 +308,50 @@ When a user requests a tool action, produce only the JSON object following the a
                         # Store agent response in history
                         self.conversation_history.append({"role": "agent", "content": response})
                     
-                    console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+                else:
+                    if tool:
+                        # TOOL HANDLING
+                        if tool.type == "internal":
+                            # Local Function Tool
+                            console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
+                            tool_result = tool.invoke(args=args)
+                        else: 
+                            # Local API Tool
+                            console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
+                            tool_result = tool.invoke(action_name, args)
+                    else: 
+                        # Check MCP
+                        if tool_name in mcp_tool_names:
+                            # MCP SERVER TOOL
+                            console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
+                            # tool_result = self.mcp_client.call_tool(tool_name, args)
+                            server_name, actual_tool = tool_name.split(".", 1)
+
+                            client = next(
+                                (c for c in self.mcp_clients if c.name == server_name),
+                                None
+                            )
+
+                            if not client:
+                                raise Exception(f"No MCP client found for server '{server_name}'")
+
+                            tool_result = client.call_tool(actual_tool, args)
+
+                    # Minify JSON to avoid confusing model in next prompt
+                    tool_result_str = json.dumps(tool_result, separators=(',', ':'))
+
+                    # Add tool output to conversation history
+                    self.conversation_history.append({"role": "tool", "content": tool_result_str})
+
+                    # Ask model to display tool output naturally
+                    analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
+                    with console.status(f"{self.name.title()} is analysing tool response...", spinner="dots"):
+                        response = self.run(analysis_prompt)
+
+                    # Store agent response in history
+                    self.conversation_history.append({"role": "agent", "content": response})
+                
+                console.print(Panel.fit(response, title="Agent Response", border_style="green"))
 
             except (json.JSONDecodeError, ValueError):
                 # Treat as normal chat response
