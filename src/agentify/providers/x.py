@@ -19,5 +19,10 @@ def run_x(model_id: str, user_prompt: str) -> str:
     chat.append(system("You are Grok, a highly intelligent, helpful AI assistant."))
     chat.append(user(user_prompt))
     response = chat.sample()
-
-    return response.content
+    
+    result = {
+        "text": response.content,
+        "input_tokens": response.usage.prompt_tokens + response.usage.reasoning_tokens,
+        "output_tokens": response.usage.completion_tokens
+    }
+    return result
