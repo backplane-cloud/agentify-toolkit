@@ -108,25 +108,18 @@ class Agent:
 
 
 
-    def chat(self, debug: bool = False):
-        from rich.console import Console
+    def chat(self, debug: bool = False, toolprompt: bool = False):
+        from rich.console import Console, Group
         from rich.panel import Panel
         from rich.prompt import Prompt
+        from rich.text import Text
+        from rich.pretty import Pretty
         
         # Load Tools from local Files in tools/
         if self.tool_names and not self._tools_loaded:
             self.load_tools()
 
-        # MCP Tool loader
-        # if self.mcp_client:
-        #     self.mcp_client.initialize()
-        #     mcp_tools = self.mcp_client.list_tools()
-        #     mcp_tool_names = [t["name"] for t in mcp_tools]
-        # else:
-        #     mcp_tool_names = []
-
         # MCP Tool loader v2
-
         mcp_tools = []
         mcp_tool_names = []
 
@@ -155,7 +148,8 @@ class Agent:
             f"Role: {self.description}\n"
             f"Using [yellow]{self.model_id}[/yellow] by {self.provider}\n"
             f"Agent Tools:      {self.tool_names}\n"
-            f"MCP Server Tools: {mcp_tool_names}",
+            f"MCP Server Tools: {mcp_tool_names}\n"
+            f"Tool Prompt enabled: {toolprompt}",
             border_style="cyan"
         ))
 
@@ -172,7 +166,20 @@ class Agent:
 
 
         if debug:
-            console.print(tools_block)
+            console.print(
+                Panel.fit(
+                    Group(
+                        "[bold cyan]LOCAL TOOLS[/bold cyan]",
+                        json.dumps(tool_schemas, indent=2, sort_keys=True) if tool_schemas else "[dim]None[/dim]",
+                        "",
+                        "[bold magenta]MCP TOOLS[/bold magenta]",
+                        json.dumps(mcp_tools, indent=2, sort_keys=True) if self.mcp_clients else "[dim]None[/dim]"
+                    ),
+                    title="[bold white]Debug[/bold white]",
+                    border_style="white",
+                )
+            )
+
 
         while True:
             prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)")
@@ -240,53 +247,68 @@ When a user requests a tool action, produce only the JSON object following the a
                 args = data.get("args", {})
                 tool = self.tools.get(tool_name)
 
-                if tool:
-                    # TOOL HANDLING
-                    if tool.type == "internal":
-                        # Local Function Tool
-                        console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
-                        tool_result = tool.invoke(args=args)
-                    else: 
-                        # Local API Tool
-                        console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
-                        tool_result = tool.invoke(action_name, args)
-                else: 
-                    # Check MCP
-                    if tool_name in mcp_tool_names:
-                        # MCP SERVER TOOL
-                        console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
-                        # tool_result = self.mcp_client.call_tool(tool_name, args)
-                        server_name, actual_tool = tool_name.split(".", 1)
-
-                        client = next(
-                            (c for c in self.mcp_clients if c.name == server_name),
-                            None
+                if toolprompt:
+                    panel_content = Group(
+                        Text(f"Tool: {tool_name}", style="white"),
+                        Text("Arguments:"),
+                        Pretty(args)
+                    )
+                    console.print(
+                        Panel.fit(
+                            panel_content,
+                            title="[bold yellow]Tool Invocation Requested[/bold yellow]",
+                            border_style="yellow",
+                            style="on rgb(40,30,0)"
                         )
+                    )
+                    prompt = Prompt.ask("Do you Approve? (y/n)", default="n")
 
-                        if not client:
-                            raise Exception(f"No MCP client found for server '{server_name}'")
+                    if prompt.lower() in ["n", "no"]:
+                        response = "Tool Invocation was cancelled"
+                    else:
+                        if tool:
+                            # TOOL HANDLING
+                            if tool.type == "internal":
+                                # Local Function Tool
+                                console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
+                                tool_result = tool.invoke(args=args)
+                            else: 
+                                # Local API Tool
+                                console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
+                                tool_result = tool.invoke(action_name, args)
+                        else: 
+                            # Check MCP
+                            if tool_name in mcp_tool_names:
+                                # MCP SERVER TOOL
+                                console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
+                                # tool_result = self.mcp_client.call_tool(tool_name, args)
+                                server_name, actual_tool = tool_name.split(".", 1)
 
-                        tool_result = client.call_tool(actual_tool, args)
+                                client = next(
+                                    (c for c in self.mcp_clients if c.name == server_name),
+                                    None
+                                )
 
-                        
-                # if not tool:
-                #     raise ValueError(f"Tool '{tool_name}' not found on agent")
+                                if not client:
+                                    raise Exception(f"No MCP client found for server '{server_name}'")
 
-                # Minify JSON to avoid confusing model in next prompt
-                tool_result_str = json.dumps(tool_result, separators=(',', ':'))
+                                tool_result = client.call_tool(actual_tool, args)
 
-                # Add tool output to conversation history
-                self.conversation_history.append({"role": "tool", "content": tool_result_str})
+                        # Minify JSON to avoid confusing model in next prompt
+                        tool_result_str = json.dumps(tool_result, separators=(',', ':'))
 
-                # Ask model to display tool output naturally
-                analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
-                with console.status(f"{self.name.title()} is analysing tool response...", spinner="dots"):
-                    response = self.run(analysis_prompt)
+                        # Add tool output to conversation history
+                        self.conversation_history.append({"role": "tool", "content": tool_result_str})
 
-                # Store agent response in history
-                self.conversation_history.append({"role": "agent", "content": response})
-                console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+                        # Ask model to display tool output naturally
+                        analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
+                        with console.status(f"{self.name.title()} is analysing tool response...", spinner="dots"):
+                            response = self.run(analysis_prompt)
 
+                        # Store agent response in history
+                        self.conversation_history.append({"role": "agent", "content": response})
+                    
+                    console.print(Panel.fit(response, title="Agent Response", border_style="green"))
 
             except (json.JSONDecodeError, ValueError):
                 # Treat as normal chat response
