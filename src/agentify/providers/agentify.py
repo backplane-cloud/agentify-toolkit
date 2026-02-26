@@ -32,11 +32,15 @@ def run_agentify(model_id: str, user_prompt: str) -> str:
         case _:
             raise ValueError(f"Unsupported provider: {provider}")
         
-def run_gateway_http(model_id: str, user_prompt: str) -> str:
+def run_gateway_http(model_id: str, user_prompt: str) -> dict:
     response = requests.post(
         "http://127.0.0.1:8000/v1/chat",
         json={"model": model_id, "prompt": user_prompt},
         timeout=30
     )
-    response.raise_for_status()
-    return response.json()["response"]
+    
+    if not response.ok:
+        print("Gateway returned:", response.text)
+        response.raise_for_status()
+
+    return response.json()
