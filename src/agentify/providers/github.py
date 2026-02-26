@@ -34,6 +34,11 @@ def run_github(model_id: str, user_prompt: str) -> str:
 
     response = requests.post(url, json=body, headers=header)
     response.raise_for_status()
-
     data = response.json()
-    return data["choices"][0]["message"]["content"]
+    
+    result = {
+        "text": data["choices"][0]["message"]["content"],
+        "input_tokens": data["usage"]["prompt_tokens"],
+        "output_tokens": data["usage"]["completion_tokens"]
+    }
+    return result
