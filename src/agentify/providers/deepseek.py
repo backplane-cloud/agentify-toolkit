@@ -22,5 +22,10 @@ def run_deepseek(model_id: str, user_prompt: str) -> str:
         ],
         stream=False
     )
-
-    return (response.choices[0].message.content)
+    
+    result = {
+        "text": response.choices[0].message.content,
+        "input_tokens": response.usage.prompt_tokens,
+        "output_tokens": response.usage.completion_tokens
+    }
+    return result
