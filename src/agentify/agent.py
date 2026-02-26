@@ -86,7 +86,7 @@ class Agent:
     def get_tools(self) -> list[str]:
         return list(self.tools.keys())
     
-    def run(self, user_prompt: str) -> str:
+    def run(self, user_prompt: str) -> dict:
         from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_gateway_http
 
         match self.provider.lower():
@@ -330,7 +330,14 @@ When a user requests a tool action, produce only the JSON object following the a
                             response = self.run(analysis_prompt)
 
                         # Store agent response in history
-                        self.conversation_history.append({"role": "agent", "content": response})
+                        if isinstance(response, dict):
+                            self.conversation_history.append(
+                                {"role": "agent", "content": response["text"]}
+                            )
+                        else:
+                            self.conversation_history.append(
+                                {"role": "agent", "content": response}
+                            )
                     
                 else:
                     if tool:
@@ -373,7 +380,15 @@ When a user requests a tool action, produce only the JSON object following the a
                         response = self.run(analysis_prompt)
 
                     # Store agent response in history
-                    self.conversation_history.append({"role": "agent", "content": response})
+                    # self.conversation_history.append({"role": "agent", "content": response})
+                    if isinstance(response, dict):
+                        self.conversation_history.append(
+                            {"role": "agent", "content": response["text"]}
+                        )
+                    else:
+                        self.conversation_history.append(
+                            {"role": "agent", "content": response}
+                        )
                 
                 if isinstance(response, dict):
                     console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
@@ -384,7 +399,15 @@ When a user requests a tool action, produce only the JSON object following the a
 
             except (json.JSONDecodeError, ValueError):
                 # Treat as normal chat response
-                self.conversation_history.append({"role": "agent", "content": response})
+                # self.conversation_history.append({"role": "agent", "content": response})
+                if isinstance(response, dict):
+                    self.conversation_history.append(
+                        {"role": "agent", "content": response["text"]}
+                    )
+                else:
+                    self.conversation_history.append(
+                        {"role": "agent", "content": response}
+                    )
 
                 
                 if isinstance(response, dict):
