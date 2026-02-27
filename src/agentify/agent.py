@@ -391,6 +391,15 @@ When a user requests a tool action, produce only the JSON object following the a
                         )
                 
                 if isinstance(response, dict):
+                    # Turn Token Usage
+                    input_tokens = response["input_tokens"]
+                    output_tokens = response["output_tokens"]
+                    total = input_tokens + output_tokens
+
+                    # Update Agent for cumulative input and output tokens
+                    self.input_tokens += input_tokens
+                    self.output_tokens += output_tokens
+
                     console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
                     console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
                 else:
