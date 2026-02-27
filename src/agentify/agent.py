@@ -154,7 +154,7 @@ class Agent:
         # Print agent header
         console.print(Panel(
             f"[bold cyan]{self.name.upper()}[/bold cyan] [dim]{self.version}[/dim]\n"
-            f"Role: {self.description}\n"
+            f"Role: {self.role}\n"
             f"Using [yellow]{self.model_id}[/yellow] by {self.provider}\n"
             f"Agent Tools:      {self.tool_names}\n"
             f"MCP Server Tools: {mcp_tool_names}\n"
