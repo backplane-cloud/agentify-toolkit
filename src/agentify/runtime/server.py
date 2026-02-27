@@ -155,9 +155,10 @@ async def prompt_agent(agent_name: str, request: Request):
     question = body.get("question")
 
     prompt = f"Answer with this role:{agent.role} the question:{question}"
-    answer = agent.run(prompt)
+    response = agent.run(prompt)
 
-    return {"answer": answer}
+    return {"answer": response["text"]}
+
 
 
 @app.post("/agents/add")
