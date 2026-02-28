@@ -252,10 +252,10 @@ class Agent:
                 """
             
                 # Expensive sending Tool Schemas on each Prompt
-                # full_prompt += tools_block
+                full_prompt += tools_block
 
                 # TOKEN OPTIMISATION - Cheaper to send tool index
-                full_prompt += compact_index
+                # full_prompt += compact_index
 
             # TOKEN OPTIMISATION - Removing whitespace to compact prompt 
             import textwrap
@@ -321,10 +321,16 @@ class Agent:
                             if tool.type == "internal":
                                 # Local Function Tool
                                 console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
+
+                                # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
                                 tool_result = tool.invoke(args=args)
                             else: 
                                 # Local API Tool
                                 console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
+
+                                # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
                                 tool_result = tool.invoke(action_name, args)
                         else: 
                             # Check MCP
@@ -341,6 +347,8 @@ class Agent:
 
                                 if not client:
                                     raise Exception(f"No MCP client found for server '{server_name}'")
+
+                                # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
 
                                 tool_result = client.call_tool(actual_tool, args)
 
@@ -371,10 +379,16 @@ class Agent:
                         if tool.type == "internal":
                             # Local Function Tool
                             console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
+
+                            # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
                             tool_result = tool.invoke(args=args)
                         else: 
                             # Local API Tool
                             console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
+
+                            # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
                             tool_result = tool.invoke(action_name, args)
                     else: 
                         # Check MCP
@@ -391,6 +405,8 @@ class Agent:
 
                             if not client:
                                 raise Exception(f"No MCP client found for server '{server_name}'")
+
+                            # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
 
                             tool_result = client.call_tool(actual_tool, args)
 
