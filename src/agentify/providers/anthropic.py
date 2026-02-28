@@ -29,7 +29,7 @@ def run_anthropic(model_id: str, user_prompt: str) -> str:
 
     input_tokens = message.usage.input_tokens
     output_tokens = message.usage.output_tokens
-    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+    token_cost = estimate_cost("anthropic", model_id, input_tokens, output_tokens)
 
     result = {
         "text": message.content[0].text,

@@ -28,7 +28,7 @@ def run_mistral(model_id: str, user_prompt: str) -> str:
 
     input_tokens = response.usage.prompt_tokens
     output_tokens = response.usage.completion_tokens
-    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+    token_cost = estimate_cost("mistral", model_id, input_tokens, output_tokens)
 
     result = {
         "text": response.choices[0].message.content,

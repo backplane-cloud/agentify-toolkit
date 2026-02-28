@@ -24,7 +24,7 @@ def run_x(model_id: str, user_prompt: str) -> str:
     
     input_tokens = response.usage.prompt_tokens + response.usage.reasoning_tokens
     output_tokens = response.usage.completion_tokens
-    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+    token_cost = estimate_cost("xai", model_id, input_tokens, output_tokens)
 
     result = {
         "text": response.content,

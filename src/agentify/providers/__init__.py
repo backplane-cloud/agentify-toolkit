@@ -9,3 +9,4 @@ from .deepseek import run_deepseek
 from .mistral import run_mistral
 from .ollama import run_ollama
 from .ollama_local import run_ollama_local
+from .rate_card import get_ratecard

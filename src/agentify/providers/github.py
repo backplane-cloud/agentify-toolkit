@@ -42,7 +42,7 @@ def run_github(model_id: str, user_prompt: str) -> str:
 
     input_tokens = data["usage"]["prompt_tokens"]
     output_tokens = data["usage"]["completion_tokens"]
-    token_cost = estimate_cost(model, input_tokens, output_tokens)
+    token_cost = estimate_cost(provider, model, input_tokens, output_tokens)
 
     result = {
         "text": data["choices"][0]["message"]["content"],

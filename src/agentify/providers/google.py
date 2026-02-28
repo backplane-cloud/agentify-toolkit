@@ -23,7 +23,7 @@ def run_google(model_id: str, user_prompt: str) -> str:
 
     input_tokens = response.usage_metadata.candidates_token_count + response.usage_metadata.prompt_token_count
     output_tokens = response.usage_metadata.thoughts_token_count
-    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+    token_cost = estimate_cost("google", model_id, input_tokens, output_tokens)
 
     result = {
         "text": response.text,
