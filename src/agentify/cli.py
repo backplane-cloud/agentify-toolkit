@@ -1,23 +1,12 @@
+# src/agentify/cli.py
 import click
+import importlib
 from agentify import __version__
-from .commands import (
-    run_command,
-    serve_command,
-    deploy_command,
-    gateway_command,
-    runtime_group,
-    tool_group,
-    agent_group,
-    provider_group,
-    mcp_group, 
-    xmcp_group
-)
-
 from rich.console import Console
 from rich.panel import Panel
 
-console = Console()
-
+# --- Console & Banner (instant) ---
+console = Console(force_terminal=True)
 agentify_icon = """
 [white]             ██   [/white]
 [white] █████████████████[/white]    Command: [yellow]agentify provider add <provider_name>[/yellow] [green]# e.g. openai, xai, anthropic[/green]
@@ -30,28 +19,109 @@ agentify_icon = """
 [white]  ░██ ░██ ░██ ░██ [/white]    Command: [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
 [white]  ░░  ░░  ░░  ░░  [/white]
 """
+console.print(
+    Panel(
+        agentify_icon,
+        title=f"AGENTIFY TOOLKIT CLI v{__version__}",
+        subtitle="Build, Run and deploy AI Agents declaratively",
+        border_style="white",
+    )
+)
 
+# --- Command registry: module path, attr, optional help text ---
+COMMANDS = {
+    "run": {"target": "agentify.commands.run:run_command", "help": "Run an agent YAML"},
+    "serve": {"target": "agentify.commands.serve:serve_command", "help": "Serve an agent via HTTP"},
+    "deploy": {"target": "agentify.commands.deploy:deploy_command", "help": "Deploy an agent"},
+    "gateway": {"target": "agentify.commands.gateway:gateway_command", "help": "Start the gateway"},
+    "runtime": {"target": "agentify.commands.runtime:runtime_group", "help": "Agent runtime group"},
+    "tool": {"target": "agentify.commands.tool:tool_group", "help": "Tool management group"},
+    "agent": {"target": "agentify.commands.agent:agent_group", "help": "Agent management group"},
+    "provider": {"target": "agentify.commands.provider:provider_group", "help": "Provider management group"},
+    "mcp": {"target": "agentify.commands.mcp:mcp_group", "help": "MCP server group"},
+}
 
-console.print(Panel(agentify_icon, title=f"AGENTIFY TOOLKIT CLI v{__version__}", subtitle="Build, Run and deploy AI Agents declaratively", border_style="white"))
+# --- Lazy leaf command ---
+class LazyCommand(click.Command):
+    def __init__(self, module_path: str, attr_name: str, help_text: str = None):
+        self.module_path = module_path
+        self.attr_name = attr_name
+        super().__init__(name=attr_name, help=help_text)
+        # Allow extra arguments (must be set after __init__)
+        self.allow_extra_args = True
+        self.ignore_unknown_options = True  # Allows things like 'agent.yaml'
 
+    def invoke(self, ctx):
+        # Lazy import the actual command
+        module = importlib.import_module(self.module_path)
+        real_cmd = getattr(module, self.attr_name)
 
-@click.group()
+        if not isinstance(real_cmd, click.Command):
+            raise click.ClickException(f"Command {self.attr_name} is not a Click Command")
+
+        # Forward raw CLI args to the real command
+        return real_cmd.main(args=ctx.args, standalone_mode=False)
+
+# --- Lazy group command ---
+class LazyGroupCommand(click.Group):
+    """Lazy-loaded click.Group with subcommands."""
+    def __init__(self, module_path: str, attr_name: str, help_text: str = None):
+        self.module_path = module_path
+        self.attr_name = attr_name
+        super().__init__(name=attr_name, help=help_text)
+
+    def list_commands(self, ctx):
+        module = importlib.import_module(self.module_path)
+        real_group = getattr(module, self.attr_name)
+        return real_group.list_commands(ctx)
+
+    def get_command(self, ctx, name):
+        module = importlib.import_module(self.module_path)
+        real_group = getattr(module, self.attr_name)
+        return real_group.get_command(ctx, name)
+
+# --- Lazy main group ---
+class LazyMainGroup(click.Group):
+    def list_commands(self, ctx):
+        return sorted(COMMANDS.keys())
+
+    def get_command(self, ctx, name):
+        if name not in COMMANDS:
+            return None
+        module_path, attr_name = COMMANDS[name]["target"].split(":")
+        help_text = COMMANDS[name].get("help", None)
+
+        # If the attribute name ends with "_group", treat as LazyGroupCommand
+        if attr_name.endswith("_group"):
+            return LazyGroupCommand(module_path, attr_name, help_text)
+        else:
+            return LazyCommand(module_path, attr_name, help_text)
+
+class LazyGroup(click.Group):
+    def list_commands(self, ctx):
+        return sorted(COMMANDS.keys())
+
+    def get_command(self, ctx, name):
+        if name not in COMMANDS:
+            return None
+
+        # Split module path and attribute
+        module_path, attr_name = COMMANDS[name]["target"].split(":")
+        help_text = COMMANDS[name].get("help")
+
+        # Import module lazily
+        module = importlib.import_module(module_path)
+        cmd = getattr(module, attr_name)
+
+        # Attach help if missing
+        if help_text and getattr(cmd, "help", None) is None:
+            cmd.help = help_text
+
+        return cmd
+    
+# --- Main entrypoint ---
+@click.group(cls=LazyMainGroup)
 @click.version_option(version=__version__, prog_name="Agentify")
 def main():
     """Agentify Toolkit CLI"""
     pass
-
-# Attach lazy-loaded commands
-main.add_command(run_command)
-main.add_command(serve_command)
-main.add_command(deploy_command)
-main.add_command(gateway_command)
-main.add_command(runtime_group)
-main.add_command(tool_group)
-main.add_command(agent_group)
-main.add_command(provider_group)
-main.add_command(mcp_group)
-main.add_command(xmcp_group)
-
-# if __name__ == "__main__":
-#     main()
