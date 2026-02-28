@@ -1,0 +1,9 @@
+name: grok-4-fast-reasoning
+description: X Grok Agent
+version: 0.1.0
+model:
+  provider: xai
+  id: grok-4-fast-reasoning
+  api_key_env: XAI_API_KEY
+role: |
+  Provide concise, practical answers.

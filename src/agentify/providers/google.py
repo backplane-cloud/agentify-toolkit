@@ -2,6 +2,8 @@ from google import genai
 from dotenv import load_dotenv
 import os
 
+from .rate_card import estimate_cost
+
 def run_google(model_id: str, user_prompt: str) -> str:
     load_dotenv()
     api_key = os.environ.get("GOOGLE_API_KEY")
@@ -19,9 +21,15 @@ def run_google(model_id: str, user_prompt: str) -> str:
         contents=user_prompt
     )
 
+    input_tokens = response.usage_metadata.candidates_token_count + response.usage_metadata.prompt_token_count
+    output_tokens = response.usage_metadata.thoughts_token_count
+    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+
     result = {
         "text": response.text,
-        "input_tokens": response.usage_metadata.candidates_token_count + response.usage_metadata.prompt_token_count,
-        "output_tokens": response.usage_metadata.thoughts_token_count
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "token_cost": token_cost
     }
     return result
+

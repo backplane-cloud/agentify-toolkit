@@ -2,6 +2,8 @@ from openai import OpenAI
 from dotenv import load_dotenv
 import os
 
+from .rate_card import estimate_cost
+
 def run_openai(model_id: str, user_prompt: str) -> str:
     load_dotenv()
     api_key = os.environ.get("OPENAI_API_KEY")
@@ -20,9 +22,15 @@ def run_openai(model_id: str, user_prompt: str) -> str:
         input=user_prompt
     )
 
+    input_tokens = response.usage.input_tokens
+    output_tokens = response.usage.output_tokens
+    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+
     result = {
         "text": response.output_text,
-        "input_tokens": response.usage.input_tokens,
-        "output_tokens": response.usage.output_tokens
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "token_cost": token_cost
     }
+    
     return result

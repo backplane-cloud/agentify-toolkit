@@ -2,6 +2,8 @@ from anthropic import Anthropic
 from dotenv import load_dotenv
 import os
 
+from .rate_card import estimate_cost
+
 def run_anthropic(model_id: str, user_prompt: str) -> str:
     load_dotenv()
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -25,9 +27,20 @@ def run_anthropic(model_id: str, user_prompt: str) -> str:
         ]
     )
 
+    input_tokens = message.usage.input_tokens
+    output_tokens = message.usage.output_tokens
+    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+
     result = {
         "text": message.content[0].text,
-        "input_tokens": message.usage.input_tokens,
-        "output_tokens": message.usage.output_tokens
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "token_cost": token_cost
     }
     return result
+
+
+
+
+ 
+  

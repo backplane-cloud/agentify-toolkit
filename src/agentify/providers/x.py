@@ -3,6 +3,8 @@ from xai_sdk.chat import user, system
 from dotenv import load_dotenv
 import os
 
+from .rate_card import estimate_cost
+
 def run_x(model_id: str, user_prompt: str) -> str:
     load_dotenv()
     api_key = os.environ.get("XAI_API_KEY")
@@ -20,9 +22,15 @@ def run_x(model_id: str, user_prompt: str) -> str:
     chat.append(user(user_prompt))
     response = chat.sample()
     
+    input_tokens = response.usage.prompt_tokens + response.usage.reasoning_tokens
+    output_tokens = response.usage.completion_tokens
+    token_cost = estimate_cost(model_id, input_tokens, output_tokens)
+
     result = {
         "text": response.content,
-        "input_tokens": response.usage.prompt_tokens + response.usage.reasoning_tokens,
-        "output_tokens": response.usage.completion_tokens
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "token_cost": token_cost
     }
     return result
+

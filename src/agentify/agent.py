@@ -26,6 +26,7 @@ class Agent:
 
     input_tokens: int = 0
     output_tokens: int = 0
+    token_cost: float = 0.0
 
     version: Optional[str] = field(default="0.0.0")
     
@@ -43,6 +44,14 @@ class Agent:
     def _get_total_tokens(self):
         """Returns input_tokens + output_tokens"""
         return self.input_tokens + self.output_tokens
+    
+    # def _get_total_tokens_cost(self):
+    #     """Returns cost of input and output tokens based on 1:6 aggregated averages"""
+    #     # Token cost based on input: 0.00002 USD output: 0.00012 USD
+    #     input_token_cost = 0.00002 * self.input_tokens
+    #     output_token_cost = 0.00012 * self.output_tokens
+    #     return round(input_token_cost + output_token_cost, 2)
+        
 
     def load_tools(self, tool_path_override: str | Path | None = None):
         """
@@ -116,7 +125,6 @@ class Agent:
                 raise ValueError(f"Unsupported provider: {self.provider}")
 
 
-
     def chat(self, debug: bool = False, toolprompt: bool = False):
         from rich.console import Console, Group
         from rich.panel import Panel
@@ -167,12 +175,13 @@ class Agent:
         tool_schemas = [tool.to_schema() for tool in self.tools.values()] if self.tools else None
         tools_block = ""
         if tool_schemas:
-            tools_block = "\n\nLOCAL TOOLS:\n" + json.dumps(tool_schemas, indent=2)
+            # tools_block = "\n\nLOCAL TOOLS:\n" + json.dumps(tool_schemas, indent=2)
+            tools_block = "\n\nLOCAL TOOLS:\n" + json.dumps(tool_schemas)
 
         # Load MCP Server Tools
         if self.mcp_clients:
-            tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools, indent=2)        
-
+            # tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools, indent=2)        
+            tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools)        
 
         if debug:
             console.print(
@@ -189,11 +198,22 @@ class Agent:
                 )
             )
 
-
+        # Lightweight tool index for prompt (name + description only) // Reduces 'in' tokens
+        tool_index = [
+            {"name": tool.name, "description": tool.description}
+            for tool in self.tools.values()
+        ]
+        mcp_tool_index = [
+            {"name": tool["name"], "description": tool["description"]}
+            for tool in mcp_tools
+        ]
+        index = tool_index + mcp_tool_index
+        compact_index = json.dumps(index)
+        
         while True:
             prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)")
             if prompt.lower() in ["/exit", "quit"]:
-                console.print(f"[yellow]Total tokens used in this session:[/yellow] {self._get_total_tokens()}")
+                console.print(f"[yellow]Total tokens used in this session:[/yellow] {self._get_total_tokens()}, Cost: {round(self.token_cost, 7)} USD")
                 break
 
             # Add user input to conversation history
@@ -209,34 +229,45 @@ class Agent:
             # Inject tool rules if tools exist
             if tool_schemas:
                 full_prompt += """
-Respond to user requests naturally, but if a tool must be invoked, respond with ONLY raw JSON that is parseable, with no code fences, no extra labels, and no commentary.
+                    Respond to user requests naturally, but if a tool must be invoked, respond with ONLY raw JSON that is parseable, with no code fences, no extra labels, and no commentary.
 
-Rules:
+                    Rules:
 
-1. If the request is "list tools", respond with a numbered list of all tools in this pattern:
-   1. <tool name>: <description>: <arguments>: <type> (local or remote)
+                    1. If the request is "list tools", respond with a numbered list of all tools in this pattern:
+                    1. <tool name>: <description>: <arguments>: <type> (local or remote)
 
-2. When invoking a tool, respond ONLY with the JSON object in this exact format:
-{
-    "tool": "<tool name>",
-    "action": "<action name>",
-    "args": {...}
-}
-Do NOT wrap this in markdown, code blocks, backticks, or any extra text. The JSON must be parseable directly.
+                    2. When invoking a tool, respond ONLY with the JSON object in this exact format:
+                    {
+                        "tool": "<tool name>",
+                        "action": "<action name>",
+                        "args": {...}
+                    }
+                    Do NOT wrap this in markdown, code blocks, backticks, or any extra text. The JSON must be parseable directly.
 
-3. Only use a tool if necessary. If no tool is needed, respond in plain language.
+                    3. Only use a tool if necessary. If no tool is needed, respond in plain language.
 
-4. Use the tool arguments exactly as defined in the schema.
+                    4. Use the tool arguments exactly as defined in the schema.
 
-When a user requests a tool action, produce only the JSON object following the above format.
+                    When a user requests a tool action, produce only the JSON object following the above format.
                 """
-                full_prompt += tools_block
+            
+                # Expensive sending Tool Schemas on each Prompt
+                # full_prompt += tools_block
+
+                # TOKEN OPTIMISATION - Cheaper to send tool index
+                full_prompt += compact_index
+
+            # TOKEN OPTIMISATION - Removing whitespace to compact prompt 
+            import textwrap
+            compact_prompt = " ".join(
+                line.strip() for line in textwrap.dedent(full_prompt).splitlines() if line.strip()
+            )
             
 
             if debug:
                 console.print(
                     Panel.fit(
-                        Group(full_prompt),
+                        Group(compact_prompt),
                         title=f"[bold white]Debug - Sent to {self.provider}/{self.model_id}[/bold white]",
                         border_style="white",
                     )
@@ -244,7 +275,7 @@ When a user requests a tool action, produce only the JSON object following the a
 
             # Send prompt to model
             with console.status(f"[green]{self.name.title()} is thinking...[/green]", spinner="dots"):
-                response = self.run(full_prompt)
+                response = self.run(compact_prompt)
 
         
             # Try parsing JSON (tool invocation)
@@ -252,11 +283,6 @@ When a user requests a tool action, produce only the JSON object following the a
                 # Clean JSON      
                 text = response.get("text") if isinstance(response, dict) else response
                 cleaned = text.strip() if isinstance(text, str) else ""
-                
-                # if response["text"]:                     
-                #     cleaned = response["text"].strip()                                                                                                                 
-                # else:
-                #     cleaned = response.strip()
 
                 if cleaned.startswith('```'):                                                      
                     cleaned = cleaned.split('```')[1]                                              
@@ -326,7 +352,7 @@ When a user requests a tool action, produce only the JSON object following the a
 
                         # Ask model to display tool output naturally
                         analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
-                        with console.status(f"{self.name.title()} is analysing tool response...", spinner="dots"):
+                        with console.status(f"{self.name.title()} is synthesising tool response...", spinner="dots"):
                             response = self.run(analysis_prompt)
 
                         # Store agent response in history
@@ -376,7 +402,7 @@ When a user requests a tool action, produce only the JSON object following the a
 
                     # Ask model to display tool output naturally
                     analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
-                    with console.status(f"{self.name.title()} is analysing tool response...", spinner="dots"):
+                    with console.status(f"{self.name.title()} is synthesising tool response...", spinner="dots"):
                         response = self.run(analysis_prompt)
 
                     # Store agent response in history
@@ -394,14 +420,16 @@ When a user requests a tool action, produce only the JSON object following the a
                     # Turn Token Usage
                     input_tokens = response["input_tokens"]
                     output_tokens = response["output_tokens"]
+                    token_cost = response["token_cost"]
                     total = input_tokens + output_tokens
 
                     # Update Agent for cumulative input and output tokens
                     self.input_tokens += input_tokens
                     self.output_tokens += output_tokens
+                    self.token_cost += token_cost
 
                     console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
-                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
+                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
                 else:
                     console.print(Panel.fit(response, title="Agent Response", border_style="green"))
 
@@ -423,14 +451,18 @@ When a user requests a tool action, produce only the JSON object following the a
                     # Turn Token Usage
                     input_tokens = response["input_tokens"]
                     output_tokens = response["output_tokens"]
+                    token_cost = response["token_cost"]
                     total = input_tokens + output_tokens
 
                     # Update Agent for cumulative input and output tokens
                     self.input_tokens += input_tokens
                     self.output_tokens += output_tokens
+                    self.token_cost += token_cost
 
                     console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
-                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
+                    # console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
+                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
+
                 else:
                     console.print(Panel.fit(response, title="Agent Response", border_style="green"))
                 
@@ -479,15 +511,6 @@ def create_agent(spec: dict, provider: str = None, model: str = None, agent_file
                 endpoint=endpoint
             )
             mcp_clients.append(client)
-    
-
-    # MCP Tools via MCP Server http://localhost:3333
-    # mcp_client = None
-    # mcp_spec = spec.get("mcp")
-    # if mcp_spec:
-    #     endpoint = mcp_spec.get("endpoint")
-    #     if endpoint:
-    #         mcp_client = MCPClientHTTP(endpoint)
 
     agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names, agent_file=agent_file, mcp_clients=mcp_clients)
 

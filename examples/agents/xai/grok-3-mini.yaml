@@ -1,0 +1,9 @@
+name: grok-3-mini
+description: X Grok Agent
+version: 0.1.0
+model:
+  provider: xai
+  id: grok-3-mini
+  api_key_env: XAI_API_KEY
+role: |
+  Provide concise, practical answers.
