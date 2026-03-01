@@ -21,15 +21,15 @@ agentify_icon = """
 """
 
 COMMANDS = {
-    "run": {"target": "agentify.commands.run:run_command", "help": "Run an agent YAML"},
-    "serve": {"target": "agentify.commands.serve:serve_command", "help": "Serve an agent via HTTP"},
-    "deploy": {"target": "agentify.commands.deploy:deploy_command", "help": "Deploy an agent"},
-    "gateway": {"target": "agentify.commands.gateway:gateway_command", "help": "Start the gateway"},
-    "runtime": {"target": "agentify.commands.runtime:runtime_group", "help": "Agent runtime group"},
-    "tool": {"target": "agentify.commands.tool:tool_group", "help": "Tool management group"},
-    "agent": {"target": "agentify.commands.agent:agent_group", "help": "Agent management group"},
-    "provider": {"target": "agentify.commands.provider:provider_group", "help": "Provider management group"},
-    "mcp": {"target": "agentify.commands.mcp:mcp_group", "help": "MCP server group"},
+    "provider": {"target": "agentify.commands.provider:provider_group", "help": "Add, remove, or list AI providers (OpenAI, Anthropic, etc.)"},
+    "agent": {"target": "agentify.commands.agent:agent_group", "help": "Create, inspect, and manage AI agents"},
+    "run": {"target": "agentify.commands.run:run_command", "help": "Execute an agent from a YAML configuration file"},
+    "serve": {"target": "agentify.commands.serve:serve_command", "help": "Start an HTTP server to run an agent interactively"},
+    "deploy": {"target": "agentify.commands.deploy:deploy_command", "help": "Deploy an agent to a runtime or production environment"},
+    "runtime": {"target": "agentify.commands.runtime:runtime_group", "help": "Launch and manage the agent runtime environment"},
+    "gateway": {"target": "agentify.commands.gateway:gateway_command", "help": "Start the model gateway for routing AI requests"},
+    "tool": {"target": "agentify.commands.tool:tool_group", "help": "Add, remove, or manage tools for agent use"},
+    "mcp": {"target": "agentify.commands.mcp:mcp_group", "help": "Start and control the MCP server and associated services"},
 }
 
 # --- Lazy leaf command ---
@@ -74,7 +74,7 @@ class LazyGroupCommand(click.Group):
 # --- Lazy main group ---
 class LazyMainGroup(click.Group):
     def list_commands(self, ctx):
-        return sorted(COMMANDS.keys())
+        return COMMANDS.keys()
 
     def get_command(self, ctx, name):
         if name not in COMMANDS:
