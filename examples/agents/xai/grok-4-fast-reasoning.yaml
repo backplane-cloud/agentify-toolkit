@@ -1,5 +1,5 @@
 name: grok-4-fast-reasoning
-description: X Grok Agent
+description: Grok‑4‑Fast Non‑Reasoning is the fast, efficiency‑optimized variant of xAI’s Grok‑4 Fast model that skips explicit reasoning steps and delivers instant, pattern‑matched responses for straightforward tasks.
 version: 0.1.0
 model:
   provider: xai

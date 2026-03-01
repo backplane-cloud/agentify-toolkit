@@ -1,5 +1,6 @@
 name: grok-3
-description: X Grok Agent
+description: |
+  Grok‑3 is the third major generation of the Grok large language model family developed by xAI, the AI company founded by Elon Musk. It’s designed to go beyond basic text generation by offering strong reasoning, deep knowledge retrieval, and enhanced conversational intelligence.
 version: 0.1.0
 model:
   provider: xai
