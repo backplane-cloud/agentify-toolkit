@@ -19,16 +19,7 @@ agentify_icon = """
 [white]  ░██ ░██ ░██ ░██ [/white]    Command: [yellow]agentify runtime start[/yellow] [green]→[/green] [yellow]agentify deploy agent.yaml[/yellow]
 [white]  ░░  ░░  ░░  ░░  [/white]
 """
-console.print(
-    Panel(
-        agentify_icon,
-        title=f"AGENTIFY TOOLKIT CLI v{__version__}",
-        subtitle="Build, Run and deploy AI Agents declaratively",
-        border_style="white",
-    )
-)
 
-# --- Command registry: module path, attr, optional help text ---
 COMMANDS = {
     "run": {"target": "agentify.commands.run:run_command", "help": "Run an agent YAML"},
     "serve": {"target": "agentify.commands.serve:serve_command", "help": "Serve an agent via HTTP"},
@@ -120,8 +111,21 @@ class LazyGroup(click.Group):
         return cmd
     
 # --- Main entrypoint ---
-@click.group(cls=LazyMainGroup)
+@click.group(cls=LazyMainGroup, invoke_without_command=True)
 @click.version_option(version=__version__, prog_name="Agentify")
-def main():
+@click.pass_context
+def main(ctx):
     """Agentify Toolkit CLI"""
-    pass
+    # Show banner only if no subcommand is invoked
+    if ctx.invoked_subcommand is None:
+        console.print(
+            Panel(
+                agentify_icon,
+                title=f"AGENTIFY TOOLKIT CLI v{__version__}",
+                subtitle="Build, Run and deploy AI Agents declaratively",
+                border_style="white",
+            )
+        )
+    
+        click.echo()  # blank line
+        click.echo(ctx.command.get_help(ctx))
