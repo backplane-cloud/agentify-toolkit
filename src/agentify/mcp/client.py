@@ -1,4 +1,6 @@
 import requests
+from requests.exceptions import ConnectionError, Timeout, RequestException
+
 import itertools
 import uuid
 import json
@@ -58,14 +60,25 @@ class MCPClientHTTP:
         # if "error" in data:
         #     raise Exception(f"MCP Error: {data['error']}")
         # return data.get("result")
-        response = requests.post(
-            self.endpoint,
-            json=payload,
-            headers=headers,
-            stream=True  # must be True for SSE
-        )
+        try:
+            response = requests.post(
+                self.endpoint,
+                json=payload,
+                headers=headers,
+                stream=True  # must be True for SSE
+            )
 
-        response.raise_for_status()
+            response.raise_for_status()
+        except ConnectionError:
+            # Server is offline / refused connection
+            print(f"[red]Error:[/red] MCP server at {self.endpoint} is offline or unreachable.")
+            return None  # or raise a controlled exception
+        except Timeout:
+            print(f"[red]Error:[/red] Connection to MCP server at {self.endpoint} timed out.")
+            return None
+        except RequestException as e:
+            print(f"[red]Error:[/red] MCP server request failed: {str(e)}")
+            return None
 
         content_type = response.headers.get("Content-Type", "")
 

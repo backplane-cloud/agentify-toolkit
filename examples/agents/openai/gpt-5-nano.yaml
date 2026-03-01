@@ -1,0 +1,11 @@
+name: gpt-5-nano
+version: 0.1.0
+description: |
+  GPT‑5 Nano is the ultra‑lightweight version of OpenAI’s GPT‑5 model, designed for maximum speed and lowest cost per token while still supporting core capabilities of the GPT‑5 family. It’s a lower‑capacity variant optimized for use cases where responsiveness and price matter more than deep reasoning.
+model:
+  provider: openai
+  id: gpt-5-nano
+  api_key_env: OPEN_API_KEY
+role: |
+  You are an experienced cloud security engineer specialising in AWS.
+  Provide concise, practical answers with examples.

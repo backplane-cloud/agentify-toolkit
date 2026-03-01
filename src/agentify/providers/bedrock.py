@@ -26,5 +26,12 @@ def run_bedrock(model_id: str, user_prompt: str) -> str:
             accept="application/json"
         )
 
-        response_body = json.loads(response["body"].read())
-        return response_body["content"][0]["text"]
+        response_body = json.loads(response["body"].read().decode('utf-8'))
+
+        result = {
+            "text": response_body["content"][0]["text"],
+            "input_tokens": response_body["usage"]["input_tokens"],
+            "output_tokens": response_body["usage"]["output_tokens"]
+        }
+
+        return result

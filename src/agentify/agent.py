@@ -21,7 +21,13 @@ class Agent:
     description: str
     provider: str
     model_id: str
+    
     role: str
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+    token_cost: float = 0.0
+
     version: Optional[str] = field(default="0.0.0")
     
     tool_names: list = field(default_factory=list)
@@ -34,6 +40,18 @@ class Agent:
     _tools_loaded: bool = field(default=False, init=False)
 
     conversation_history: list = field(default_factory=list)
+    
+    def _get_total_tokens(self):
+        """Returns input_tokens + output_tokens"""
+        return self.input_tokens + self.output_tokens
+    
+    # def _get_total_tokens_cost(self):
+    #     """Returns cost of input and output tokens based on 1:6 aggregated averages"""
+    #     # Token cost based on input: 0.00002 USD output: 0.00012 USD
+    #     input_token_cost = 0.00002 * self.input_tokens
+    #     output_token_cost = 0.00012 * self.output_tokens
+    #     return round(input_token_cost + output_token_cost, 2)
+        
 
     def load_tools(self, tool_path_override: str | Path | None = None):
         """
@@ -77,7 +95,7 @@ class Agent:
     def get_tools(self) -> list[str]:
         return list(self.tools.keys())
     
-    def run(self, user_prompt: str) -> str:
+    def run(self, user_prompt: str) -> dict:
         from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_gateway_http
 
         match self.provider.lower():
@@ -107,26 +125,18 @@ class Agent:
                 raise ValueError(f"Unsupported provider: {self.provider}")
 
 
-
-    def chat(self, debug: bool = False):
-        from rich.console import Console
+    def chat(self, debug: bool = False, toolprompt: bool = False):
+        from rich.console import Console, Group
         from rich.panel import Panel
         from rich.prompt import Prompt
+        from rich.text import Text
+        from rich.pretty import Pretty
         
         # Load Tools from local Files in tools/
         if self.tool_names and not self._tools_loaded:
             self.load_tools()
 
-        # MCP Tool loader
-        # if self.mcp_client:
-        #     self.mcp_client.initialize()
-        #     mcp_tools = self.mcp_client.list_tools()
-        #     mcp_tool_names = [t["name"] for t in mcp_tools]
-        # else:
-        #     mcp_tool_names = []
-
         # MCP Tool loader v2
-
         mcp_tools = []
         mcp_tool_names = []
 
@@ -152,10 +162,11 @@ class Agent:
         # Print agent header
         console.print(Panel(
             f"[bold cyan]{self.name.upper()}[/bold cyan] [dim]{self.version}[/dim]\n"
-            f"Role: {self.description}\n"
+            f"Role: {self.role}\n"
             f"Using [yellow]{self.model_id}[/yellow] by {self.provider}\n"
             f"Agent Tools:      {self.tool_names}\n"
-            f"MCP Server Tools: {mcp_tool_names}",
+            f"MCP Server Tools: {mcp_tool_names}\n"
+            f"Tool Prompt enabled: {toolprompt}",
             border_style="cyan"
         ))
 
@@ -164,20 +175,45 @@ class Agent:
         tool_schemas = [tool.to_schema() for tool in self.tools.values()] if self.tools else None
         tools_block = ""
         if tool_schemas:
-            tools_block = "\n\nLOCAL TOOLS:\n" + json.dumps(tool_schemas, indent=2)
+            # tools_block = "\n\nLOCAL TOOLS:\n" + json.dumps(tool_schemas, indent=2)
+            tools_block = "\n\nLOCAL TOOLS:\n" + json.dumps(tool_schemas)
 
         # Load MCP Server Tools
         if self.mcp_clients:
-            tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools, indent=2)        
-
+            # tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools, indent=2)        
+            tools_block += "\n\nMCP TOOLS:\n" + json.dumps(mcp_tools)        
 
         if debug:
-            console.print(tools_block)
+            console.print(
+                Panel.fit(
+                    Group(
+                        "[bold cyan]LOCAL TOOLS[/bold cyan]",
+                        json.dumps(tool_schemas, indent=2, sort_keys=True) if tool_schemas else "[dim]None[/dim]",
+                        "",
+                        "[bold magenta]MCP TOOLS[/bold magenta]",
+                        json.dumps(mcp_tools, indent=2, sort_keys=True) if self.mcp_clients else "[dim]None[/dim]"
+                    ),
+                    title="[bold white]Debug[/bold white]",
+                    border_style="white",
+                )
+            )
 
+        # Lightweight tool index for prompt (name + description only) // Reduces 'in' tokens
+        tool_index = [
+            {"name": tool.name, "description": tool.description}
+            for tool in self.tools.values()
+        ]
+        mcp_tool_index = [
+            {"name": tool["name"], "description": tool["description"]}
+            for tool in mcp_tools
+        ]
+        index = tool_index + mcp_tool_index
+        compact_index = json.dumps(index)
+        
         while True:
             prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)")
             if prompt.lower() in ["/exit", "quit"]:
-                console.print("[yellow]Exiting. Goodbye![/yellow]")
+                console.print(f"[yellow]Total tokens used in this session:[/yellow] {self._get_total_tokens()}, Cost: {round(self.token_cost, 7)} USD")
                 break
 
             # Add user input to conversation history
@@ -193,40 +229,61 @@ class Agent:
             # Inject tool rules if tools exist
             if tool_schemas:
                 full_prompt += """
-Respond to user requests naturally, but if a tool must be invoked, respond with ONLY raw JSON that is parseable, with no code fences, no extra labels, and no commentary.
+                    Respond to user requests naturally, but if a tool must be invoked, respond with ONLY raw JSON that is parseable, with no code fences, no extra labels, and no commentary.
 
-Rules:
+                    Rules:
 
-1. If the request is "list tools", respond with a numbered list of all tools in this pattern:
-   1. <tool name>: <description>: <arguments>: <type> (local or remote)
+                    1. If the request is "list tools", respond with a numbered list of all tools in this pattern:
+                    1. <tool name>: <description>: <arguments>: <type> (local or remote)
 
-2. When invoking a tool, respond ONLY with the JSON object in this exact format:
-{
-    "tool": "<tool name>",
-    "action": "<action name>",
-    "args": {...}
-}
-Do NOT wrap this in markdown, code blocks, backticks, or any extra text. The JSON must be parseable directly.
+                    2. When invoking a tool, respond ONLY with the JSON object in this exact format:
+                    {
+                        "tool": "<tool name>",
+                        "action": "<action name>",
+                        "args": {...}
+                    }
+                    Do NOT wrap this in markdown, code blocks, backticks, or any extra text. The JSON must be parseable directly.
 
-3. Only use a tool if necessary. If no tool is needed, respond in plain language.
+                    3. Only use a tool if necessary. If no tool is needed, respond in plain language.
 
-4. Use the tool arguments exactly as defined in the schema.
+                    4. Use the tool arguments exactly as defined in the schema.
 
-When a user requests a tool action, produce only the JSON object following the above format.
+                    When a user requests a tool action, produce only the JSON object following the above format.
                 """
-                full_prompt += tools_block
             
+                # Expensive sending Tool Schemas on each Prompt
+                full_prompt += tools_block
+
+                # TOKEN OPTIMISATION - Cheaper to send tool index
+                # full_prompt += compact_index
+
+            # TOKEN OPTIMISATION - Removing whitespace to compact prompt 
+            import textwrap
+            compact_prompt = " ".join(
+                line.strip() for line in textwrap.dedent(full_prompt).splitlines() if line.strip()
+            )
+            
+
             if debug:
-                console.print(full_prompt)
+                console.print(
+                    Panel.fit(
+                        Group(compact_prompt),
+                        title=f"[bold white]Debug - Sent to {self.provider}/{self.model_id}[/bold white]",
+                        border_style="white",
+                    )
+                )
 
             # Send prompt to model
             with console.status(f"[green]{self.name.title()} is thinking...[/green]", spinner="dots"):
-                response = self.run(full_prompt)
+                response = self.run(compact_prompt)
 
+        
             # Try parsing JSON (tool invocation)
             try:
-                # Clean JSON                           
-                cleaned = response.strip()                                                                                                                 
+                # Clean JSON      
+                text = response.get("text") if isinstance(response, dict) else response
+                cleaned = text.strip() if isinstance(text, str) else ""
+
                 if cleaned.startswith('```'):                                                      
                     cleaned = cleaned.split('```')[1]                                              
                 if cleaned.startswith('json'):                                                 
@@ -240,58 +297,191 @@ When a user requests a tool action, produce only the JSON object following the a
                 args = data.get("args", {})
                 tool = self.tools.get(tool_name)
 
-                if tool:
-                    # TOOL HANDLING
-                    if tool.type == "internal":
-                        # Local Function Tool
-                        console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
-                        tool_result = tool.invoke(args=args)
-                    else: 
-                        # Local API Tool
-                        console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
-                        tool_result = tool.invoke(action_name, args)
-                else: 
-                    # Check MCP
-                    if tool_name in mcp_tool_names:
-                        # MCP SERVER TOOL
-                        console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
-                        # tool_result = self.mcp_client.call_tool(tool_name, args)
-                        server_name, actual_tool = tool_name.split(".", 1)
-
-                        client = next(
-                            (c for c in self.mcp_clients if c.name == server_name),
-                            None
+                if toolprompt:
+                    panel_content = Group(
+                        Text(f"Tool: {tool_name}", style="white"),
+                        Text("Arguments:"),
+                        Pretty(args)
+                    )
+                    console.print(
+                        Panel.fit(
+                            panel_content,
+                            title="[bold yellow]Tool Invocation Requested[/bold yellow]",
+                            border_style="yellow",
+                            style="on rgb(40,30,0)"
                         )
+                    )
+                    prompt = Prompt.ask("Do you Approve? (y/n)", default="n")
 
-                        if not client:
-                            raise Exception(f"No MCP client found for server '{server_name}'")
+                    if prompt.lower() in ["n", "no"]:
+                        response = "Tool Invocation was cancelled"
+                    else:
+                        if tool:
+                            # TOOL HANDLING
+                            if tool.type == "internal":
+                                # Local Function Tool
+                                console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
 
-                        tool_result = client.call_tool(actual_tool, args)
+                                # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
 
-                        
-                # if not tool:
-                #     raise ValueError(f"Tool '{tool_name}' not found on agent")
+                                tool_result = tool.invoke(args=args)
+                            else: 
+                                # Local API Tool
+                                console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
 
-                # Minify JSON to avoid confusing model in next prompt
-                tool_result_str = json.dumps(tool_result, separators=(',', ':'))
+                                # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
 
-                # Add tool output to conversation history
-                self.conversation_history.append({"role": "tool", "content": tool_result_str})
+                                tool_result = tool.invoke(action_name, args)
+                        else: 
+                            # Check MCP
+                            if tool_name in mcp_tool_names:
+                                # MCP SERVER TOOL
+                                console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
+                                # tool_result = self.mcp_client.call_tool(tool_name, args)
+                                server_name, actual_tool = tool_name.split(".", 1)
 
-                # Ask model to display tool output naturally
-                analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
-                with console.status(f"{self.name.title()} is analysing tool response...", spinner="dots"):
-                    response = self.run(analysis_prompt)
+                                client = next(
+                                    (c for c in self.mcp_clients if c.name == server_name),
+                                    None
+                                )
 
-                # Store agent response in history
-                self.conversation_history.append({"role": "agent", "content": response})
-                console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+                                if not client:
+                                    raise Exception(f"No MCP client found for server '{server_name}'")
+
+                                # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
+                                tool_result = client.call_tool(actual_tool, args)
+
+                        # Minify JSON to avoid confusing model in next prompt
+                        tool_result_str = json.dumps(tool_result, separators=(',', ':'))
+
+                        # Add tool output to conversation history
+                        self.conversation_history.append({"role": "tool", "content": tool_result_str})
+
+                        # Ask model to display tool output naturally
+                        analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
+                        with console.status(f"{self.name.title()} is synthesising tool response...", spinner="dots"):
+                            response = self.run(analysis_prompt)
+
+                        # Store agent response in history
+                        if isinstance(response, dict):
+                            self.conversation_history.append(
+                                {"role": "agent", "content": response["text"]}
+                            )
+                        else:
+                            self.conversation_history.append(
+                                {"role": "agent", "content": response}
+                            )
+                    
+                else:
+                    if tool:
+                        # TOOL HANDLING
+                        if tool.type == "internal":
+                            # Local Function Tool
+                            console.print(f"USING LOCAL TOOL: '{tool_name}' with args: {args}", style="white on green")
+
+                            # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
+                            tool_result = tool.invoke(args=args)
+                        else: 
+                            # Local API Tool
+                            console.print(f"USING LOCAL TOOL: '{tool_name}' action '{action_name}' with args: {args}", style="bold black on yellow")
+
+                            # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
+                            tool_result = tool.invoke(action_name, args)
+                    else: 
+                        # Check MCP
+                        if tool_name in mcp_tool_names:
+                            # MCP SERVER TOOL
+                            console.print(f"USING MCP SERVER TOOL: '{tool_name}' with args: {args}", style="bold black on yellow")
+                            # tool_result = self.mcp_client.call_tool(tool_name, args)
+                            server_name, actual_tool = tool_name.split(".", 1)
+
+                            client = next(
+                                (c for c in self.mcp_clients if c.name == server_name),
+                                None
+                            )
+
+                            if not client:
+                                raise Exception(f"No MCP client found for server '{server_name}'")
+
+                            # Note: Need to call LLM with Tool Schema to obtain the proper invocation Args
+
+                            tool_result = client.call_tool(actual_tool, args)
+
+                    # Minify JSON to avoid confusing model in next prompt
+                    tool_result_str = json.dumps(tool_result, separators=(',', ':'))
+
+                    # Add tool output to conversation history
+                    self.conversation_history.append({"role": "tool", "content": tool_result_str})
+
+                    # Ask model to display tool output naturally
+                    analysis_prompt = "Display the following tool data in natural language:\n" + tool_result_str
+                    with console.status(f"{self.name.title()} is synthesising tool response...", spinner="dots"):
+                        response = self.run(analysis_prompt)
+
+                    # Store agent response in history
+                    # self.conversation_history.append({"role": "agent", "content": response})
+                    if isinstance(response, dict):
+                        self.conversation_history.append(
+                            {"role": "agent", "content": response["text"]}
+                        )
+                    else:
+                        self.conversation_history.append(
+                            {"role": "agent", "content": response}
+                        )
+                
+                if isinstance(response, dict):
+                    # Turn Token Usage
+                    input_tokens = response["input_tokens"]
+                    output_tokens = response["output_tokens"]
+                    token_cost = response["token_cost"]
+                    total = input_tokens + output_tokens
+
+                    # Update Agent for cumulative input and output tokens
+                    self.input_tokens += input_tokens
+                    self.output_tokens += output_tokens
+                    self.token_cost += token_cost
+
+                    console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
+                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
+                else:
+                    console.print(Panel.fit(response, title="Agent Response", border_style="green"))
 
 
             except (json.JSONDecodeError, ValueError):
                 # Treat as normal chat response
-                self.conversation_history.append({"role": "agent", "content": response})
-                console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+                # self.conversation_history.append({"role": "agent", "content": response})
+                if isinstance(response, dict):
+                    self.conversation_history.append(
+                        {"role": "agent", "content": response["text"]}
+                    )
+                else:
+                    self.conversation_history.append(
+                        {"role": "agent", "content": response}
+                    )
+
+                
+                if isinstance(response, dict):
+                    # Turn Token Usage
+                    input_tokens = response["input_tokens"]
+                    output_tokens = response["output_tokens"]
+                    token_cost = response["token_cost"]
+                    total = input_tokens + output_tokens
+
+                    # Update Agent for cumulative input and output tokens
+                    self.input_tokens += input_tokens
+                    self.output_tokens += output_tokens
+                    self.token_cost += token_cost
+
+                    console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
+                    # console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
+                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
+
+                else:
+                    console.print(Panel.fit(response, title="Agent Response", border_style="green"))
+                
 
 def create_agents(specs: list) -> dict[str, Agent]:
     agents = {}
@@ -337,15 +527,6 @@ def create_agent(spec: dict, provider: str = None, model: str = None, agent_file
                 endpoint=endpoint
             )
             mcp_clients.append(client)
-    
-
-    # MCP Tools via MCP Server http://localhost:3333
-    # mcp_client = None
-    # mcp_spec = spec.get("mcp")
-    # if mcp_spec:
-    #     endpoint = mcp_spec.get("endpoint")
-    #     if endpoint:
-    #         mcp_client = MCPClientHTTP(endpoint)
 
     agent = Agent(name=name, provider=provider, model_id=model_id, role=role, description=description, version=version, tool_names=tool_names, agent_file=agent_file, mcp_clients=mcp_clients)
 

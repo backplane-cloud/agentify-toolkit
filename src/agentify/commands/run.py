@@ -7,14 +7,14 @@ from pathlib import Path
 @click.option("--provider", type=str, help="Override the LLM provider at runtime")
 @click.option("--server", type=str, help="Optional: run on a remote server instead of local")
 @click.option("--debug", is_flag=True, help="Turn on debugging to see raw prompt")
-def run_command(path, model, provider, server, debug):
+@click.option("--toolprompt", is_flag=True, help="Agent prompts for approval before tool invocation")
+def run_command(path, model, provider, server, debug, toolprompt):
     """Execute an agent from a YAML file or directory"""
     import yaml
     import sys
     from ..agent import create_agent, create_agents
     from ..specs import load_agent_specs
     from ..cli_ui import show_agent_menu
-    # from ..runtime_client import upload_agent  # Optional
 
     agent_path = path or "./agents"
     path = Path(agent_path)
@@ -34,7 +34,7 @@ def run_command(path, model, provider, server, debug):
             spec = yaml.safe_load(f)
 
         agent = create_agent(spec, provider=provider, model=model, agent_file=path.resolve())
-        agent.chat(debug=debug)
+        agent.chat(debug=debug, toolprompt=toolprompt)
 
     elif path.is_dir():
         specs = load_agent_specs(path)

@@ -2,6 +2,8 @@ from dotenv import load_dotenv
 import os
 import requests
 
+from .rate_card import estimate_cost
+
 def run_github(model_id: str, user_prompt: str) -> str:
     
     # Get Api Key
@@ -34,6 +36,18 @@ def run_github(model_id: str, user_prompt: str) -> str:
 
     response = requests.post(url, json=body, headers=header)
     response.raise_for_status()
-
     data = response.json()
-    return data["choices"][0]["message"]["content"]
+    
+    provider, model = model_id.split("/") 
+
+    input_tokens = data["usage"]["prompt_tokens"]
+    output_tokens = data["usage"]["completion_tokens"]
+    token_cost = estimate_cost(provider, model, input_tokens, output_tokens)
+
+    result = {
+        "text": data["choices"][0]["message"]["content"],
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "token_cost": token_cost
+    }
+    return result

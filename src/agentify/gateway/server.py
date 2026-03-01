@@ -9,15 +9,20 @@ class ChatRequest(BaseModel):
     prompt: str
     
 class ChatResponse(BaseModel):
-    response: str
+    text: str
+    input_tokens: int
+    output_tokens: int
 
 @app.post("/v1/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
+
     try:
         output = run_agentify(
             model_id=req.model,
             user_prompt=req.prompt
         )
-        return ChatResponse(response=output)
+
+        return ChatResponse(**output)
+    
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))

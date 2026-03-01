@@ -26,7 +26,13 @@ def run_ollama(model_id: str, user_prompt: str) -> str:
     ]
 
     response =  client.chat(model_id, messages=messages, stream=False)
-    return response.message.content
+
+    result = {
+        "text": response.message.content,
+        "input_tokens": response.prompt_eval_count,
+        "output_tokens": response.eval_count
+    }
+    return result
 
    
 

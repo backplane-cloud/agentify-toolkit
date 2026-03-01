@@ -16,7 +16,13 @@ def run_ollama_local(model_id: str, user_prompt: str) -> str:
     response.raise_for_status()
 
     data = response.json()
-    return data["response"]
+
+    result = {
+        "text": data["response"],
+        "input_tokens": data["prompt_eval_count"],
+        "output_tokens": data["eval_count"]
+    }
+    return result
 
    
 

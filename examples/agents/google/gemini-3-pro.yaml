@@ -1,0 +1,10 @@
+name: gemini-3-pro-preview
+description: High-capability Gemini model for complex reasoning and production workloads.
+version: 0.1.0
+model:
+  provider: google
+  id: gemini-3-pro-preview
+  api_key_env: GEMINI_API_KEY
+role: |
+  You are a Google Cloud Architect. 
+  Provide concise, practical answers.

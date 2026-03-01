@@ -165,13 +165,13 @@ def validate_provider(provider: str) -> str:
         Exception: if provider loading, authentication, or invocation fails
     """
     from ..providers import run_agentify
-          
+
     response = run_agentify(
         model_id=provider,
         user_prompt="respond with ok"
     )
-
-    if not response or not response.strip():
+    
+    if not response:
         raise RuntimeError("Provider returned an empty response")
 
-    return response
+    return response["text"]

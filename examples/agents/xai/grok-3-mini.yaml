@@ -1,0 +1,9 @@
+name: grok-3-mini
+description: Grok‑3 Mini is the smaller, faster, and more cost‑efficient Grok model in the Grok‑3 lineup. It retains core reasoning and logical capabilities of the full Grok‑3 model but with reduced computational requirements, making it ideal for tasks where both speed and cost efficiency are important.
+version: 0.1.0
+model:
+  provider: xai
+  id: grok-3-mini
+  api_key_env: XAI_API_KEY
+role: |
+  Provide concise, practical answers.
