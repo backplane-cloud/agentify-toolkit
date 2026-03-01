@@ -8,6 +8,7 @@
 
 | Feature                                     | Description                                                                                     | Branch                        | Release |
 | ------------------------------------------- | ----------------------------------------------------------------------------------------------- | ----------------------------- | ------- |
+| Token Usage / Cost                          | Record Token Usage of Agent / Model / Provider with estimated cost                              | `feature/token-usage`         | v0.21.0 |
 | [Tool Prompting](./CHANGELOG.md)            | Have agents prompt for approval before making tool call: `agentify run agent.yaml --toolprompt` | `feature/toolprompt`          | v0.20.0 |
 | [MCP Server](docs/MCP.md)                   | Agents can connect to MCP servers for tools e.g. `agentify mcp start`                           | `feature/mcp`                 | v0.19.0 |
 | [Provider Validation](docs/CLI.md)          | Provides validation of Provider API KEY                                                         | `feature/provider-validation` | v0.18.0 |
@@ -32,11 +33,12 @@
 
 ## Proposed
 
-| Feature                      | Description                                                                                 | Branch                       | Status      |
-| ---------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------- | ----------- |
-| Token Usage                  | Record Token Usage of Agent / Model / Provider                                              | `feature/token-usage`        | Not started |
-| Memory                       | Agent Memory                                                                                | `feature/memory`             | Not started |
-| Streaming                    | Stream LLM Responses in chat mode                                                           | `feature/streaming`          | Not started |
-| Agent-to-Agent Communication | Agents can talk to other Agents                                                             | `feature/agent-to-agent`     | Proposed    |
-| Agent Reproduction           | Agents can dynamically create new agents to serve sub goals                                 | `feature/agent-reproduction` | Proposed    |
-| Namespaces                   | e.g. `agentify init` within `solution/` and then `agentify deploy solution` under namespace | `feature/deploy-namespace`   | Proposed    |
+| Feature                      | Description                                                                                                              | Branch                       | Status      |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------- | ----------- |
+| Memory                       | Agent Memory                                                                                                             | `feature/memory`             | Not started |
+| Streaming                    | Stream LLM Responses in chat mode                                                                                        | `feature/streaming`          | Not started |
+| Agent-to-Agent Communication | Agents can talk to other Agents                                                                                          | `feature/agent-to-agent`     | Proposed    |
+| Agent Reproduction           | Agents can dynamically create new agents to serve sub goals                                                              | `feature/agent-reproduction` | Proposed    |
+| Namespaces                   | e.g. `agentify init` within `solution/` and then `agentify deploy solution` under namespace                              | `feature/deploy-namespace`   | Proposed    |
+| Model Classes                | Establish abstracted classes for model selection to use case e.g. flagship, mini, nano for example planner:worker:router | `feature/model-classes`      | Proposed    |
+| Token Optmisation            | Stop sending tool schema per prompt and offload tool selection to budget-models to minimise token consumption and cost   | `feature/token-optimisation` | Proposed    |
