@@ -9,9 +9,9 @@ RATE_CARD = {
         "gpt-4.1-nano": {"input_rate": 0.10, "output_rate": 0.40},
     },
     "anthropic": {
-        "claude-opus-4.5": {"input_rate": 5, "output_rate": 25},
+        "claude-opus-4-5": {"input_rate": 5, "output_rate": 25},
         "claude-sonnet-4-5": {"input_rate": 3, "output_rate": 15},
-        "claude-haiku-4.5": {"input_rate": 1, "output_rate": 5},
+        "claude-haiku-4-5": {"input_rate": 1, "output_rate": 5},
     },
     "google": {
         "gemini-3-pro": {"input_rate": 2.00, "output_rate": 12.00},
