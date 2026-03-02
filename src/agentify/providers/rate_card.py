@@ -23,6 +23,9 @@ RATE_CARD = {
     "mistral": {
         "mistral-small-latest": {"input_rate": 0.10, "output_rate": 0.30},
     },
+    "deepseek": {
+        "deepseek-chat": {"input_rate": 0.28, "output_rate": 0.42},
+    },
     "xai": {
         "grok-4": {"input_rate": 3.00, "output_rate": 15.00},
         "grok-3": {"input_rate": 3.00, "output_rate": 15.00},
