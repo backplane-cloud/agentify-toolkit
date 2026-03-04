@@ -17,5 +17,6 @@ __all__ = [
     "agent_group",
     "provider_group",
     "gateway_command",
-    "mcp_group"
+    "mcp_group",
+    "shell_comamnd"
 ]
