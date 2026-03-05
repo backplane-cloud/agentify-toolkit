@@ -279,7 +279,7 @@ class AgentifyApp(App):
             root.add_leaf("No agents directory found")
 
     async def run_agent(self, agent_path: Path):
-        from agentify.agent import create_agent
+        from agentify.sdk.agent import create_agent
         import yaml
 
         log = self.query_one("#chat_log", Log)
