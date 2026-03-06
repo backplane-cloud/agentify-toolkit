@@ -116,8 +116,8 @@ def register_path_tools(path: str) -> list[str]:
         return {"jsonrpc":"2.0","id":response_id,"error":{"code":-32602,"message":"Missing 'path' parameter"}}
 
     registered = []
-    from ..tool import create_tool
-    from ..specs import load_tool_specs, load_tool_spec 
+    from agentify.sdk.tool import create_tool
+    from agentify.sdk.specs import load_tool_specs, load_tool_spec 
     if os.path.isfile(path):
         # It's a single YAML file
         yaml_specs = [load_tool_spec(path)]
