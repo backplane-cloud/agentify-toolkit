@@ -1,4 +1,4 @@
-name: ollama
+name: ollama_tool
 description: AI Engineer
 version: 0.1.0
 model:
