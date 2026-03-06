@@ -108,7 +108,7 @@ def list_agents(path):
     from rich.console import Console
     from rich.table import Table
     from rich.theme import Theme
-    from ..specs import load_agent_specs
+    from agentify.sdk.specs import load_agent_specs
 
     console = Console(theme=Theme({"header": "bold cyan", "highlight": "magenta"}))
 

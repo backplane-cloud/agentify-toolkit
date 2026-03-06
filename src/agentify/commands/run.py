@@ -12,8 +12,8 @@ def run_command(path, model, provider, server, debug, toolprompt):
     """Execute an agent from a YAML file or directory"""
     import yaml
     import sys
-    from ..agent import create_agent, create_agents
-    from ..specs import load_agent_specs
+    from agentify.sdk.agent import create_agent, create_agents
+    from agentify.sdk.specs import load_agent_specs
     from ..cli_ui import show_agent_menu
 
     agent_path = path or "./agents"

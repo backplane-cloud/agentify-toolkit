@@ -4,7 +4,7 @@ import os
 
 from .registry import list_tools, get_tool, register_tool, deregister_tool
 from .builtin_tools import register_builtin_tools 
-from agentify.tool import Tool
+from agentify.sdk.tool import Tool
 
 # app = FastAPI()
 def create_app(tool_path: str | None = None) -> FastAPI:
