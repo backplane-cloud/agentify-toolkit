@@ -12,6 +12,7 @@ class ChatResponse(BaseModel):
     text: str
     input_tokens: int
     output_tokens: int
+    token_cost: float
 
 @app.post("/v1/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
