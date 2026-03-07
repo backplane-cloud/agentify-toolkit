@@ -13,6 +13,7 @@ from pathlib import Path
 # Import MCP Client
 # from agentify.mcp_client import MCPClient
 from agentify.mcp.client import MCPClientHTTP
+import asyncio
 
 
 @dataclass
@@ -27,6 +28,7 @@ class Agent:
     input_tokens: int = 0
     output_tokens: int = 0
     token_cost: float = 0.0
+    active: bool = False
 
     version: Optional[str] = field(default="0.0.0")
     
@@ -94,6 +96,10 @@ class Agent:
 
     def get_tools(self) -> list[str]:
         return list(self.tools.keys())
+    
+    async def run_async(self, user_prompt: str) -> dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.run, user_prompt)
     
     def run(self, user_prompt: str) -> dict:
         from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_gateway_http
