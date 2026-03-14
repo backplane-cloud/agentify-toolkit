@@ -183,7 +183,8 @@ class Agent:
             f"Using [yellow]{self.model_id}[/yellow] by {self.provider}\n"
             f"Agent Tools:      {self.tool_names}\n"
             f"MCP Server Tools: {mcp_tool_names}\n"
-            f"Tool Prompt enabled: {toolprompt}",
+            f"Tool Prompt: {toolprompt}\n"
+            f"Show Statistics: {showstats}",
             border_style="cyan"
         ))
 
