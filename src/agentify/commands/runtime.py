@@ -143,7 +143,9 @@ def runtime_list(server):
                 input_tokens = f"[dim]{str(round(agent.get("input_tokens"), 6))}[/]"
                 output_tokens = f"[dim]{str(round(agent.get("output_tokens"), 6))}[/]"
                 cost = f"[dim]{str(round(agent.get("token_cost"), 6))}[/]"
-                if latency_ms < 1:
+                if latency_ms == 0.0:
+                    latency = f"[dim]{round(latency_ms, 2)}s[/]"
+                elif latency_ms < 1:
                     latency = f"[green]{round(latency_ms, 2)}s[/]"
                 elif 1 <= latency_ms < 5:
                     latency = f"[yellow]{round(latency_ms, 2)}s[/]"
