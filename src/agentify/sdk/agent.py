@@ -25,10 +25,13 @@ class Agent:
     
     role: str
 
+    # State - need to move to State Object to keep Agent stateless
+    # Let the Runtime handle state. Need to think this through. 
     input_tokens: int = 0
     output_tokens: int = 0
     token_cost: float = 0.0
     active: bool = False
+    latency: float = 0.0
 
     version: Optional[str] = field(default="0.0.0")
     
@@ -103,35 +106,43 @@ class Agent:
     
     def run(self, user_prompt: str) -> dict:
         from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_gateway_http
+        import time
+
+        start = time.perf_counter()
 
         match self.provider.lower():
             case "openai":
-                return run_openai(self.model_id, user_prompt)
+                result = run_openai(self.model_id, user_prompt)
             case "anthropic":
-                return run_anthropic(self.model_id, user_prompt)
+                result = run_anthropic(self.model_id, user_prompt)
             case "google":
-                return run_google(self.model_id, user_prompt)
+                result = run_google(self.model_id, user_prompt)
             case "bedrock":
-                return run_bedrock(self.model_id, user_prompt)
+                result = run_bedrock(self.model_id, user_prompt)
             case "github":
-                return run_github(self.model_id, user_prompt)
+                result = run_github(self.model_id, user_prompt)
             case "agentify":
-                return run_gateway_http(self.model_id, user_prompt)
+                result = run_gateway_http(self.model_id, user_prompt)
             case "xai":
-                return run_x(self.model_id, user_prompt)
+                result = run_x(self.model_id, user_prompt)
             case "deepseek":
-                return run_deepseek(self.model_id, user_prompt)
+                result = run_deepseek(self.model_id, user_prompt)
             case "mistral":
-                return run_mistral(self.model_id, user_prompt)
+                result = run_mistral(self.model_id, user_prompt)
             case "ollama":
-                return run_ollama(self.model_id, user_prompt)
+                result = run_ollama(self.model_id, user_prompt)
             case "ollama_local":
-                return run_ollama_local(self.model_id, user_prompt)
+                result = run_ollama_local(self.model_id, user_prompt)
             case _:
                 raise ValueError(f"Unsupported provider: {self.provider}")
 
+        latency = (time.perf_counter() - start)
 
-    def chat(self, debug: bool = False, toolprompt: bool = False):
+        result["latency"] = round(latency,2)
+
+        return result
+
+    def chat(self, debug: bool = False, toolprompt: bool = False, showstats: bool = False):
         from rich.console import Console, Group
         from rich.panel import Panel
         from rich.prompt import Prompt
@@ -444,14 +455,18 @@ class Agent:
                     output_tokens = response["output_tokens"]
                     token_cost = response["token_cost"]
                     total = input_tokens + output_tokens
+                    latency = response["latency"]
+
 
                     # Update Agent for cumulative input and output tokens
                     self.input_tokens += input_tokens
                     self.output_tokens += output_tokens
                     self.token_cost += token_cost
+                    self.latency = latency
 
                     console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
-                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
+                    if showstats:
+                        console.print(f"Latency (sec): {response["latency"]} Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
                 else:
                     console.print(Panel.fit(response, title="Agent Response", border_style="green"))
 
@@ -475,15 +490,20 @@ class Agent:
                     output_tokens = response["output_tokens"]
                     token_cost = response["token_cost"]
                     total = input_tokens + output_tokens
+                    latency = response["latency"]
 
                     # Update Agent for cumulative input and output tokens
                     self.input_tokens += input_tokens
                     self.output_tokens += output_tokens
                     self.token_cost += token_cost
+                    self.latency = latency
 
                     console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
                     # console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
-                    console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
+                    # console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
+                    if showstats:
+                        console.print(f"Latency (sec): {response["latency"]} Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
+
 
                 else:
                     console.print(Panel.fit(response, title="Agent Response", border_style="green"))

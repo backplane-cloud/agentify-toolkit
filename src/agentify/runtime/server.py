@@ -118,6 +118,7 @@ async def list_agents_endpoint():
             "output_tokens": getattr(agent, "output_tokens", None),
             "token_cost": getattr(agent, "token_cost", None),
             "active": getattr(agent, "active", False), 
+            "latency": getattr(agent, "latency", False), 
 
         })
 
@@ -172,6 +173,7 @@ async def prompt_agent(agent_name: str, request: Request):
         agent.output_tokens += response.get("output_tokens", 0)
         agent.token_cost += response.get("token_cost", 0)
     finally:
+        agent.latency = response.get("latency", 0)
         agent.active = False
 
     return {"answer": response["text"]}

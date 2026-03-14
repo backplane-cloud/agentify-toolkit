@@ -106,6 +106,7 @@ def runtime_list(server):
         table.add_column("Tokens In", justify="right", style="yellow")
         table.add_column("Tokens Out", justify="right", style="yellow")
         table.add_column("Token Cost", justify="right")
+        table.add_column("Latency (sec)", justify="right")
 
         spinner_frames = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
         frame = int(time.time() * 10) % len(spinner_frames)
@@ -113,10 +114,12 @@ def runtime_list(server):
         total_input_tokens = 0
         total_output_tokens = 0
         total_cost = 0
+
         for agent in agents:
             in_tokens = agent.get("input_tokens", 0)
             out_tokens = agent.get("output_tokens", 0)
             cost_tokens = agent.get("token_cost", 0)
+            latency_ms = agent.get("latency")
 
             total_input_tokens += in_tokens
             total_output_tokens += out_tokens
@@ -131,6 +134,7 @@ def runtime_list(server):
                 input_tokens = f"[green]{str(round(agent.get("input_tokens"), 6))}[/]"
                 output_tokens = f"[green]{str(round(agent.get("output_tokens"), 6))}[/]"
                 cost = f"[green]{str(round(agent.get("token_cost"), 6))}[/]"
+                latency = f"[cyan]Invoking[/]"
             else:
                 name = agent.get("name")
                 status = "[dim]idle[/]"
@@ -139,6 +143,12 @@ def runtime_list(server):
                 input_tokens = f"[dim]{str(round(agent.get("input_tokens"), 6))}[/]"
                 output_tokens = f"[dim]{str(round(agent.get("output_tokens"), 6))}[/]"
                 cost = f"[dim]{str(round(agent.get("token_cost"), 6))}[/]"
+                if latency_ms < 1:
+                    latency = f"[green]{round(latency_ms, 2)}s[/]"
+                elif 1 <= latency_ms < 5:
+                    latency = f"[yellow]{round(latency_ms, 2)}s[/]"
+                else:
+                    latency = f"[red]{round(latency_ms, 2)}s[/]"
               
 
             table.add_row(
@@ -148,7 +158,8 @@ def runtime_list(server):
                 model,
                 input_tokens,
                 output_tokens,
-                cost
+                cost,
+                latency
             )
 
         table.add_section()
