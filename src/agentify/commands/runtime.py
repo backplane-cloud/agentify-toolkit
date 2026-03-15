@@ -99,10 +99,10 @@ def runtime_list(server):
     def build_table(agents):
         table = Table(title="Agent Runtime")
 
-        table.add_column("Name")
+        table.add_column("Agent Name")
         table.add_column("Status")
-        table.add_column("Model")
         table.add_column("Provider")
+        table.add_column("Model")
         table.add_column("Tokens In", justify="right", style="yellow")
         table.add_column("Tokens Out", justify="right", style="yellow")
         table.add_column("Token Cost", justify="right")
