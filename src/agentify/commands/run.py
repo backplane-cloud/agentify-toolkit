@@ -9,7 +9,8 @@ from pathlib import Path
 @click.option("--debug", is_flag=True, help="Turn on debugging to see raw prompt")
 @click.option("--toolprompt", is_flag=True, help="Agent prompts for approval before tool invocation")
 @click.option("--showstats", is_flag=True, help="Display Token usage, cost and latency")
-def run_command(path, model, provider, server, debug, toolprompt, showstats):
+@click.option("--stream", is_flag=True, help="Stream response")
+def run_command(path, model, provider, server, debug, toolprompt, showstats, stream):
     """Execute an agent from a YAML file or directory"""
     import yaml
     import sys
@@ -34,7 +35,7 @@ def run_command(path, model, provider, server, debug, toolprompt, showstats):
             spec = yaml.safe_load(f)
 
         agent = create_agent(spec, provider=provider, model=model, agent_file=path.resolve())
-        agent.chat(debug=debug, toolprompt=toolprompt, showstats=showstats)
+        agent.chat(debug=debug, toolprompt=toolprompt, showstats=showstats, stream=stream)
 
     elif path.is_dir():
         specs = load_agent_specs(path)

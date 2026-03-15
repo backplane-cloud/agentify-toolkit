@@ -31,7 +31,8 @@ def run_bedrock(model_id: str, user_prompt: str) -> str:
         result = {
             "text": response_body["content"][0]["text"],
             "input_tokens": response_body["usage"]["input_tokens"],
-            "output_tokens": response_body["usage"]["output_tokens"]
+            "output_tokens": response_body["usage"]["output_tokens"],
+            "token_cost": 0.0
         }
 
         return result

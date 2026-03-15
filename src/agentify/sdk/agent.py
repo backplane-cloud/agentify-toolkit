@@ -49,13 +49,6 @@ class Agent:
     def _get_total_tokens(self):
         """Returns input_tokens + output_tokens"""
         return self.input_tokens + self.output_tokens
-    
-    # def _get_total_tokens_cost(self):
-    #     """Returns cost of input and output tokens based on 1:6 aggregated averages"""
-    #     # Token cost based on input: 0.00002 USD output: 0.00012 USD
-    #     input_token_cost = 0.00002 * self.input_tokens
-    #     output_token_cost = 0.00012 * self.output_tokens
-    #     return round(input_token_cost + output_token_cost, 2)
         
 
     def load_tools(self, tool_path_override: str | Path | None = None):
@@ -104,7 +97,7 @@ class Agent:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.run, user_prompt)
     
-    def run(self, user_prompt: str) -> dict:
+    def run(self, user_prompt: str, stream: bool = False) -> dict:
         from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local, run_gateway_http
         import time
 
@@ -112,27 +105,27 @@ class Agent:
 
         match self.provider.lower():
             case "openai":
-                result = run_openai(self.model_id, user_prompt)
+                result = run_openai(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "anthropic":
-                result = run_anthropic(self.model_id, user_prompt)
+                result = run_anthropic(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "google":
                 result = run_google(self.model_id, user_prompt)
             case "bedrock":
                 result = run_bedrock(self.model_id, user_prompt)
             case "github":
-                result = run_github(self.model_id, user_prompt)
+                result = run_github(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "agentify":
                 result = run_gateway_http(self.model_id, user_prompt)
             case "xai":
-                result = run_x(self.model_id, user_prompt)
+                result = run_x(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "deepseek":
-                result = run_deepseek(self.model_id, user_prompt)
+                result = run_deepseek(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "mistral":
-                result = run_mistral(self.model_id, user_prompt)
+                result = run_mistral(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "ollama":
-                result = run_ollama(self.model_id, user_prompt)
+                result = run_ollama(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "ollama_local":
-                result = run_ollama_local(self.model_id, user_prompt)
+                result = run_ollama_local(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case _:
                 raise ValueError(f"Unsupported provider: {self.provider}")
 
@@ -142,7 +135,7 @@ class Agent:
 
         return result
 
-    def chat(self, debug: bool = False, toolprompt: bool = False, showstats: bool = False):
+    def chat(self, debug: bool = False, toolprompt: bool = False, showstats: bool = False, stream: bool = False):
         from rich.console import Console, Group
         from rich.panel import Panel
         from rich.prompt import Prompt
@@ -160,8 +153,6 @@ class Agent:
         for client in self.mcp_clients:
             client.initialize()
             tools = client.list_tools()
-            # mcp_tools += tools
-            # mcp_tool_names += [t["name"] for t in tools]
 
             for tool in tools:
                 namespaced_tool = tool.copy()
@@ -176,7 +167,7 @@ class Agent:
 
         console = Console()
         
-        # Print agent header
+        # DISPLAY AGENT HEADER
         console.print(Panel(
             f"[bold cyan]{self.name.upper()}[/bold cyan] [dim]{self.version}[/dim]\n"
             f"Role: {self.role}\n"
@@ -184,12 +175,13 @@ class Agent:
             f"Agent Tools:      {self.tool_names}\n"
             f"MCP Server Tools: {mcp_tool_names}\n"
             f"Tool Prompt: {toolprompt}\n"
-            f"Show Statistics: {showstats}",
+            f"Show Statistics: {showstats}\n"
+            f"Streaming Mode: {stream}",
             border_style="cyan"
         ))
 
         
-        # Load Local Tool Schemas
+        # LOAD TOOL SCHEMAS
         tool_schemas = [tool.to_schema() for tool in self.tools.values()] if self.tools else None
         tools_block = ""
         if tool_schemas:
@@ -228,9 +220,10 @@ class Agent:
         index = tool_index + mcp_tool_index
         compact_index = json.dumps(index)
         
+        # MAIN AGENTIC LOOP
         while True:
             prompt = Prompt.ask("\nEnter your prompt ('/exit' to quit)")
-            if prompt.lower() in ["/exit", "quit"]:
+            if prompt.lower() in ["/exit", "quit", "q"]:
                 console.print(f"[yellow]Total tokens used in this session:[/yellow] {self._get_total_tokens()}, Cost: {round(self.token_cost, 7)} USD")
                 break
 
@@ -281,7 +274,7 @@ class Agent:
                 line.strip() for line in textwrap.dedent(full_prompt).splitlines() if line.strip()
             )
             
-
+            # DEBUG: DISPLAY PROMPT SENT
             if debug:
                 console.print(
                     Panel.fit(
@@ -292,8 +285,18 @@ class Agent:
                 )
 
             # Send prompt to model
-            with console.status(f"[green]{self.name.title()} is thinking...[/green]", spinner="dots"):
-                response = self.run(compact_prompt)
+            # with console.status(f"[green]{self.name.title()} is thinking...[/green]", spinner="dots"):
+            #     response = self.run(compact_prompt)
+
+            # NEW STREAMING MODE
+            if stream: 
+                console.print(f"[green]{self.name.title()} is thinking...[/green]")
+                response = self.run(compact_prompt, stream=True)
+                console.print()
+            else:
+                with console.status(f"[green]{self.name.title()} is thinking...[/green]", spinner="dots"):
+                    response = self.run(compact_prompt)
+                
 
         
             # Try parsing JSON (tool invocation)
@@ -499,7 +502,8 @@ class Agent:
                     self.token_cost += token_cost
                     self.latency = latency
 
-                    console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
+                    if not stream:
+                        console.print(Panel.fit(response["text"], title="Agent Response", border_style="green"))
                     # console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()}")
                     # console.print(f"Token Usage: In: {response["input_tokens"]} Out: {response["output_tokens"]} Total: {total} Session Total: {self._get_total_tokens()} Cost: {round(self.token_cost,7)} USD")
                     if showstats:
