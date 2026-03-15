@@ -10,6 +10,7 @@ RATE_CARD = {
     },
     "bedrock": {
         "gpt-4": {"input_rate": 0.01, "output_rate": 0.01},
+        "anthropic.claude-3-sonnet-20240229-v1:0": {"input_rate": 0.01, "output_rate": 0.01},
     },
     "anthropic": {
         "claude-opus-4-5": {"input_rate": 5, "output_rate": 25},
