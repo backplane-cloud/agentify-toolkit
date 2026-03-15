@@ -109,13 +109,13 @@ class Agent:
             case "anthropic":
                 result = run_anthropic(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "google":
-                result = run_google(self.model_id, user_prompt)
+                result = run_google(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "bedrock":
-                result = run_bedrock(self.model_id, user_prompt)
+                result = run_bedrock(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "github":
                 result = run_github(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "agentify":
-                result = run_gateway_http(self.model_id, user_prompt)
+                result = run_gateway_http(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "xai":
                 result = run_x(self.model_id, user_prompt, stream=stream) # <-- STREAMING SUPPORT IMPLEMENTED
             case "deepseek":
