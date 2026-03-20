@@ -41,6 +41,7 @@ def run_ollama(model_id: str, user_prompt: str, stream: bool = False) -> str:
         return result
     else: 
         # STREAMING
+        full_text = ""
         from rich.console import Console
         console = Console()
         stream_resp = client.chat(model_id, messages=messages, stream=True)
