@@ -1,6 +1,6 @@
 from typing import Dict, Any
 from .registry import register_tool
-from agentify.tool import Tool
+from agentify.sdk.tool import Tool
 
 # Handlers
 def add(**kwargs):

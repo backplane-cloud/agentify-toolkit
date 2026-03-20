@@ -7,11 +7,13 @@ app = FastAPI(title="Agentify Model Gateway")
 class ChatRequest(BaseModel):
     model: str
     prompt: str
+    stream: bool
     
 class ChatResponse(BaseModel):
     text: str
     input_tokens: int
     output_tokens: int
+    token_cost: float
 
 @app.post("/v1/chat", response_model=ChatResponse)
 def chat(req: ChatRequest):
@@ -19,7 +21,8 @@ def chat(req: ChatRequest):
     try:
         output = run_agentify(
             model_id=req.model,
-            user_prompt=req.prompt
+            user_prompt=req.prompt,
+            stream=req.stream
         )
 
         return ChatResponse(**output)

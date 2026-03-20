@@ -1,5 +1,5 @@
 from typing import Dict
-from agentify.tool import Tool
+from agentify.sdk.tool import Tool
 
 _TOOL_REGISTRY: Dict[str, Tool] = {}
 

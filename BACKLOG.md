@@ -42,3 +42,5 @@
 | Namespaces                   | e.g. `agentify init` within `solution/` and then `agentify deploy solution` under namespace                              | `feature/deploy-namespace`   | Proposed    |
 | Model Classes                | Establish abstracted classes for model selection to use case e.g. flagship, mini, nano for example planner:worker:router | `feature/model-classes`      | Proposed    |
 | Token Optmisation            | Stop sending tool schema per prompt and offload tool selection to budget-models to minimise token consumption and cost   | `feature/token-optimisation` | Proposed    |
+| Agent Shell                  | Terminal User Interface based on Textual to provide Agent IDE                                                            | `feature/shell`              | Started     |
+| Agent and Tool Registry      | The agent.yanml can be stored in a repository                                                                            | `feature/agent-registry`     | Proposed    |

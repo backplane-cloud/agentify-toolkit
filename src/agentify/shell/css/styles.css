@@ -1,0 +1,123 @@
+Screen {
+  layout: vertical;
+  background: #191724;
+  color: #e0def4;
+}
+
+Header {
+  dock: top;
+  background: #1f1d2e;
+  color: #eb6f92;
+}
+
+Footer {
+  dock: bottom;
+  background: #1f1d2e;
+  color: #e0def4;
+}
+
+#main {
+  layout: horizontal;
+  height: 1fr; /* fill remaining space between header/footer */
+}
+
+#left {
+  width: 20%;
+  border: solid gray;
+  background: #1f1d2e;
+  overflow-x: hidden;
+}
+
+#center {
+  layout: vertical;
+  height: 1fr; /* allows #chat_log to expand */
+  border: solid gray;
+}
+
+#right {
+  width: 20%;
+  height: 100%;
+  border: solid gray;
+  background: #1f1d2e;
+  overflow-x: hidden;
+}
+
+#chat_log {
+  height: 1fr; /* fills available vertical space */
+  overflow-x: hidden; /* hide horizontal scrollbar */
+  overflow-y: auto; /* enable vertical scrolling */
+  background: #26233a;
+  color: #e0def4;
+  border: solid #524f67;
+  scrollbar-gutter: stable;
+}
+
+#call_stats {
+  background: #26233a;
+  color: #e0def4;
+  border: solid #524f67;
+  scrollbar-gutter: stable;
+}
+
+#send_button {
+  padding: 0 2;
+  border: tall #eb6f92;
+  background: #eb6f92;
+  color: #191724;
+  content-align: center middle;
+}
+
+#input_row {
+  height: auto;
+  layout: horizontal;
+}
+
+#input_row Input {
+  background: #26233a;
+  color: #e0def4;
+  border: solid #524f67;
+}
+
+#stats {
+  width: 1fr;
+  height: auto;
+}
+
+#stats > Static {
+  width: 1fr; /* each static gets equal share */
+  height: 4;
+  background: #26233a;
+  color: #e0def4;
+  border: solid #524f67;
+}
+
+#yaml_editor {
+  height: 20;
+  background: #1f1d2e;
+  color: #e0def4;
+  border: solid #524f67;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1 1;
+}
+
+#title_bar {
+  text-align: center;
+
+  background: #5c52a9;
+  color: #eb6f92;
+  padding: 0 0;
+  height: 1; /* keep it a single line */
+}
+
+#stats_bar {
+  height: auto;
+}
+
+.full_width {
+  width: 100%;
+}
+
+.agent-response {
+  color: cyan;
+}

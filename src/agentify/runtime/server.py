@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pathlib import Path
 import uvicorn
 
-from ..agent import create_agent
+from agentify.sdk.agent import create_agent
 
 app = FastAPI()
 
@@ -114,6 +114,12 @@ async def list_agents_endpoint():
             "role": getattr(agent, "role", ""),
             "model": getattr(agent, "model_id", None),
             "provider": getattr(agent, "provider", None),
+            "input_tokens": getattr(agent, "input_tokens", None),
+            "output_tokens": getattr(agent, "output_tokens", None),
+            "token_cost": getattr(agent, "token_cost", None),
+            "active": getattr(agent, "active", False), 
+            "latency": getattr(agent, "latency", False), 
+
         })
 
     return {"agents": agents_data}
@@ -134,7 +140,7 @@ async def ask_agent(agent_name: str, question: str = Form(...)):
     prompt = f"Answer with this role:{agent.role} the question: {question}"
     
     try:
-        answer = agent.run(prompt)
+        answer = await agent.run(prompt)
     except Exception as e:
         answer = f"Agent error: {str(e)}"
 
@@ -145,6 +151,7 @@ async def ask_agent(agent_name: str, question: str = Form(...)):
     """
     return HTMLResponse(content=html)
 
+# Prompt endpoint
 @app.post("/agents/{agent_name}/prompt")
 async def prompt_agent(agent_name: str, request: Request):
     agent = app.state.agents.get(agent_name)
@@ -152,10 +159,22 @@ async def prompt_agent(agent_name: str, request: Request):
         return JSONResponse({"error": f"Agent '{agent_name}' not found"}, status_code=404)
 
     body = await request.json()
-    question = body.get("question")
+    question = body.get("question", "")
+    prompt = f"Answer with this role: {agent.role} the question: {question}"
 
-    prompt = f"Answer with this role:{agent.role} the question:{question}"
-    response = agent.run(prompt)
+    # Mark agent as active while running
+    agent.active = True
+    try:
+        # response = await agent.run(prompt)
+        response = await agent.run_async(prompt)
+
+        # Update token and cost stats safely
+        agent.input_tokens += response.get("input_tokens", 0)
+        agent.output_tokens += response.get("output_tokens", 0)
+        agent.token_cost += response.get("token_cost", 0)
+    finally:
+        agent.latency = response.get("latency", 0)
+        agent.active = False
 
     return {"answer": response["text"]}
 

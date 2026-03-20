@@ -30,6 +30,7 @@ COMMANDS = {
     "gateway": {"target": "agentify.commands.gateway:gateway_command", "help": "Start the model gateway for routing AI requests"},
     "tool": {"target": "agentify.commands.tool:tool_group", "help": "Add, remove, or manage tools for agent use"},
     "mcp": {"target": "agentify.commands.mcp:mcp_group", "help": "Start and control the MCP server and associated services"},
+    "shell": {"target": "agentify.commands.shell:shell_command", "help": "Start Agentify Terminal Shell"},
 }
 
 # --- Lazy leaf command ---

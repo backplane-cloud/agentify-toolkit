@@ -7,7 +7,7 @@ from pathlib import Path
 def serve_command(path, port):
     """Serve an agent locally with HTTP API and Web UI"""
     import yaml
-    from ..agent import create_agent
+    from agentify.sdk.agent import create_agent
     from agentify.server import serve_agent
 
     p = Path(path)

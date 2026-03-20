@@ -60,11 +60,137 @@ def runtime_list(server):
         click.echo("No agents loaded on the runtime server.")
         return
 
-    click.echo(f"{'NAME':20} {'MODEL':15} {'PROVIDER':15} {'DESCRIPTION'}")
-    click.echo("-" * 70)
-    for a in agents:
-        click.echo(f"{a['name']:<20} {str(a.get('model','')):<15} {str(a.get('provider','')):<15} {a.get('description','')}")
+    # from rich.table import Table
+    # from rich.console import Console
 
+    # console = Console()
+
+    # table = Table(title="Agents")
+
+    # table.add_column("Name", style="bold cyan", width=20)
+    # table.add_column("Model", width=20)
+    # table.add_column("Provider", width=20)
+    # table.add_column("Tokens (In)", justify="right", style="yellow")
+    # table.add_column("Tokens (Out)", justify="right", style="yellow")
+    # table.add_column("Token Cost", justify="right", style="red")
+
+    # for agent in agents:
+    #     tokens = agent.get("input_tokens", 0) + agent.get("output_tokens", 0)
+    #     style = "on red" if tokens > 1000 else None
+    #     table.add_row(
+    #         agent["name"],
+    #         str(agent.get("model", "")),
+    #         str(agent.get("provider", "")),
+    #         str(agent.get("input_tokens", "")),
+    #         str(agent.get("output_tokens", "")),
+    #         str(agent.get("token_cost", "")),
+    #         style=style
+    #     )
+
+    # console.print(table)
+    from rich.console import Console
+    from rich.table import Table
+    from rich.live import Live
+    import requests
+    import time
+
+    console = Console()
+
+    def build_table(agents):
+        table = Table(title="Agent Runtime")
+
+        table.add_column("Agent Name")
+        table.add_column("Status")
+        table.add_column("Provider")
+        table.add_column("Model")
+        table.add_column("Tokens In", justify="right", style="yellow")
+        table.add_column("Tokens Out", justify="right", style="yellow")
+        table.add_column("Token Cost", justify="right")
+        table.add_column("Latency (sec)", justify="right")
+
+        spinner_frames = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
+        frame = int(time.time() * 10) % len(spinner_frames)
+
+        total_input_tokens = 0
+        total_output_tokens = 0
+        total_cost = 0
+
+        for agent in agents:
+            in_tokens = agent.get("input_tokens", 0)
+            out_tokens = agent.get("output_tokens", 0)
+            cost_tokens = agent.get("token_cost", 0)
+            latency_ms = agent.get("latency")
+
+            total_input_tokens += in_tokens
+            total_output_tokens += out_tokens
+            total_cost += cost_tokens
+
+            if agent.get("active"):
+                name = f"[black on yellow]{agent.get('name')}[/]"
+                # status = "[green]RUNNING[/]"
+                status = f"[green]{spinner_frames[frame]} RUNNING[/]"
+                model = f"[green]{agent.get('model')}[/]"
+                provider = f"[green]{agent.get('provider')}[/]"
+                input_tokens = f"[green]{str(round(agent.get("input_tokens"), 6))}[/]"
+                output_tokens = f"[green]{str(round(agent.get("output_tokens"), 6))}[/]"
+                cost = f"[green]{str(round(agent.get("token_cost"), 6))}[/]"
+                latency = f"[cyan]Invoking[/]"
+            else:
+                name = agent.get("name")
+                status = "[dim]idle[/]"
+                model = agent.get("model")
+                provider = agent.get("provider")
+                input_tokens = f"[dim]{str(round(agent.get("input_tokens"), 6))}[/]"
+                output_tokens = f"[dim]{str(round(agent.get("output_tokens"), 6))}[/]"
+                cost = f"[dim]{str(round(agent.get("token_cost"), 6))}[/]"
+                if latency_ms == 0.0:
+                    latency = f"[dim]{round(latency_ms, 2)}s[/]"
+                elif latency_ms < 1:
+                    latency = f"[green]{round(latency_ms, 2)}s[/]"
+                elif 1 <= latency_ms < 5:
+                    latency = f"[yellow]{round(latency_ms, 2)}s[/]"
+                else:
+                    latency = f"[red]{round(latency_ms, 2)}s[/]"
+              
+
+            table.add_row(
+                name,
+                status,
+                provider,
+                model,
+                input_tokens,
+                output_tokens,
+                cost,
+                latency
+            )
+
+        table.add_section()
+        table.add_row(
+            "[bold]TOTAL[/]",
+            "",
+            "",
+            "",
+            f"[bold yellow]{round(total_input_tokens, 6)}[/]",
+            f"[bold yellow]{round(total_output_tokens, 6)}[/]",
+            f"[bold red]{round(total_cost, 6)}[/]",
+        )
+
+
+        return table
+
+
+    with Live(console=console, refresh_per_second=2) as live:
+        while True:
+            try:
+                resp = requests.get(f"{server}/agents")
+                resp.raise_for_status()
+                agents = resp.json().get("agents", [])
+            except Exception as e:
+                console.print(f"[red]Failed to fetch agents: {e}[/]")
+                agents = []
+
+            live.update(build_table(agents))
+            time.sleep(0.5)
 
 @runtime_group.command("invoke")
 @click.argument("agent_name")

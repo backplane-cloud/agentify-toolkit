@@ -1,6 +1,6 @@
 import requests
 
-def run_agentify(model_id: str, user_prompt: str) -> str:
+def run_agentify(model_id: str, user_prompt: str, stream: bool = False) -> dict:
     # Import providers
     from agentify.providers import run_openai, run_anthropic, run_google, run_bedrock, run_github, run_x, run_deepseek, run_mistral, run_ollama, run_ollama_local
 
@@ -10,35 +10,36 @@ def run_agentify(model_id: str, user_prompt: str) -> str:
     # Run provider
     match provider.lower():
         case "openai":
-            return run_openai(model, user_prompt)
+            return run_openai(model, user_prompt, stream=stream)
         case "anthropic":
-            return run_anthropic(model, user_prompt)
+            return run_anthropic(model, user_prompt, stream=stream)
         case "google":
-            return run_google(model, user_prompt)
+            return run_google(model, user_prompt, stream=stream)
         case "bedrock":
-            return run_bedrock(model, user_prompt)
+            return run_bedrock(model, user_prompt, stream=stream)
         case "github":
-            return run_github(model, user_prompt)
+            return run_github(model, user_prompt, stream=stream)
         case "xai":
-            return run_x(model, user_prompt)
+            return run_x(model, user_prompt, stream=stream)
         case "deepseek":
-            return run_deepseek(model, user_prompt)
+            return run_deepseek(model, user_prompt, stream=stream)
         case "mistral":
-            return run_mistral(model, user_prompt)
+            return run_mistral(model, user_prompt, stream=stream)
         case "ollama":
-            return run_ollama(model, user_prompt)
+            return run_ollama(model, user_prompt, stream=stream)
         case "ollama_local":
-            return run_ollama_local(model, user_prompt)
+            return run_ollama_local(model, user_prompt, stream=stream)
         case _:
             raise ValueError(f"Unsupported provider: {provider}")
         
-def run_gateway_http(model_id: str, user_prompt: str) -> dict:
+def run_gateway_http(model_id: str, user_prompt: str, stream: bool = False) -> dict:
+    # print(model_id, user_prompt, stream)
     response = requests.post(
         "http://127.0.0.1:8000/v1/chat",
-        json={"model": model_id, "prompt": user_prompt},
+        json={"model": model_id, "prompt": user_prompt, "stream": stream},
         timeout=30
     )
-    
+
     if not response.ok:
         print("Gateway returned:", response.text)
         response.raise_for_status()

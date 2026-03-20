@@ -8,6 +8,10 @@ RATE_CARD = {
         "gpt-4.1-mini": {"input_rate": 0.40, "output_rate": 1.60},
         "gpt-4.1-nano": {"input_rate": 0.10, "output_rate": 0.40},
     },
+    "bedrock": {
+        "gpt-4": {"input_rate": 0.01, "output_rate": 0.01},
+        "anthropic.claude-3-sonnet-20240229-v1:0": {"input_rate": 0.01, "output_rate": 0.01},
+    },
     "anthropic": {
         "claude-opus-4-5": {"input_rate": 5, "output_rate": 25},
         "claude-sonnet-4-5": {"input_rate": 3, "output_rate": 15},
@@ -22,6 +26,13 @@ RATE_CARD = {
     },
     "mistral": {
         "mistral-small-latest": {"input_rate": 0.10, "output_rate": 0.30},
+    },
+    "ollama": {
+        "devstral-small-2:24b": {"input_rate": 0.01, "output_rate": 0.01},
+        "gemma3:4b": {"input_rate": 0.01, "output_rate": 0.01},
+    },
+    "deepseek": {
+        "deepseek-chat": {"input_rate": 0.28, "output_rate": 0.42},
     },
     "xai": {
         "grok-4": {"input_rate": 3.00, "output_rate": 15.00},

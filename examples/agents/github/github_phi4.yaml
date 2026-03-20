@@ -1,4 +1,4 @@
-name: github
+name: github_phi4
 description: This is an example Github Models agent
 version: 0.1.0
 model:

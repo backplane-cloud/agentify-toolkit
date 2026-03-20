@@ -53,7 +53,7 @@ def list_tools(path, mcp, url):
     # -----------------------------
     # LOCAL YAML MODE (existing behaviour)
     # -----------------------------
-    from ..specs import load_tool_specs
+    from agentify.sdk.specs import load_tool_specs
 
     p = Path(path)
     if not p.is_dir():

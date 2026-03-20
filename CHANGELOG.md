@@ -5,6 +5,34 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.22.0] - 2026-02-14
+
+### Feature/shell
+
+- Added agentify shell to display terminal ui (basic)
+
+#### Metrics
+
+- Added latency metric to agent
+- Added `agentify runtime list` to display latency
+- Added `agentify run agent.yaml --showstats` to display token usage/cost and latency
+
+#### Streaming
+
+- Added `agentify run agent.yaml --stream` to stream responses
+
+- OpenAI, Ollama, Mistral, DeepSeek, X AI, GitHub models were all updated to support streaming via
+
+  ```python
+  run_provider(model_id, user_prompt, stream=True)
+  ```
+
+#### Streaming - Token Usage & Cost Estimation
+
+- Typically providers (GitHub, X AI) don’t include token usage in streaming chunks.
+- Implemented `tiktoken` for accurate token counting in streaming responses:
+  - Ensures token cost calculation is correct without needing a second API call which would double token usage and therefore cost.
+
 ## [0.21.0] - 2026-02-28
 
 ### Feature/token-usage, token-cost (via ratecard)
