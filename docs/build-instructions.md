@@ -61,3 +61,8 @@ rm -rf dist/ build/ src/*.egg-info
 ```
 
 Then repeat steps to test and verify version.
+
+```bash
+git tag v0.4.0
+git push origin v0.4.0
+```
